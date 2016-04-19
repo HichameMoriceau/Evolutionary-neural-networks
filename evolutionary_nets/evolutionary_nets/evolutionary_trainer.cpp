@@ -1058,36 +1058,36 @@ void Evolutionary_trainer::PSO_topology_evolution(vector<vec> &pop, vector<vec> 
             velocities[p][i] = clip(velocities[p][i], -5, 5);
         }
 
-        vec particule = pop[p];
+        vec particle = pop[p];
         // update particle data
         for(unsigned int i=0; i<genome_size; i++){
             switch(i){
             case 0:
                 // protect NB INPUTS from being altered
-                particule[0] = training_set.X.n_cols;
+                particle[0] = training_set.X.n_cols;
                 break;
             case 1:
                 // make sure NB HIDDEN UNITS PER LAYER doesn't exceed genome size
-                particule[1] = round(clip(particule[i] + velocities[p][i], 2, max_topo.nb_units_per_hidden_layer));
-                //cout << "|HID.UNITS|\tparticule[i] " << i << " = " << particule[i] << " and velocity[p][i] = " << velocities[p][i] << "\tsum of the 2 = " << particule[i] + velocities[p][i] << "result = " << particule[1] << " hid.units" << endl;
+                particle[1] = round(clip(particle[i] + velocities[p][i], 2, max_topo.nb_units_per_hidden_layer));
+                //cout << "|HID.UNITS|\tparticle[i] " << i << " = " << particle[i] << " and velocity[p][i] = " << velocities[p][i] << "\tsum of the 2 = " << particle[i] + velocities[p][i] << "result = " << particle[1] << " hid.units" << endl;
                 break;
             case 2:
                 // protect NB OUTPUTS from being altered
-                particule[2] = 1;
+                particle[2] = 1;
                 break;
             case 3:
                 // make sure NB HIDDEN LAYERS doesn't exceed genome size
-                //cout << "|HID.LAYS|\tparticule[i] " << i << " = " << particule[i] << " and velocity[p][i] = " << velocities[p][i] << "\tsum of the 2 = " << particule[i] + velocities[p][i]  << endl;
-                particule[3] = round(clip(particule[i] + velocities[p][i], 1, max_topo.nb_hidden_layers));
+                //cout << "|HID.LAYS|\tparticle[i] " << i << " = " << particle[i] << " and velocity[p][i] = " << velocities[p][i] << "\tsum of the 2 = " << particle[i] + velocities[p][i]  << endl;
+                particle[3] = round(clip(particle[i] + velocities[p][i], 1, max_topo.nb_hidden_layers));
                 break;
             default:
-                particule[i] = particule[i] + velocities[p][i];
+                particle[i] = particle[i] + velocities[p][i];
                 break;
             }
         }
-        //cout << " and now particle[" << p << "] has " << particule[1] << " hid.units" << endl;
-        if(generate_net(particule).get_f1_score(training_set) >= generate_net(pop[p]).get_f1_score(training_set))
-            pop[p] = particule;
+        //cout << " and now particle[" << p << "] has " << particle[1] << " hid.units" << endl;
+        if(generate_net(particle).get_f1_score(training_set) >= generate_net(pop[p]).get_f1_score(training_set))
+            pop[p] = particle;
     }
     // update population
     population = convert_population_to_nets(pop);
