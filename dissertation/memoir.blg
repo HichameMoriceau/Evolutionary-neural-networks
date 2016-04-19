@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2013/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: memoir.aux
+The style file: plain.bst
+Database file #1: latex-citations.bib
+Warning--empty publisher in mccormick-2013
+Warning--empty publisher in fortmann-2012
+You've used 29 entries,
+            2118 wiz_defined-function locations,
+            658 strings with 8882 characters,
+and the built_in function-call counts, 9249 in all, are:
+= -- 872
+> -- 444
+< -- 6
++ -- 179
+- -- 148
+* -- 599
+:= -- 1536
+add.period$ -- 84
+call.type$ -- 29
+change.case$ -- 154
+chr.to.int$ -- 0
+cite$ -- 31
+duplicate$ -- 355
+empty$ -- 752
+format.name$ -- 148
+if$ -- 1949
+int.to.chr$ -- 0
+int.to.str$ -- 29
+missing$ -- 30
+newline$ -- 144
+num.names$ -- 58
+pop$ -- 207
+preamble$ -- 1
+purify$ -- 131
+quote$ -- 0
+skip$ -- 263
+stack$ -- 0
+substring$ -- 502
+swap$ -- 74
+text.length$ -- 6
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 102
+warning$ -- 2
+while$ -- 82
+width$ -- 31
+write$ -- 301
+(There were 2 warnings)

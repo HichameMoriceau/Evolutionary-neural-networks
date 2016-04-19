@@ -1,0 +1,39 @@
+\BOOKMARK [0][-]{section*.1}{Contents}{}% 1
+\BOOKMARK [0][-]{chapter.1}{Acknowledgements}{}% 2
+\BOOKMARK [0][-]{chapter.2}{Introduction}{}% 3
+\BOOKMARK [1][-]{section.2.1}{Motivations}{chapter.2}% 4
+\BOOKMARK [1][-]{section.2.2}{Scope}{chapter.2}% 5
+\BOOKMARK [1][-]{section.2.3}{Aims and Objectives}{chapter.2}% 6
+\BOOKMARK [1][-]{section.2.4}{Prerequisites}{chapter.2}% 7
+\BOOKMARK [1][-]{section.2.5}{Structure of the Report}{chapter.2}% 8
+\BOOKMARK [1][-]{section.2.6}{Terminology}{chapter.2}% 9
+\BOOKMARK [0][-]{chapter.3}{Literature Review}{}% 10
+\BOOKMARK [1][-]{section.3.1}{Evolutionary Algorithms Theory}{chapter.3}% 11
+\BOOKMARK [1][-]{section.3.2}{Neural Network Theory}{chapter.3}% 12
+\BOOKMARK [1][-]{section.3.3}{Optimization Algorithms Theory}{chapter.3}% 13
+\BOOKMARK [1][-]{section.3.4}{Note on Neural Network Ensembles}{chapter.3}% 14
+\BOOKMARK [0][-]{chapter.4}{Methodology and Design}{}% 15
+\BOOKMARK [1][-]{section.4.1}{Implementation Options}{chapter.4}% 16
+\BOOKMARK [1][-]{section.4.2}{Implementation Decisions}{chapter.4}% 17
+\BOOKMARK [1][-]{section.4.3}{Experimental Design}{chapter.4}% 18
+\BOOKMARK [1][-]{section.4.4}{Neural Network Encoding}{chapter.4}% 19
+\BOOKMARK [1][-]{section.4.5}{Fitness Function}{chapter.4}% 20
+\BOOKMARK [1][-]{section.4.6}{The Overfitting Problem}{chapter.4}% 21
+\BOOKMARK [1][-]{section.4.7}{The Competing Conventions Problem}{chapter.4}% 22
+\BOOKMARK [1][-]{section.4.8}{Data Preprocessing}{chapter.4}% 23
+\BOOKMARK [1][-]{section.4.9}{Selection of Control Variables of DE}{chapter.4}% 24
+\BOOKMARK [0][-]{chapter.5}{Results}{}% 25
+\BOOKMARK [1][-]{section.5.1}{Breast Cancer: Malignant or Benign?}{chapter.5}% 26
+\BOOKMARK [1][-]{section.5.2}{Breast Cancer Recurrence}{chapter.5}% 27
+\BOOKMARK [1][-]{section.5.3}{Haberman's survival}{chapter.5}% 28
+\BOOKMARK [1][-]{section.5.4}{Using a Derived Termination Criteria}{chapter.5}% 29
+\BOOKMARK [1][-]{section.5.5}{Measurement Methodology}{chapter.5}% 30
+\BOOKMARK [1][-]{section.5.6}{Experiment Replicability}{chapter.5}% 31
+\BOOKMARK [1][-]{section.5.7}{Comparison with previous work}{chapter.5}% 32
+\BOOKMARK [0][-]{chapter.6}{Evaluation}{}% 33
+\BOOKMARK [0][-]{chapter.7}{Conclusions}{}% 34
+\BOOKMARK [1][-]{section.7.1}{Further Study}{chapter.7}% 35
+\BOOKMARK [0][-]{appendix.A}{Data Set resources}{}% 36
+\BOOKMARK [0][-]{appendix.B}{Results - Breast Cancer: Recurrence or Not ?}{}% 37
+\BOOKMARK [0][-]{appendix.C}{Haberman's survival test}{}% 38
+\BOOKMARK [0][-]{section*.97}{Bibliography}{}% 39

@@ -1,0 +1,205 @@
+\hypertarget{classNeuralNet}{\section{Neural\-Net Class Reference}
+\label{classNeuralNet}\index{Neural\-Net@{Neural\-Net}}
+}
+
+
+The \hyperlink{classNeuralNet}{Neural\-Net} class.  
+
+
+
+
+{\ttfamily \#include $<$neuralnet.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classNeuralNet_aea0e1ca0f36640971b2954d135b0a12e}{{\bfseries Neural\-Net} (\hyperlink{structnet__topology}{net\-\_\-topology} t)}\label{classNeuralNet_aea0e1ca0f36640971b2954d135b0a12e}
+
+\item 
+mat \hyperlink{classNeuralNet_ab53c509b46f5a901a45be9e4cf77f3bd}{forward\-\_\-propagate} (mat X)
+\begin{DoxyCompactList}\small\item\em forward\-\_\-propagate \end{DoxyCompactList}\item 
+mat \hyperlink{classNeuralNet_a6a9fdc8fffbd2745d7cca5562912335b}{forward\-\_\-propagate} (mat X, vector$<$ mat $>$ \&Zs, vector$<$ mat $>$ \&As)
+\begin{DoxyCompactList}\small\item\em forward\-\_\-propagate \end{DoxyCompactList}\item 
+vector$<$ mat $>$ \hyperlink{classNeuralNet_a74dc26bcfbb7a054a8c7697f537a5a99}{reshape\-\_\-weights} ()
+\begin{DoxyCompactList}\small\item\em reshape\-\_\-weights \end{DoxyCompactList}\item 
+\hypertarget{classNeuralNet_aefd889aaa736267ae67bd2beb0275628}{void {\bfseries save\-\_\-net} (ofstream \&model\-\_\-file)}\label{classNeuralNet_aefd889aaa736267ae67bd2beb0275628}
+
+\item 
+\hypertarget{classNeuralNet_a2e458054a038980589c2c4a97e647709}{unsigned int {\bfseries get\-\_\-total\-\_\-nb\-\_\-weights} ()}\label{classNeuralNet_a2e458054a038980589c2c4a97e647709}
+
+\item 
+\hypertarget{classNeuralNet_ae24cbf6ab4032ca16983dbed084b6d85}{vec {\bfseries generate\-\_\-random\-\_\-model} ()}\label{classNeuralNet_ae24cbf6ab4032ca16983dbed084b6d85}
+
+\item 
+\hypertarget{classNeuralNet_a7749da58906658bed5b008c6022807ee}{void {\bfseries print\-\_\-topology} ()}\label{classNeuralNet_a7749da58906658bed5b008c6022807ee}
+
+\item 
+\hypertarget{classNeuralNet_a41636bc3b34948ad3da08980af76387d}{vec {\bfseries get\-\_\-params} ()}\label{classNeuralNet_a41636bc3b34948ad3da08980af76387d}
+
+\item 
+\hypertarget{classNeuralNet_af9a25d684ca80c51953bfef7fd443e2d}{void {\bfseries set\-\_\-params} (vec p)}\label{classNeuralNet_af9a25d684ca80c51953bfef7fd443e2d}
+
+\item 
+\hypertarget{classNeuralNet_ad32dd2df156318945f665949f1759875}{\hyperlink{structnet__topology}{net\-\_\-topology} {\bfseries get\-\_\-topology} ()}\label{classNeuralNet_ad32dd2df156318945f665949f1759875}
+
+\item 
+\hypertarget{classNeuralNet_a241e0975c735bff8804fe42a205d0b39}{void {\bfseries set\-\_\-topology} (\hyperlink{structnet__topology}{net\-\_\-topology} t)}\label{classNeuralNet_a241e0975c735bff8804fe42a205d0b39}
+
+\item 
+double \hyperlink{classNeuralNet_ab7227a1d2bebbc92c1c7dc5a952ad2cc}{get\-\_\-accuracy} (\hyperlink{structdata__subset}{data\-\_\-subset} d)
+\begin{DoxyCompactList}\small\item\em get\-\_\-accuracy \end{DoxyCompactList}\item 
+double \hyperlink{classNeuralNet_aecea67ed4059c88b0b74c13f0c7c52a7}{get\-\_\-f1\-\_\-score} (\hyperlink{structdata__subset}{data\-\_\-subset} d)
+\begin{DoxyCompactList}\small\item\em get\-\_\-f1\-\_\-score \end{DoxyCompactList}\item 
+double \hyperlink{classNeuralNet_a97703e2851b62dbdd0ded415542d8614}{get\-\_\-matthews\-\_\-correlation\-\_\-coefficient} (\hyperlink{structdata__subset}{data\-\_\-subset} d)
+\begin{DoxyCompactList}\small\item\em get\-\_\-matthews\-\_\-correlation\-\_\-coefficient \end{DoxyCompactList}\item 
+\hypertarget{classNeuralNet_adc22e85172dc8cd50ebcda46d8b9ba58}{void {\bfseries print\-\_\-topology} (\hyperlink{structnet__topology}{net\-\_\-topology} t)}\label{classNeuralNet_adc22e85172dc8cd50ebcda46d8b9ba58}
+
+\item 
+bool \hyperlink{classNeuralNet_a3f74539900212d97ed0eeb8117613943}{operator$<$} (\hyperlink{classNeuralNet}{Neural\-Net} \&n)
+\begin{DoxyCompactList}\small\item\em operator $<$ (comparator-\/function for sorting by highest score) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classNeuralNet}{Neural\-Net} class. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classNeuralNet_ab53c509b46f5a901a45be9e4cf77f3bd}{\index{Neural\-Net@{Neural\-Net}!forward\-\_\-propagate@{forward\-\_\-propagate}}
+\index{forward\-\_\-propagate@{forward\-\_\-propagate}!NeuralNet@{Neural\-Net}}
+\subsubsection[{forward\-\_\-propagate}]{\setlength{\rightskip}{0pt plus 5cm}mat Neural\-Net\-::forward\-\_\-propagate (
+\begin{DoxyParamCaption}
+\item[{mat}]{X}
+\end{DoxyParamCaption}
+)}}\label{classNeuralNet_ab53c509b46f5a901a45be9e4cf77f3bd}
+
+
+forward\-\_\-propagate 
+
+
+\begin{DoxyParams}{Parameters}
+{\em X} & Input data as matrix, whether it contains a single row or several. (Must fit the number of input neurons) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The predictions made by the net on the input data X 
+\end{DoxyReturn}
+\hypertarget{classNeuralNet_a6a9fdc8fffbd2745d7cca5562912335b}{\index{Neural\-Net@{Neural\-Net}!forward\-\_\-propagate@{forward\-\_\-propagate}}
+\index{forward\-\_\-propagate@{forward\-\_\-propagate}!NeuralNet@{Neural\-Net}}
+\subsubsection[{forward\-\_\-propagate}]{\setlength{\rightskip}{0pt plus 5cm}mat Neural\-Net\-::forward\-\_\-propagate (
+\begin{DoxyParamCaption}
+\item[{mat}]{X, }
+\item[{vector$<$ mat $>$ \&}]{Zs, }
+\item[{vector$<$ mat $>$ \&}]{As}
+\end{DoxyParamCaption}
+)}}\label{classNeuralNet_a6a9fdc8fffbd2745d7cca5562912335b}
+
+
+forward\-\_\-propagate 
+
+
+\begin{DoxyParams}{Parameters}
+{\em X} & Input data as matrix, whether it contains a single row or several. (Must fit the number of input neurons) \\
+\hline
+{\em Zs} & vector of matrices for the summed weights$\ast$inputs(not yet been through sigmoid) to be returned by reference \\
+\hline
+{\em As} & vector of matrices for the activations (outputs) of the neurons to be returned by reference \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The predictions made by the net on the input data X Also returns (by reference) the updated state of the vectors Z and A 
+\end{DoxyReturn}
+\hypertarget{classNeuralNet_ab7227a1d2bebbc92c1c7dc5a952ad2cc}{\index{Neural\-Net@{Neural\-Net}!get\-\_\-accuracy@{get\-\_\-accuracy}}
+\index{get\-\_\-accuracy@{get\-\_\-accuracy}!NeuralNet@{Neural\-Net}}
+\subsubsection[{get\-\_\-accuracy}]{\setlength{\rightskip}{0pt plus 5cm}double Neural\-Net\-::get\-\_\-accuracy (
+\begin{DoxyParamCaption}
+\item[{{\bf data\-\_\-subset}}]{d}
+\end{DoxyParamCaption}
+)}}\label{classNeuralNet_ab7227a1d2bebbc92c1c7dc5a952ad2cc}
+
+
+get\-\_\-accuracy 
+
+
+\begin{DoxyParams}{Parameters}
+{\em d} & data portion used for accuracy calculation \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+returns percentage representing how often the model correctly predicts $<$\-Y$>$ on the data-\/set $<$\-X$>$ 
+\end{DoxyReturn}
+\hypertarget{classNeuralNet_aecea67ed4059c88b0b74c13f0c7c52a7}{\index{Neural\-Net@{Neural\-Net}!get\-\_\-f1\-\_\-score@{get\-\_\-f1\-\_\-score}}
+\index{get\-\_\-f1\-\_\-score@{get\-\_\-f1\-\_\-score}!NeuralNet@{Neural\-Net}}
+\subsubsection[{get\-\_\-f1\-\_\-score}]{\setlength{\rightskip}{0pt plus 5cm}double Neural\-Net\-::get\-\_\-f1\-\_\-score (
+\begin{DoxyParamCaption}
+\item[{{\bf data\-\_\-subset}}]{d}
+\end{DoxyParamCaption}
+)}}\label{classNeuralNet_aecea67ed4059c88b0b74c13f0c7c52a7}
+
+
+get\-\_\-f1\-\_\-score 
+
+
+\begin{DoxyParams}{Parameters}
+{\em d} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+(score function) returns an indication of the quality of the model \mbox{[}0, 1\mbox{]} The F1 Score function calculates the {\itshape precision} and {\itshape recall} of the model. This function is used as fitness function by the Differential Evolution algorithm. 
+\end{DoxyReturn}
+\hypertarget{classNeuralNet_a97703e2851b62dbdd0ded415542d8614}{\index{Neural\-Net@{Neural\-Net}!get\-\_\-matthews\-\_\-correlation\-\_\-coefficient@{get\-\_\-matthews\-\_\-correlation\-\_\-coefficient}}
+\index{get\-\_\-matthews\-\_\-correlation\-\_\-coefficient@{get\-\_\-matthews\-\_\-correlation\-\_\-coefficient}!NeuralNet@{Neural\-Net}}
+\subsubsection[{get\-\_\-matthews\-\_\-correlation\-\_\-coefficient}]{\setlength{\rightskip}{0pt plus 5cm}double Neural\-Net\-::get\-\_\-matthews\-\_\-correlation\-\_\-coefficient (
+\begin{DoxyParamCaption}
+\item[{{\bf data\-\_\-subset}}]{d}
+\end{DoxyParamCaption}
+)}}\label{classNeuralNet_a97703e2851b62dbdd0ded415542d8614}
+
+
+get\-\_\-matthews\-\_\-correlation\-\_\-coefficient 
+
+
+\begin{DoxyParams}{Parameters}
+{\em d} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+(score function) returns an indication of the quality of the model \mbox{[}-\/1, +1\mbox{]} 
+\end{DoxyReturn}
+\hypertarget{classNeuralNet_a3f74539900212d97ed0eeb8117613943}{\index{Neural\-Net@{Neural\-Net}!operator$<$@{operator$<$}}
+\index{operator$<$@{operator$<$}!NeuralNet@{Neural\-Net}}
+\subsubsection[{operator$<$}]{\setlength{\rightskip}{0pt plus 5cm}bool Neural\-Net\-::operator$<$ (
+\begin{DoxyParamCaption}
+\item[{{\bf Neural\-Net} \&}]{n}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classNeuralNet_a3f74539900212d97ed0eeb8117613943}
+
+
+operator $<$ (comparator-\/function for sorting by highest score) 
+
+
+\begin{DoxyParams}{Parameters}
+{\em n} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if the provided net is less fit than this net 
+\end{DoxyReturn}
+\hypertarget{classNeuralNet_a74dc26bcfbb7a054a8c7697f537a5a99}{\index{Neural\-Net@{Neural\-Net}!reshape\-\_\-weights@{reshape\-\_\-weights}}
+\index{reshape\-\_\-weights@{reshape\-\_\-weights}!NeuralNet@{Neural\-Net}}
+\subsubsection[{reshape\-\_\-weights}]{\setlength{\rightskip}{0pt plus 5cm}vector$<$ mat $>$ Neural\-Net\-::reshape\-\_\-weights (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classNeuralNet_a74dc26bcfbb7a054a8c7697f537a5a99}
+
+
+reshape\-\_\-weights 
+
+\begin{DoxyReturn}{Returns}
+returns vector of Theta (weights) matrices of the neural network e.\-g. if net has 1 input layer, 1 hidden layer, 1 output layer \hyperlink{classNeuralNet_a74dc26bcfbb7a054a8c7697f537a5a99}{reshape\-\_\-weights()} will return a vector of the two weight matrices respectively Theta\mbox{[}0\mbox{]} and Theta\mbox{[}1\mbox{]} 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+neuralnet.\-h\item 
+neuralnet.\-cpp\end{DoxyCompactItemize}

@@ -1,0 +1,25 @@
+\contentsline {chapter}{\numberline {1}Hierarchical Index}{1}{chapter.1}
+\contentsline {section}{\numberline {1.1}Class Hierarchy}{1}{section.1.1}
+\contentsline {chapter}{\numberline {2}Class Index}{3}{chapter.2}
+\contentsline {section}{\numberline {2.1}Class List}{3}{section.2.1}
+\contentsline {chapter}{\numberline {3}Class Documentation}{5}{chapter.3}
+\contentsline {section}{\numberline {3.1}Backpropagation\discretionary {-}{}{}\_\discretionary {-}{}{}trainer Class Reference}{5}{section.3.1}
+\contentsline {section}{\numberline {3.2}Data\discretionary {-}{}{}\_\discretionary {-}{}{}set Class Reference}{6}{section.3.2}
+\contentsline {section}{\numberline {3.3}data\discretionary {-}{}{}\_\discretionary {-}{}{}subset Struct Reference}{7}{section.3.3}
+\contentsline {section}{\numberline {3.4}Evolutionary\discretionary {-}{}{}\_\discretionary {-}{}{}trainer Class Reference}{7}{section.3.4}
+\contentsline {subsection}{\numberline {3.4.1}Member Function Documentation}{8}{subsection.3.4.1}
+\contentsline {subsubsection}{\numberline {3.4.1.1}evolve\discretionary {-}{}{}\_\discretionary {-}{}{}through\discretionary {-}{}{}\_\discretionary {-}{}{}generations}{8}{subsubsection.3.4.1.1}
+\contentsline {section}{\numberline {3.5}invalid\discretionary {-}{}{}\_\discretionary {-}{}{}dataset\discretionary {-}{}{}\_\discretionary {-}{}{}exception Class Reference}{8}{section.3.5}
+\contentsline {section}{\numberline {3.6}Net\discretionary {-}{}{}\_\discretionary {-}{}{}benchmark Class Reference}{9}{section.3.6}
+\contentsline {section}{\numberline {3.7}net\discretionary {-}{}{}\_\discretionary {-}{}{}topology Struct Reference}{9}{section.3.7}
+\contentsline {section}{\numberline {3.8}Neural\discretionary {-}{}{}Net Class Reference}{10}{section.3.8}
+\contentsline {subsection}{\numberline {3.8.1}Detailed Description}{10}{subsection.3.8.1}
+\contentsline {subsection}{\numberline {3.8.2}Member Function Documentation}{10}{subsection.3.8.2}
+\contentsline {subsubsection}{\numberline {3.8.2.1}forward\discretionary {-}{}{}\_\discretionary {-}{}{}propagate}{10}{subsubsection.3.8.2.1}
+\contentsline {subsubsection}{\numberline {3.8.2.2}forward\discretionary {-}{}{}\_\discretionary {-}{}{}propagate}{10}{subsubsection.3.8.2.2}
+\contentsline {subsubsection}{\numberline {3.8.2.3}get\discretionary {-}{}{}\_\discretionary {-}{}{}accuracy}{11}{subsubsection.3.8.2.3}
+\contentsline {subsubsection}{\numberline {3.8.2.4}get\discretionary {-}{}{}\_\discretionary {-}{}{}f1\discretionary {-}{}{}\_\discretionary {-}{}{}score}{11}{subsubsection.3.8.2.4}
+\contentsline {subsubsection}{\numberline {3.8.2.5}get\discretionary {-}{}{}\_\discretionary {-}{}{}matthews\discretionary {-}{}{}\_\discretionary {-}{}{}correlation\discretionary {-}{}{}\_\discretionary {-}{}{}coefficient}{11}{subsubsection.3.8.2.5}
+\contentsline {subsubsection}{\numberline {3.8.2.6}operator$<$}{11}{subsubsection.3.8.2.6}
+\contentsline {subsubsection}{\numberline {3.8.2.7}reshape\discretionary {-}{}{}\_\discretionary {-}{}{}weights}{12}{subsubsection.3.8.2.7}
+\contentsline {section}{\numberline {3.9}Trainer Class Reference}{12}{section.3.9}

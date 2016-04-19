@@ -1,0 +1,4 @@
+<map id="Trainer" name="Trainer">
+<area shape="rect" id="node2" href="$classBackpropagation__trainer.html" title="Backpropagation_trainer" alt="" coords="5,80,168,107"/>
+<area shape="rect" id="node3" href="$classEvolutionary__trainer.html" title="Evolutionary_trainer" alt="" coords="193,80,329,107"/>
+</map>
