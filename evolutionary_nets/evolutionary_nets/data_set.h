@@ -51,6 +51,8 @@ public:
 
     string          result_filename;
 
+    unsigned int    nb_prediction_classes;
+
 public:
                     // ctors
                     Data_set();
@@ -65,6 +67,8 @@ public:
     void            set_data_set(unsigned int chosen_data_set_index, string &data_set_filename);
 
     string          get_data_set_info(mat data_set);
+
+    unsigned int    find_nb_prediction_classes(mat D);
 
     void            subdivide_data_cross_validation(unsigned int index_validation_fold, unsigned int nb_folds);
 

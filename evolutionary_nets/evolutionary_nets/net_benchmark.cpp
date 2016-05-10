@@ -3,8 +3,8 @@
 
 Net_benchmark::Net_benchmark() {
     // set default data-set
-    data_set = Data_set(0);
-    data_set.select_data_set(0);
+    data_set = Data_set();
+    //data_set.select_data_set(0);
     // set default max topology
     max_topo.nb_input_units = data_set.training_set.X.n_cols;
     max_topo.nb_units_per_hidden_layer = data_set.training_set.X.n_cols * 4;
@@ -93,6 +93,7 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
     // for each data-set
     for(unsigned int i=0; i<total_nb_data_sets; i++) {
         // use data requested by user
+        cout << "select_data_set()" << endl;
         data_set.select_data_set(i);
         // set largest topology
         max_topo.nb_input_units = data_set.training_set.X.n_cols;

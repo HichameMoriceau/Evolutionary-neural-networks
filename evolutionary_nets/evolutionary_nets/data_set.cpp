@@ -9,7 +9,6 @@ Data_set::Data_set(string full_path)
 {
     mat D;
     D.load(full_path);
-    check_fann_format_available(D,"default.csv");
     standardize(D);
     D = shuffle(D);
     data = D;
@@ -115,14 +114,15 @@ void Data_set::select_data_set(unsigned int chosen_data_set_index) {
         throw ex;
     }
 
+    cout << "loading " << data_set_filename << endl;
+
     mat D;
     D.load(data_set_filename);
-    // verify if the data-set exist in format of *fann library*
-    check_fann_format_available(D, data_set_filename);
     standardize(D);
-    //cout << "standardize output = " << D << endl;
     D = shuffle(D);
     data = D;
+    find_nb_prediction_classes(D);
+    cout << "NB PRED CLASS FOUND = " << nb_prediction_classes << endl;
     subdivide_data_cross_validation(1,10);
 }
 
@@ -142,17 +142,35 @@ void Data_set::set_data_set(unsigned int chosen_data_set_index, string &data_set
 string Data_set::get_data_set_info(mat D) {
   // return variable
   stringstream ss;
-  mat Y = D.col(D.n_cols-1);
-
-  // data-set info
-  unsigned int nb_examples = D.n_rows;
-  unsigned int nb_positive_examples = count_nb_elements_equal_to(Y.col(0),double(1));
-  unsigned int nb_negative_examples = count_nb_elements_equal_to(Y.col(0),double(0));
-
-  ss << "nb examples = " << nb_examples << "\n";
-  ss << "nb positive examples = " << nb_positive_examples << "\n";
-  ss << "nb negative examples = " << nb_negative_examples << "\n";
+  ss << "nb examples = " << D.n_rows << "\n";
+  ss << "nb prediction classes = " << find_nb_prediction_classes(D) << "\n";
   return ss.str();
+}
+
+unsigned int Data_set::find_nb_prediction_classes(mat D){
+    vector<unsigned int> prediction_classes(0);
+    bool is_known_class = false;
+
+    // compute nb output units required
+    for(unsigned int i=0; i<D.n_rows; i++) {
+        unsigned int current_pred_class = D(i,D.n_cols-1);
+
+        is_known_class=false;
+        // for each known prediction classes
+        for(unsigned int j=0;j<prediction_classes.size(); j++) {
+            // if current output is different from prediction class
+            if(current_pred_class==prediction_classes[j]){
+                is_known_class = true;
+            }
+        }
+
+        if(prediction_classes.empty() || (!is_known_class)){
+            prediction_classes.push_back(current_pred_class);
+        }
+    }
+    // update nb output units
+    nb_prediction_classes = prediction_classes.size();
+    return nb_prediction_classes;
 }
 
 void Data_set::standardize(mat &D){
