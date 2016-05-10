@@ -1,5 +1,5 @@
 # Evolutionary Neural Networks 
-#### Pursuing the work done for my bachelor's dissertation over the course of a research internship
+### [Pursuing the work done for my bachelor's dissertation over the course of a research internship]
 
 
 Neural Networks are a very popular technique for supervised learning challenges. This project focuses on the automation of the search for the most adequate neural net architecture and weights for any given use-case. 
