@@ -8,7 +8,6 @@
 #include "neuralnet.h"
 #include "trainer.h"
 #include "evolutionary_trainer.h"
-#include "backpropagation_trainer.h"
 #include <thread>
 #include <chrono>
 #include <omp.h>
@@ -30,8 +29,6 @@ private:
     net_topology                max_topo;
 
     Evolutionary_trainer        evo_trainer;
-
-    Backpropagation_trainer     backprop_trainer;
 
 /*
     // result file Octave variable names:

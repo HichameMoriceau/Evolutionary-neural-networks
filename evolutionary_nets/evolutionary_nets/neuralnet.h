@@ -133,15 +133,13 @@ public:
      * \param n
      * \return true if the provided net is less fit than this net
      */
-    bool            operator<(NeuralNet &n) {   return n.score < this->score; }
-
+    bool            operator<(const NeuralNet &n) const {   return n.score < this->score; }
 
     // returns the Mean Squared Error of a net on <data_set>
     double          get_MSE(data_subset d);
 
     // helper methods
 private:
-
     double          sigmoid(double z);
 
     /**
@@ -161,5 +159,4 @@ private:
     unsigned int    get_nb_identical_elements(mat A, mat B);
 
 };
-
 #endif // NEURALNET_H

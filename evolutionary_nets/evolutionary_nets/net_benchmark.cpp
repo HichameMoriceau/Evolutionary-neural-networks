@@ -21,7 +21,6 @@ Net_benchmark::Net_benchmark() {
     set_topology(t);
 
     // instantiate optimization algorithms
-    backprop_trainer  = Backpropagation_trainer();
     evo_trainer       = Evolutionary_trainer();
 
     experiment_file.open("experiment.txt", ios::app);
@@ -101,7 +100,7 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
         max_topo.nb_output_units = 1;
         max_topo.nb_hidden_layers = 2;
 
-        // 550 epochs in total is often much more than enough
+        // 500 epochs in total is often more than enough
         double epsilon = find_termination_criteria_epsilon(1000);
         // save results of cross-validated training
         train_net_and_save_performances(pop_size_GA, nb_generations_GA, epsilon, mutation_scheme);
@@ -189,7 +188,6 @@ unsigned int Net_benchmark::count_nb_positive_examples(vec A){
 
 // returns a matrix of results such as :
 mat Net_benchmark::evaluate_backprop_general_performances() {
-
     data_subset training_set   = data_set.training_set;
 
     // result matrix
@@ -677,3 +675,4 @@ const string Net_benchmark::get_current_date_time() {
     strftime(buffer, sizeof(buffer), "%Y-%m-%d.%X", &tstruct);
     return buffer;
 }
+

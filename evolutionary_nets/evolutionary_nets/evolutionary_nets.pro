@@ -19,19 +19,17 @@ SOURCES += main.cpp \
     data_set.cpp \
     trainer.cpp \
     net_benchmark.cpp \
-    evolutionary_trainer.cpp \
-    backpropagation_trainer.cpp
+    evolutionary_trainer.cpp
 
 HEADERS += \
     neuralnet.h \
     data_set.h \
     trainer.h \
     net_benchmark.h \
-    evolutionary_trainer.h \
-    backpropagation_trainer.h
+    evolutionary_trainer.h
 
 # arguments for linear algebra library on linux
-LIBS += -llapack -lblas -larmadillo -lfann
+LIBS += -llapack -lblas -larmadillo
 
 QMAKE_CXXFLAGS += -std=c++11
 
