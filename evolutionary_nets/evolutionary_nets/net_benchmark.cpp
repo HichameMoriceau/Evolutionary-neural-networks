@@ -78,9 +78,9 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
     max_topo.nb_hidden_layers           = 2;
     max_topo.nb_units_per_hidden_layer  = max_topo.nb_input_units * 4;
 
-    unsigned int pop_size_GA = 60;
-    unsigned int nb_generations_GA = 150;
-    unsigned int total_nb_data_sets = 1;
+    unsigned int pop_size_GA = 30;
+    unsigned int nb_generations_GA = 100;
+    unsigned int total_nb_data_sets = 3;
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
@@ -88,21 +88,25 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
 
     evo_trainer.initialize_random_population(pop_size_GA, max_topo);
 
+    vector<string> data_set_filenames;
+    data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
+    data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
+    data_set_filenames.push_back("data/haberman-data-transformed.csv");
+
     string start_time_str = get_current_date_time();
     auto start_time = system_clock::now();
     // for each data-set
     for(unsigned int i=0; i<total_nb_data_sets; i++) {
         // use data requested by user
-        cout << "select_data_set()" << endl;
-        data_set.select_data_set(i);
+        data_set.select_data_set(data_set_filenames[i]);
         // set largest topology
         max_topo.nb_input_units = data_set.training_set.X.n_cols;
-        max_topo.nb_units_per_hidden_layer = 20;
-        max_topo.nb_output_units = 1;
-        max_topo.nb_hidden_layers = 2;
+        max_topo.nb_units_per_hidden_layer = 10;
+        max_topo.nb_output_units = 1;//data_set.find_nb_prediction_classes(data_set.data);
+        max_topo.nb_hidden_layers = 1;
 
         // 500 epochs in total is often more than enough
-        double epsilon = find_termination_criteria_epsilon(1000);
+        double epsilon = find_termination_criteria_epsilon(500);
         // save results of cross-validated training
         train_net_and_save_performances(pop_size_GA, nb_generations_GA, epsilon, mutation_scheme);
 
@@ -333,8 +337,8 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
     // save results
     averaged_performances = join_horiz(averaged_performances, ones(averaged_performances.n_rows,1) * nb_replicates);
     // save error amonst replicates
-    print_results_octave_format(result_file, averaged_performances, data_set.octave_variable_name_performances_VS_nb_epochs);
-    print_results_octave_format(result_file, err_perfs, "err_" + data_set.octave_variable_name_performances_VS_nb_epochs);
+    print_results_octave_format(result_file, averaged_performances, data_set.OCTAVE_perfs_VS_nb_epochs);
+    print_results_octave_format(result_file, err_perfs, "err_" + data_set.OCTAVE_perfs_VS_nb_epochs);
 
     //
     // PERFORMANCES AS DATA-SET SIZE INCREASES

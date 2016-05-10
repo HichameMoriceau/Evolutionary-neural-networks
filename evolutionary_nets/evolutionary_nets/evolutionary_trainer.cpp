@@ -52,7 +52,6 @@ void Evolutionary_trainer::train_weights(data_subset training_set, data_subset v
     for(unsigned int i=0; i<nb_epochs; ++i) {
         // optimize model params and topology using training-set
         differential_evolution(population, training_set);
-
         trained_model = get_best_model(population);
 
         // record model performances on new data
@@ -83,6 +82,7 @@ void Evolutionary_trainer::train_weights(data_subset training_set, data_subset v
                  << nb_hidden_layers
                  << false // pop *not* heterogeneous (only nets of identical topology)
                  << endr;
+
         results_score_evolution = join_vert(results_score_evolution, new_line);
         cout << "epoch=" << i << "\tscore=" << score << "\tMCC=" << MCC << "\taccuracy=" << prediction_accuracy << endl;
     }

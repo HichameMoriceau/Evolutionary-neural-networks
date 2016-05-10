@@ -41,13 +41,13 @@ public:
 
     string          data_set_filename;
 
-    string          octave_variable_name_performances_VS_nb_epochs;
+    string          OCTAVE_perfs_VS_nb_epochs;
 
-    string          octave_variable_name_cost_training_set_size;
+    string          OCTAVE_cost_training_set_size;
 
-    string          octave_variable_name_cost_validation_set_size;
+    string          OCTAVE_cost_validation_set_size;
 
-    string          octave_variable_name_scores_pop_size;
+    string          OCTAVE_scores_pop_size;
 
     string          result_filename;
 
@@ -63,6 +63,8 @@ public:
 
 
     void            select_data_set(unsigned int chosen_data_set_index);
+
+    void            select_data_set(string filename);
 
     void            set_data_set(unsigned int chosen_data_set_index, string &data_set_filename);
 

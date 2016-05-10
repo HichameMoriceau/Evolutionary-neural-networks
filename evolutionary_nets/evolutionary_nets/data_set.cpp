@@ -67,13 +67,13 @@ void Data_set::select_data_set(unsigned int chosen_data_set_index) {
     case 0 :
         data_set_filename
                 = "data/breast-cancer-malignantOrBenign-data-transformed.csv";
-        octave_variable_name_performances_VS_nb_epochs
+        OCTAVE_perfs_VS_nb_epochs
                 = "breastCancer_MalignantOrBenign_results";
-        octave_variable_name_cost_training_set_size
+        OCTAVE_cost_training_set_size
                 = "MalignantOrBenign_results_increasingly_large_training_set";
-        octave_variable_name_cost_validation_set_size
+        OCTAVE_cost_validation_set_size
                 = "MalignantOrBenign_results_increasingly_large_validation_set";
-        octave_variable_name_scores_pop_size
+        OCTAVE_scores_pop_size
                 = "MalignantOrBenign_results_increasing_pop_size";
 
         result_filename = "data/breastCancer_MalignantOrBenign-results.mat";
@@ -82,13 +82,13 @@ void Data_set::select_data_set(unsigned int chosen_data_set_index) {
     case 1 :
         data_set_filename
                 = "data/breast-cancer-recurrence-data-transformed.csv";
-        octave_variable_name_performances_VS_nb_epochs
+        OCTAVE_perfs_VS_nb_epochs
                 = "breastCancer_RecurrenceOrNot_results";
-        octave_variable_name_cost_training_set_size
+        OCTAVE_cost_training_set_size
                 = "RecurrenceOrNot_results_increasingly_large_training_set";
-        octave_variable_name_cost_validation_set_size
+        OCTAVE_cost_validation_set_size
                 = "RecurrenceOrNot_results_increasingly_large_validation_set";
-        octave_variable_name_scores_pop_size
+        OCTAVE_scores_pop_size
                 = "RecurrenceOrNot_results_increasing_pop_size";
 
         result_filename = "data/breastCancer_RecurrenceOrNot-results.mat";
@@ -97,13 +97,13 @@ void Data_set::select_data_set(unsigned int chosen_data_set_index) {
     case 2 :
         data_set_filename
                 = "data/haberman-data-transformed.csv";
-        octave_variable_name_performances_VS_nb_epochs
+        OCTAVE_perfs_VS_nb_epochs
                 = "haberman_results";
-        octave_variable_name_cost_training_set_size
+        OCTAVE_cost_training_set_size
                 = "haberman_results_increasingly_large_training_set";
-        octave_variable_name_cost_validation_set_size
+        OCTAVE_cost_validation_set_size
                 = "haberman_results_increasingly_large_validation_set";
-        octave_variable_name_scores_pop_size
+        OCTAVE_scores_pop_size
                 = "haberman_results_increasing_pop_size";
 
         result_filename = "data/haberman-results.mat";
@@ -114,22 +114,46 @@ void Data_set::select_data_set(unsigned int chosen_data_set_index) {
         throw ex;
     }
 
-    cout << "loading " << data_set_filename << endl;
-
     mat D;
     D.load(data_set_filename);
     standardize(D);
     D = shuffle(D);
     data = D;
     find_nb_prediction_classes(D);
-    cout << "NB PRED CLASS FOUND = " << nb_prediction_classes << endl;
+    subdivide_data_cross_validation(1,10);
+}
+
+void Data_set::select_data_set(string filename) {
+
+    string base_name = filename.substr(5,filename.size()-9);
+    // set Octave variable names
+    data_set_filename = filename;
+    OCTAVE_perfs_VS_nb_epochs = base_name + "_results";
+    OCTAVE_cost_training_set_size = base_name + "_results_increasingly_large_training_set";
+    OCTAVE_cost_validation_set_size = base_name + "_results_increasingly_large_validation_set";
+    OCTAVE_scores_pop_size = base_name + "_results_increasing_pop_size";
+    result_filename = "data/" + base_name + "_results.mat";
+    // replace all '-' by '_'
+    std::replace(OCTAVE_perfs_VS_nb_epochs.begin(), OCTAVE_perfs_VS_nb_epochs.end(), '-','_');
+    std::replace(OCTAVE_cost_training_set_size.begin(), OCTAVE_cost_training_set_size.end(), '-','_');
+    std::replace(OCTAVE_cost_validation_set_size.begin(), OCTAVE_cost_validation_set_size.end(), '-','_');
+    std::replace(OCTAVE_scores_pop_size.begin(), OCTAVE_scores_pop_size.end(), '-','_');
+    std::replace(result_filename.begin(), result_filename.end(), '-','_');
+    // load corresponding data set
+    mat D;
+    D.load(data_set_filename);
+    standardize(D);
+    D = shuffle(D);
+    data = D;
+    // update nb possible outputs
+    find_nb_prediction_classes(D);
+    // set initial training and test folds
     subdivide_data_cross_validation(1,10);
 }
 
 // load chosen data-set and returns appropriate relative path to result file and octave variable names
 void Data_set::set_data_set(unsigned int chosen_data_set_index, string &data_set_filename) {
     select_data_set( chosen_data_set_index);
-
     mat D;
     D.load(data_set_filename);
     standardize(D);
@@ -154,7 +178,6 @@ unsigned int Data_set::find_nb_prediction_classes(mat D){
     // compute nb output units required
     for(unsigned int i=0; i<D.n_rows; i++) {
         unsigned int current_pred_class = D(i,D.n_cols-1);
-
         is_known_class=false;
         // for each known prediction classes
         for(unsigned int j=0;j<prediction_classes.size(); j++) {
@@ -163,7 +186,6 @@ unsigned int Data_set::find_nb_prediction_classes(mat D){
                 is_known_class = true;
             }
         }
-
         if(prediction_classes.empty() || (!is_known_class)){
             prediction_classes.push_back(current_pred_class);
         }
