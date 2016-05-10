@@ -7,11 +7,11 @@ Neural Networks are a very popular technique for supervised learning challenges.
 Given a maximum size neural network topology (architecture) the population based optimization algorithm(s) autonomously find an appropriate topology and set of weights. The algorithm was tested on 3 data sets: Breast Cancer Malignant (Diagnostic), Breast Cancer Recurrence and Haberman's survival test.
 
 This work contains implementations of the following techniques:
- - Vectorized Neural Network of any topology (using Linear Algebra)
+ - [Vectorized Neural Network](https://en.wikipedia.org/wiki/Feedforward_neural_network) of any topology (using Linear Algebra)
  - [Differential Evolution](https://en.wikipedia.org/wiki/Differential_evolution)
  - [Particle Swarm Optimization](https://en.wikipedia.org/wiki/Particle_swarm_optimization)
- - Neural Network Ensemble (The population of neural networks vote to make a prediction)
- - N-Fold Cross Validation Method
+ - [Neural Network Ensemble](http://www.sciencedirect.com/science/article/pii/S000437020200190X)
+ - [K-Fold Cross Validation](https://en.wikipedia.org/wiki/Cross-validation_(statistics)#k-fold_cross-validation)
 
 The program leverages the [Armadillo C++](http://arma.sourceforge.net/) Linear Algebra library and each replicate of the experiment is ran as an [OpenMP](http://openmp.org/wp/) thread.
 
