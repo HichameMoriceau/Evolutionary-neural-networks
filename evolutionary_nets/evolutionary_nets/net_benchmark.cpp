@@ -80,7 +80,7 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
 
     unsigned int pop_size_GA = 30;
     unsigned int nb_generations_GA = 100;
-    unsigned int total_nb_data_sets = 3;
+    unsigned int total_nb_data_sets = 1;
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
@@ -89,6 +89,7 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
     evo_trainer.initialize_random_population(pop_size_GA, max_topo);
 
     vector<string> data_set_filenames;
+    data_set_filenames.push_back("data/iris-data-transformed.csv");
     data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
     data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
     data_set_filenames.push_back("data/haberman-data-transformed.csv");
@@ -109,8 +110,6 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
         double epsilon = find_termination_criteria_epsilon(500);
         // save results of cross-validated training
         train_net_and_save_performances(pop_size_GA, nb_generations_GA, epsilon, mutation_scheme);
-
-        // save results of backprop training
     }
     auto end_time = system_clock::now();
     string end_time_str = get_current_date_time();
