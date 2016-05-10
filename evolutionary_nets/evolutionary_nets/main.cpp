@@ -6,10 +6,6 @@ using namespace std;
 
 // compile:  g++ main.cpp -o compiled_executable -larmadillo
 int main(int argc, char** argv) {
-    //
-    // BENCHMARKING PERFS OF NEUROEVOLUTIONARY TRAINER
-    //
-
     // default nb replicates
     unsigned int nb_replicates = 1;
     // retrieve nb replicates
