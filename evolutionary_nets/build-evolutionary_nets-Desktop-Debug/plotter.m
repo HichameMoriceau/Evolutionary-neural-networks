@@ -65,7 +65,7 @@ hold off;
 plot(results(:,1), results(:,5), 'b', 'LineWidth', 1);
 grid on;
 hold on;
-title(strcat(data_set_name, "Variance of individuals's scores against nb generations"));
+title(strcat(data_set_name, " - Variance of individuals's scores against nb generations"));
 legend('Variance', "location", "northeast");
 xlabel('Number of generations');
 ylabel('Variance on validation-set');
