@@ -91,3 +91,450 @@ THREAD3 replicate=0	seed=0	best_score=	on82.3529data/haberman-data-transformed.c
 Training started at  : 2016-05-10.13:39:45
 Training finished at : 2016-05-10.13:47:13 (to produce result data USING: 1 replicates and 3 data sets)
 experiment duration :	7 minutes
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		4
+GA population size	30
+Max NB generations	1100
+GA Termination criterionif population score variance < 1.63682 then stop
+NB generations per fold100
+End of search space	4_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD3 replicate=2	seed=20	best_score=	on100data/iris-data-transformed.csv
+THREAD0 replicate=0	seed=0	best_score=	on100data/iris-data-transformed.csv
+THREAD2 replicate=3	seed=30	best_score=	on100data/iris-data-transformed.csv
+THREAD1 replicate=1	seed=10	best_score=	on100data/iris-data-transformed.csv
+Training started at  : 2016-05-11.13:18:26
+Training finished at : 2016-05-11.13:22:01 (to produce result data USING: 4 replicates and 1 data sets)
+experiment duration :	3 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		4
+GA population size	30
+Max NB generations	2200
+GA Termination criterionif population score variance < 1.61162 then stop
+NB generations per fold200
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD3 replicate=1	seed=10	best_score=	on95.8333data/breast-cancer-malignantOrBenign-data-transformed.csv
+THREAD2 replicate=3	seed=30	best_score=	on100data/breast-cancer-malignantOrBenign-data-transformed.csv
+THREAD0 replicate=2	seed=20	best_score=	on100data/breast-cancer-malignantOrBenign-data-transformed.csv
+THREAD1 replicate=0	seed=0	best_score=	on100data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-11.15:09:37
+Training finished at : 2016-05-11.15:25:22 (to produce result data USING: 4 replicates and 1 data sets)
+experiment duration :	15 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		4
+GA population size	30
+Max NB generations	2200
+GA Termination criterionif population score variance < 1.61162 then stop
+NB generations per fold200
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD1 replicate=1	seed=10	best_score=	on100data/breast-cancer-malignantOrBenign-data-transformed.csv
+THREAD3 replicate=3	seed=30	best_score=	on97.8723data/breast-cancer-malignantOrBenign-data-transformed.csv
+THREAD0 replicate=2	seed=20	best_score=	on100data/breast-cancer-malignantOrBenign-data-transformed.csv
+THREAD2 replicate=0	seed=0	best_score=	on100data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-11.16:42:53
+Training finished at : 2016-05-11.16:57:06 (to produce result data USING: 4 replicates and 1 data sets)
+experiment duration :	14 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < 1.61162 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on97.9592data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-11.17:29:39
+Training finished at : 2016-05-11.17:31:24 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < 1.61162 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on97.9592data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-11.17:35:14
+Training finished at : 2016-05-11.17:36:58 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < 1.61162 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD1 replicate=0	seed=0	best_score=	on100data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-11.17:41:27
+Training finished at : 2016-05-11.17:43:30 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	2 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < 1.61162 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on97.9592data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-11.17:47:59
+Training finished at : 2016-05-11.17:49:46 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < 1.61162 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on97.9592data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-11.17:56:32
+Training finished at : 2016-05-11.17:58:16 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < 1.61162 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on97.9592data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-11.18:11:42
+Training finished at : 2016-05-11.18:13:13 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < 1.61162 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on97.8723data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-11.18:21:36
+Training finished at : 2016-05-11.18:23:28 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < 1.61162 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on97.8723data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-11.18:28:27
+Training finished at : 2016-05-11.18:30:02 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < 1.61162 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD3 replicate=0	seed=0	best_score=	on100data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-11.18:39:37
+Training finished at : 2016-05-11.18:41:03 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on97.9592data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-12.07:37:31
+Training finished at : 2016-05-12.07:38:51 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on97.9592data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-12.07:42:05
+Training finished at : 2016-05-12.07:43:23 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on97.9592data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-12.07:50:03
+Training finished at : 2016-05-12.07:51:13 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	30
+Max NB generations	550
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold50
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD2 replicate=0	seed=0	best_score=	on100data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-12.07:55:43
+Training finished at : 2016-05-12.07:57:26 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	10
+Max NB generations	220
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold20
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on87.5data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-12.08:01:17
+Training finished at : 2016-05-12.08:01:27 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	0 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	10
+Max NB generations	220
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold20
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD2 replicate=0	seed=0	best_score=	on93.8776data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-12.08:04:36
+Training finished at : 2016-05-12.08:04:47 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	0 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	10
+Max NB generations	220
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold20
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	10
+Max NB generations	220
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold20
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	10
+Max NB generations	220
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold20
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	10
+Max NB generations	220
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold20
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD2 replicate=0	seed=0	best_score=	on93.8776data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-12.08:13:39
+Training finished at : 2016-05-12.08:13:52 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	0 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	10
+Max NB generations	220
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold20
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on91.3043data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-12.08:41:17
+Training finished at : 2016-05-12.08:41:23 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	0 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	10
+Max NB generations	220
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold20
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	10
+Max NB generations	220
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold20
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on93.8776data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-12.08:48:38
+Training finished at : 2016-05-12.08:48:45 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	0 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < 1.64029 then stop
+NB generations per fold100
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on94.1176data/breast-cancer-malignantOrBenign-data-transformed.csv
+------------------------------------
+Data-set		data/breast-cancer-recurrence-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < 1.30793 then stop
+NB generations per fold100
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD1 replicate=0	seed=0	best_score=	on100data/breast-cancer-recurrence-data-transformed.csv
+------------------------------------
+Data-set		data/haberman-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < 1.11521 then stop
+NB generations per fold100
+End of search space	3_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on73.6842data/haberman-data-transformed.csv
+Training started at  : 2016-05-12.09:03:45
+Training finished at : 2016-05-12.09:10:22 (to produce result data USING: 1 replicates and 3 data sets)
+experiment duration :	6 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		4
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < 1.64029 then stop
+NB generations per fold100
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD2 replicate=3	seed=30	best_score=	on92data/breast-cancer-malignantOrBenign-data-transformed.csv
+THREAD3 replicate=0	seed=0	best_score=	on92data/breast-cancer-malignantOrBenign-data-transformed.csv
+THREAD0 replicate=2	seed=20	best_score=	on94.1176data/breast-cancer-malignantOrBenign-data-transformed.csv
+THREAD1 replicate=1	seed=10	best_score=	on93.8776data/breast-cancer-malignantOrBenign-data-transformed.csv
+------------------------------------
+Data-set		data/breast-cancer-recurrence-data-transformed.csv
+NB replicates		4
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < 1.24864 then stop
+NB generations per fold100
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on88.8889data/breast-cancer-recurrence-data-transformed.csv
+THREAD1 replicate=3	seed=30	best_score=	on94.7368data/breast-cancer-recurrence-data-transformed.csv
+THREAD3 replicate=1	seed=10	best_score=	on100data/breast-cancer-recurrence-data-transformed.csv
+THREAD2 replicate=2	seed=20	best_score=	on100data/breast-cancer-recurrence-data-transformed.csv
+------------------------------------
+Data-set		data/haberman-data-transformed.csv
+NB replicates		4
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < 1.12787 then stop
+NB generations per fold100
+End of search space	3_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD2 replicate=3	seed=30	best_score=	on72.7273data/haberman-data-transformed.csv
+THREAD0 replicate=0	seed=0	best_score=	on72.7273data/haberman-data-transformed.csv
+THREAD1 replicate=1	seed=10	best_score=	on75data/haberman-data-transformed.csv
+THREAD3 replicate=2	seed=20	best_score=	on78.2609data/haberman-data-transformed.csv
+Training started at  : 2016-05-12.09:20:11
+Training finished at : 2016-05-12.09:42:47 (to produce result data USING: 4 replicates and 3 data sets)
+experiment duration :	22 minutes

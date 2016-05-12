@@ -233,6 +233,7 @@ double NeuralNet::get_f1_score(data_subset data_set) {
     unsigned int true_positives  = sum(sum(Predictions==1 && data_set.Y==1));
     unsigned int false_positives = sum(sum(Predictions==1 && data_set.Y==0));
     unsigned int false_negatives = sum(sum(Predictions==0 && data_set.Y==1));
+    
     if( !((true_positives + false_positives)==0 || (true_positives + false_negatives)==0)){
         precision =  ( (double) true_positives) / (true_positives + false_positives);
         recall    =  ( (double) true_positives) / (true_positives + false_negatives);

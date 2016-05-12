@@ -4,7 +4,8 @@
 
 using namespace std;
 
-// compile:  g++ main.cpp -o compiled_executable -larmadillo
+// compile:  $ g++ main.cpp -o compiled_executable -larmadillo
+// run    :  $ ./evolutionary_nets 64 # for 64 replicates
 int main(int argc, char** argv) {
     // default nb replicates
     unsigned int nb_replicates = 1;

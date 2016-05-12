@@ -1,330 +1,113 @@
 #!/usr/bin/octave -qf
 
-fprintf("Running plotter.");
+arg_list = argv ();
+filename = arg_list{1};
+data_set_name = arg_list{2};
+
+fprintf("Plotting curves based on file: \"%s\"\n" , filename);
 
 # load experimentation results
-load data/breast_cancer_malignantOrBenign_data_transformed_results.mat
-load data/breast_cancer_recurrence_data_transformed_results.mat
-load data/haberman_data_transformed_results.mat
-
+load("-text",filename);
 
 # write out plots in image directory
 cd 'images/';
 
-population_size	= breast_cancer_malignantOrBenign_data_transformed_results(1,9);
-nb_replicates   = breast_cancer_malignantOrBenign_data_transformed_results(1,end);
+population_size	= results(1,9);
+nb_replicates   = results(1,end);
 
-breastCancer_MalignantOrBenign_AVRG_CV_FITNESS = breast_cancer_malignantOrBenign_data_transformed_results(1,end-3)
-breastCancer_RecurrenceOrNot_AVRG_CV_FITNESS = breast_cancer_recurrence_data_transformed_results(1,end-3)
-haberman_AVRG_CV_FITNESS = haberman_data_transformed_results(1,end-3)
+AVRG_CV_FITNESS = results(1,end-3);
+AVRG_CV_ACC = results(1,end-2);
 
-breastCancer_MalignantOrBenign_AVRG_CV_ACC = breast_cancer_malignantOrBenign_data_transformed_results(1,end-2)
-breastCancer_RecurrenceOrNot_AVRG_CV_ACC = breast_cancer_recurrence_data_transformed_results(1,end-2)
-haberman_AVRG_CV_ACC = haberman_data_transformed_results(1,end-2)
-
-#
-#
-# PLOTTING DATA SET : HABERMAN
-#
-#
 
 #
 # TRAINING PERFS
 #
-align_right_haberman = haberman_data_transformed_results(end,1) - (haberman_data_transformed_results(end,1)/3) - 26;
-errorbar(haberman_data_transformed_results(:,1), haberman_data_transformed_results(:,4), err_haberman_data_transformed_results);
+align_right = results(end,1) - (results(end,1)/3) - 26;
+errorbar(results(:,1), results(:,4), err_results);
 hold on;
 grid on;
-plot(haberman_data_transformed_results(:,1),haberman_data_transformed_results(:,3), 'k', 'LineWidth', 1);
-plot(haberman_data_transformed_results(:,1),haberman_data_transformed_results(:,4), 'r', 'LineWidth', 1);
-plot(haberman_data_transformed_results(:,1),haberman_data_transformed_results(:,17), 'm', 'LineWidth', 1);
-axis([0, haberman_data_transformed_results(end,1), 0, 100]);
-title( strcat("Haberman's survival - population size : ", num2str(population_size), "[", num2str(nb_replicates), " replicates]"));
+plot(results(:,1),results(:,3),  'k', 'LineWidth', 1);
+plot(results(:,1),results(:,4),  'r', 'LineWidth', 1);
+plot(results(:,1),results(:,17), 'm', 'LineWidth', 1);
+axis([0, results(end,1), 0, 100]);
+title( strcat(data_set_name, " - population size : ", num2str(population_size), "[", num2str(nb_replicates), " replicates]"));
 legend('[Error amongst replicates] Corrected sample standard deviation','Prediction accuracy','F1 score of the best individual', 'F1 score of the ensemble', "location", "southeast");
 xlabel('Number of generations');
 ylabel('Performance of best individual on each cross-validation set');
-text(align_right_haberman, 46 , strcat("Average score on CV sets =", num2str(haberman_AVRG_CV_FITNESS)));
-text(align_right_haberman, 42 , strcat("Average acc on CV sets =", num2str(haberman_AVRG_CV_ACC)));
+text(align_right, 46 , strcat("Average score on CV sets =", num2str(AVRG_CV_FITNESS)));
+text(align_right, 42 , strcat("Average acc on CV sets =", num2str(AVRG_CV_ACC)));
 # add topology description
-text(align_right_haberman, 38 , "Final topology:");
-text(align_right_haberman, 34 , strcat("NB inputs            =", num2str(haberman_data_transformed_results(end,10))) );
-text(align_right_haberman, 30 , strcat("NB hidden units  =", num2str(haberman_data_transformed_results(end,11))) );
-text(align_right_haberman, 26 , strcat("NB outputs          =", num2str(haberman_data_transformed_results(end,12))) );
-text(align_right_haberman, 22 , strcat("NB hidden layers=", num2str(haberman_data_transformed_results(end,13))) );
-
-print -dpng 'haberman-performancesVSepochs.png';
+text(align_right, 38 , "Final topology:");
+text(align_right, 34 , strcat("NB inputs            =", num2str(results(end,10))) );
+text(align_right, 30 , strcat("NB hidden units  =", num2str(results(end,11))) );
+text(align_right, 26 , strcat("NB outputs          =", num2str(results(end,12))) );
+text(align_right, 22 , strcat("NB hidden layers=", num2str(results(end,13))) );
+"here"
+plot_name = strcat(data_set_name, "-performancesVSepochs.png")
+data_set_name
+print('-dpng', '-tiff', plot_name)
 hold off;
 
-plot(haberman_data_transformed_results(:,1),haberman_data_transformed_results(:,5), 'b', 'LineWidth', 1);
+plot(results(:,1),results(:,5), 'b', 'LineWidth', 1);
 hold on;
 grid on;
 legend('Mean Squared Error', "location", "northeast");
 xlabel('Number of generations');
 ylabel('MSE of best individual on each cross-validation set');
-print -dpng 'haberman-MSEVSepochs.png';
+plot_name = strcat(data_set_name, "-MSEVSepochs.png");
+print('-dpng', '-tiff', plot_name);
 hold off;
 
 #
 # POPULATION SCORE STATS
 #
 
-plot(haberman_data_transformed_results(:,1), haberman_data_transformed_results(:,5), 'b', 'LineWidth', 1);
+plot(results(:,1), results(:,5), 'b', 'LineWidth', 1);
 grid on;
 hold on;
-title("Haberman's survival - Variance of individuals's scores against nb generations");
+title(strcat(data_set_name, "Variance of individuals's scores against nb generations"));
 legend('Variance', "location", "northeast");
 xlabel('Number of generations');
 ylabel('Variance on validation-set');
-print -dpng 'haberman-varianceVSepochs.png';
+plot_name = strcat(data_set_name, "-varianceVSepochs.png");
+print('-dpng', '-tiff', plot_name);
 hold off;
 
-plot(haberman_data_transformed_results(:,1), haberman_data_transformed_results(:,6), 'b', 'LineWidth', 1);
+plot(results(:,1), results(:,6), 'b', 'LineWidth', 1);
 hold on;
 grid on;
-title("Haberman's survival - Standard deviation of individuals's scores against nb generations");
+title(strcat(data_set_name, " - Standard deviation of individuals's scores against nb generations"));
 legend('Standard deviation', "location", "northeast");
 xlabel('Number of generations');
 ylabel('Standard deviation on validation-set');
-print -dpng 'haberman-stddevVSepochs.png';
+plot_name = strcat(data_set_name, "-stddevVSepochs.png");
+print('-dpng', '-tiff', plot_name);
 hold off;
 
-plot(haberman_data_transformed_results(:,1), haberman_data_transformed_results(:,7), 'b', 'LineWidth', 1);
+plot(results(:,1), results(:,7), 'b', 'LineWidth', 1);
 hold on;
 grid on;
-title("Haberman's survival - Mean of individuals's scores against nb generations");
+title(strcat(data_set_name, " - Mean of individuals's scores against nb generations"));
 legend('Mean', "location", "southeast");
 xlabel('Number of generations');
 ylabel('Mean of population score on validation-set');
-print -dpng 'haberman-meanVSepochs.png';
+plot_name = strcat(data_set_name, "-meanVSepochs.png");
+print('-dpng', '-tiff', plot_name);
 hold off;
-
-
 
 
 #
 # LEARNING CURVES
 #
 #{
-plot(haberman_data_transformed_results_increasingly_large_training_set(:,1),haberman_data_transformed_results_increasingly_large_training_set(:,2), 'r');
+plot(results_increasingly_large_training_set(:,1),results_increasingly_large_training_set(:,2), 'r');
 hold on;
-title("Haberman's survival - Learning curves");
-plot(haberman_data_transformed_results_increasingly_large_training_set(:,1),haberman_data_transformed_results_increasingly_large_training_set(:,4), 'b');
+title(strcat(data_set_name, " - Learning curves"));
+plot(results_increasingly_large_training_set(:,1),results_increasingly_large_training_set(:,4), 'b');
 legend('Error training-set', 'Error validation-set');
 xlabel('m (training set size)');
 ylabel('Error');
-print -dpng 'haberman-learning_curve-increasingly_large_training_set.png';
+plot_name = strcat(data_set_name, "-learning_curve-increasingly_large_training_set.png");
+print('-dpng', '-tiff', plot_name);
 hold off;
 #}
-
-
-
-
-
-#
-#
-# PLOTTING DATA SET : MALIGNANT OR BENIGN
-#
-#
-
-align_right_malignant = breast_cancer_malignantOrBenign_data_transformed_results(end,1) - (breast_cancer_malignantOrBenign_data_transformed_results(end,1)/3) - 26;
-#
-# TRAINING PERFS
-#
-errorbar(breast_cancer_malignantOrBenign_data_transformed_results(:,1),breast_cancer_malignantOrBenign_data_transformed_results(:,4), err_breast_cancer_malignantOrBenign_data_transformed_results);
-hold on;
-grid on;
-plot(breast_cancer_malignantOrBenign_data_transformed_results(:,1),breast_cancer_malignantOrBenign_data_transformed_results(:,3), 'r', 'LineWidth', 1);
-plot(breast_cancer_malignantOrBenign_data_transformed_results(:,1),breast_cancer_malignantOrBenign_data_transformed_results(:,4), 'k', 'LineWidth', 1);
-plot(breast_cancer_malignantOrBenign_data_transformed_results(:,1),breast_cancer_malignantOrBenign_data_transformed_results(:,17), 'm', 'LineWidth', 1);
-axis([0, breast_cancer_malignantOrBenign_data_transformed_results(end,1), 0, 100]);
-title( strcat("Breast cancer (Malignant?) - population size : ", num2str(population_size), "[", num2str(nb_replicates), " replicates]" ));
-legend('[Error amongst replicates] Corrected sample standard deviation', 'Prediction accuracy','F1 score of the best individual', 'F1 score of the ensemble', "location", "southeast");
-xlabel('Number of generations');
-ylabel('Performance of best individual on each cross-validation set');
-text(align_right_malignant, 46 , strcat("Average score on CV sets =", num2str(breastCancer_MalignantOrBenign_AVRG_CV_FITNESS)));
-text(align_right_malignant, 42 , strcat("Average acc on CV sets =", num2str(breastCancer_MalignantOrBenign_AVRG_CV_ACC)));
-# add topology description
-text(align_right_malignant, 38 , "Final topology:");
-text(align_right_malignant, 34 , strcat("NB inputs            =", num2str(breast_cancer_malignantOrBenign_data_transformed_results(end,10))) );
-text(align_right_malignant, 30 , strcat("NB hidden units  =", num2str(breast_cancer_malignantOrBenign_data_transformed_results(end,11))) );
-text(align_right_malignant, 25 , strcat("NB outputs          =", num2str(breast_cancer_malignantOrBenign_data_transformed_results(end,12))) );
-text(align_right_malignant, 22 , strcat("NB hidden layers=", num2str(breast_cancer_malignantOrBenign_data_transformed_results(end,13))) );
-print -dpng 'malignant-performancesVSepochs.png';
-hold off;
-
-#backprop_perfs = backprop_perfs(1:(size(breast_cancer_malignantOrBenign_data_transformed_results))(1),:);
-plot(breast_cancer_malignantOrBenign_data_transformed_results(:,1),breast_cancer_malignantOrBenign_data_transformed_results(:,2), 'b', 'LineWidth', 1);
-hold on;
-grid on;
-legend('Mean Squared Error', "location", "northeast");
-xlabel('Number of generations');
-ylabel('MSE of best individual on each cross-validation set');
-print -dpng 'malignant-MSEVSepochs.png';
-hold off;
-
-#
-# POPULATION SCORE STATS
-#
-
-plot(breast_cancer_malignantOrBenign_data_transformed_results(:,1), breast_cancer_malignantOrBenign_data_transformed_results(:,5), 'b', 'LineWidth', 1);
-hold on;
-grid on;
-title("Breast cancer (Malignant?) - Variance of individuals's scores against nb generations");
-legend('Variance', "location", "northeast");
-xlabel('Number of generations');
-ylabel('Variance on validation-set');
-print -dpng 'malignant-varianceVSepochs.png';
-hold off;
-
-plot(breast_cancer_malignantOrBenign_data_transformed_results(:,1), breast_cancer_malignantOrBenign_data_transformed_results(:,6), 'b', 'LineWidth', 1);
-hold on;
-grid on;
-title("Breast cancer (Malignant?) - Standard deviation of individuals's scores against nb generations");
-legend('Standard deviation', "location", "northeast");
-xlabel('Number of generations');
-ylabel('Standard deviation on validation-set');
-print -dpng 'malignant-stddevVSepochs.png';
-hold off;
-
-plot(breast_cancer_malignantOrBenign_data_transformed_results(:,1), breast_cancer_malignantOrBenign_data_transformed_results(:,7), 'b', 'LineWidth', 1);
-hold on;
-grid on;
-title("Breast cancer (Malignant?) - Mean of individuals's scores against nb generations");
-legend('Mean', "location", "southeast");
-xlabel('Number of generations');
-ylabel('Mean of population score on validation-set');
-print -dpng 'malignant-meanVSepochs.png';
-hold off;
-
-#{
-#
-# LEARNING CURVES DATA-SET SIZE
-#
-
-plot(MalignantOrBenign_results_increasingly_large_training_set(1,:),MalignantOrBenign_results_increasingly_large_training_set(:,2), 'r');
-hold on;
-title("Breast cancer (Malignant?) - Data-set Size Learning Curves");
-plot(MalignantOrBenign_results_increasingly_large_training_set(:,1),MalignantOrBenign_results_increasingly_large_training_set(:,4), 'b');
-legend('Error training-set', 'Error validation-set');
-xlabel('m (training set size)');
-ylabel('Error');
-print -dpng 'malignant-learning_curve-increasingly_large_training_set.png';
-hold off;
-
-fprintf('printing learning curves pop size');
-errorbar(pop_sizes(:,1), MalignantOrBenign_results_increasing_pop_size(:,1), err_MalignantOrBenign_results_increasing_pop_size);
-hold on;
-grid on;
-axis([0, pop_sizes(end,1), 0, 100]);
-title(strcat("Breast cancer (Malignant?) - Population Size Learning Curves", "[", num2str(nb_replicates), " replicates]"));
-legend('average F1 score of best individual on validation-set','[Error amongst replicates] Corrected Sample Standard Deviation', "location", "southeast");
-print -dpng 'malignant-learning_curve_pop_size.png';
-hold off;
-#}
-
-
-
-
-
-
-
-#
-#
-# PLOTTING DATA SET : RECCURENCE OR NOT
-#
-#
-
-
-
-#
-# TRAINING PERFS
-#
-
-align_right_recurrence = breast_cancer_recurrence_data_transformed_results(end,1)- (breast_cancer_recurrence_data_transformed_results(end,1)/3) - 26;
-errorbar(breast_cancer_recurrence_data_transformed_results(:,1),breast_cancer_recurrence_data_transformed_results(:,3), err_breast_cancer_recurrence_data_transformed_results);
-hold on;
-grid on;
-plot(breast_cancer_recurrence_data_transformed_results(:,1),breast_cancer_recurrence_data_transformed_results(:,3), 'r', 'LineWidth', 1);
-plot(breast_cancer_recurrence_data_transformed_results(:,1),breast_cancer_recurrence_data_transformed_results(:,4), 'k', 'LineWidth', 1);
-plot(breast_cancer_recurrence_data_transformed_results(:,1),breast_cancer_recurrence_data_transformed_results(:,17), 'm', 'LineWidth', 1);
-title( strcat("Breast cancer (Recurrence?) - population size : ", num2str(population_size), "[", num2str(nb_replicates), " replicates]"));
-axis([0, breast_cancer_recurrence_data_transformed_results(end,1), 0, 100]);
-legend('[Error amongst replicates] Corrected sample standard deviation','Prediction accuracy','F1 score of the best individual', 'F1 score of the ensemble', "location", "southeast");
-xlabel('Number of generations');
-ylabel('Performance of best individual on each cross-validation set');
-text(align_right_recurrence, 46 , strcat("Average score on CV sets =", num2str(breastCancer_RecurrenceOrNot_AVRG_CV_FITNESS)));
-text(align_right_recurrence, 42 , strcat("Average acc on CV sets =", num2str(breastCancer_RecurrenceOrNot_AVRG_CV_ACC)));
-# add topology description
-text(align_right_recurrence, 38 , "Final topology:");
-text(align_right_recurrence, 34 , strcat("NB inputs            =", num2str(breast_cancer_recurrence_data_transformed_results(end,10))) );
-text(align_right_recurrence, 30 , strcat("NB hidden units  =", num2str(breast_cancer_recurrence_data_transformed_results(end,11))) );
-text(align_right_recurrence, 26 , strcat("NB outputs          =", num2str(breast_cancer_recurrence_data_transformed_results(end,12))) );
-text(align_right_recurrence, 22 , strcat("NB hidden layers=", num2str(breast_cancer_recurrence_data_transformed_results(end,13))) );
-print -dpng 'recurrence-performancesVSepochs.png';
-hold off;
-
-
-
-plot(breast_cancer_recurrence_data_transformed_results(:,1),breast_cancer_recurrence_data_transformed_results(:,5), 'b', 'LineWidth', 1);
-hold on;
-grid on;
-legend('Mean Squared Error', "location", "northeast");
-xlabel('Number of generations');
-ylabel('MSE of best individual on each cross-validation set');
-print -dpng 'recurrence-MSEVSepochs.png';
-hold off;
-
-#
-# POPULATION SCORE STATS
-#
-
-plot(breast_cancer_recurrence_data_transformed_results(:,1), breast_cancer_recurrence_data_transformed_results(:,5), 'b', 'LineWidth', 1);
-hold on;
-grid on;
-title("Breast cancer (Recurrence?) - Variance of individuals's scores against nb generations");
-legend('Variance', "location", "northeast");
-xlabel('Number of generations');
-ylabel('Variance on validation-set');
-print -dpng 'recurrence-varianceVSepochs.png';
-hold off;
-
-plot(breast_cancer_recurrence_data_transformed_results(:,1), breast_cancer_recurrence_data_transformed_results(:,6), 'b', 'LineWidth', 2);
-hold on;
-grid on;
-title("Breast cancer (Recurrence?) - Standard deviation of individuals's scores against nb generations");
-legend('Standard deviation', "location", "northeast");
-xlabel('Number of generations');
-ylabel('Standard deviation on validation-set');
-print -dpng 'recurrence-stddevVSepochs.png';
-hold off;
-
-plot(breast_cancer_recurrence_data_transformed_results(:,1), breast_cancer_recurrence_data_transformed_results(:,7), 'b', 'LineWidth', 2);
-hold on;
-grid on;
-title("Breast cancer (Recurrence?) - Mean of individuals's scores against nb generations");
-legend('Mean', "location", "southeast");
-xlabel('Number of generations');
-ylabel('Mean of population score on validation-set');
-print -dpng 'recurrence-meanVSepochs.png';
-hold off;
-
-
-#
-# LEARNING CURVES
-#
-
-plot(breast_cancer_recurrence_data_transformed_results_increasingly_large_training_set(:,1),breast_cancer_recurrence_data_transformed_results_increasingly_large_training_set(:,2), 'r');
-hold on;
-grid on;
-title("Breast cancer (Recurrence?) - Learning curves");
-plot(breast_cancer_recurrence_data_transformed_results_increasingly_large_training_set(:,1),breast_cancer_recurrence_data_transformed_results_increasingly_large_training_set(:,4), 'b');
-legend('Error training-set', 'Error validation-set');
-xlabel('m (training set size)');
-ylabel('Error');
-print -dpng 'recurrence-learning_curve-increasingly_large_training_set.png';
-hold off;
-
-
-fprintf("terminated.\n")
-
-

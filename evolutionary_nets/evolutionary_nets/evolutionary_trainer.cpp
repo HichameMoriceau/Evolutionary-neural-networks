@@ -125,7 +125,7 @@ NeuralNet Evolutionary_trainer::cross_validation_training(Data_set data_set, net
     unsigned int pop_size = population.size();
     population = convert_population_to_nets(generate_random_topology_genome_population(pop_size,min_topo, max_topo));
 
-    cout << "running DE mutation scheme: " << selected_mutation_scheme << endl;
+    cout << "MUTATION SCHEME: " << selected_mutation_scheme << endl;
 
     // for each fold
     for(unsigned int k=0; k<nb_folds; ++k) {
