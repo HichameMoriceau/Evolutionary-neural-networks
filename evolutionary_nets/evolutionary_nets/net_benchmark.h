@@ -7,7 +7,8 @@
 #include "data_set.h"
 #include "neuralnet.h"
 #include "trainer.h"
-#include "evolutionary_trainer.h"
+#include "trainer_de.h"
+#include "trainer_pso.h"
 #include <thread>
 #include <chrono>
 #include <omp.h>
@@ -21,7 +22,6 @@ class Net_benchmark
 {
 
 private:
-
     unsigned int                nb_replicates;
 
     Data_set                    data_set;
@@ -30,7 +30,7 @@ private:
 
     net_topology                max_topo;
 
-    Evolutionary_trainer        evo_trainer;
+    Trainer_DE                  evo_trainer;
 
 /*
     // result file Octave variable names:

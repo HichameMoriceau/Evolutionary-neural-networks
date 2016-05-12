@@ -21,7 +21,7 @@ Net_benchmark::Net_benchmark() {
     set_topology(t);
 
     // instantiate optimization algorithms
-    evo_trainer       = Evolutionary_trainer();
+    evo_trainer       = Trainer_DE();
     experiment_file.open("experiment.txt", ios::app);
 }
 
@@ -45,7 +45,7 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
-    unsigned int mutation_scheme = MUTATION_SCHEME_RAND;
+    unsigned int mutation_scheme = MUTATION_SCHEME_BEST;
 
     evo_trainer.initialize_random_population(pop_size_GA, max_topo);
 
@@ -100,7 +100,7 @@ double Net_benchmark::find_termination_criteria_epsilon(unsigned int many_genera
     cout << "search termination criteria epsilon with " << many_generations << " generations"<< endl;
 
     // initial *generous* run of many generations
-    Evolutionary_trainer t;
+    Trainer_DE t;
     // force trainer to perform all epochs
     t.set_epsilon(-1);
     t.initialize_random_population(100, max_topo);
@@ -138,15 +138,10 @@ void Net_benchmark::train_topology(NeuralNet &evolved_net){
     double current_perf = 0;
     NeuralNet best_net;
     double best_perf = 0;
-
-    /*
-     * Use provided net topology as basis
-     */
     net_topology t = net.get_topology();
 
     // search best topology
     for(unsigned int i=0; i<nb_topology_sizes; ++i) {
-
         // set new topology
         t.nb_units_per_hidden_layer += 1;
         current_net.set_topology(t);
@@ -392,10 +387,6 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
 void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, string data_set_filename, vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_algorithm,double epsilon, unsigned int selected_mutation_scheme){
 
     // --- create copy of attributes ---
-    Evolutionary_trainer t;
-    t.set_nb_epochs(evo_trainer.get_nb_epochs());
-    t.set_epsilon(epsilon);
-    t.set_population(evo_trainer.get_population());
     Data_set d = data_set;
     net_topology max_t = max_topo;
     // --- ---
@@ -417,14 +408,35 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
     net = NeuralNet();
 
     NeuralNet trained_net;
+
+    Trainer_DE trainer_de;
+    Trainer_PSO trainer_pso;
+
     // train net up to largest topology using chosen trainer
     switch(selected_opt_algorithm){
         case OPTIMIZATION_ALG::DE:
-            trained_net = t.train_topology_plus_weights(d, max_t, results_score_evolution, selected_mutation_scheme);
+            // initialize optimization algorithm
+            trainer_de.set_nb_epochs(evo_trainer.get_nb_epochs());
+            trainer_de.set_epsilon(epsilon);
+            trainer_de.set_population(evo_trainer.get_population());
+
+            trained_net = trainer_de.train_topology_plus_weights(d, max_t, results_score_evolution, selected_mutation_scheme);
             break;
         case OPTIMIZATION_ALG::PSO:
-            trained_net = t.train_topology_plus_weights_PSO(d, max_t, results_score_evolution);
+            // initialize optimization algorithm
+            trainer_pso.set_nb_epochs(evo_trainer.get_nb_epochs());
+            trainer_pso.set_epsilon(epsilon);
+            trainer_pso.set_population(evo_trainer.get_population());
+            trained_net = trainer_pso.train_topology_plus_weights(d, max_t, results_score_evolution);
             break;
+        default:
+            // initialize optimization algorithm
+            trainer_de.set_nb_epochs(evo_trainer.get_nb_epochs());
+            trainer_de.set_epsilon(epsilon);
+            trainer_de.set_population(evo_trainer.get_population());
+
+            trained_net = trainer_de.train_topology_plus_weights(d, max_t, results_score_evolution, selected_mutation_scheme);
+
     }
 
     net = trained_net;
@@ -432,8 +444,8 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
     double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
 
     result_matrices_training_perfs.push_back(results_score_evolution);
-    cout            << "THREAD" << omp_get_thread_num() << " replicate=" << i << "\tseed=" << seed << "\tbest_score=" << "\ton" << best_score << data_set_filename << endl;
-    experiment_file << "THREAD" << omp_get_thread_num() << " replicate=" << i << "\tseed=" << seed << "\tbest_score=" << "\ton" << best_score << data_set_filename << endl;
+    cout            << "THREAD" << omp_get_thread_num() << " replicate=" << i << "\tseed=" << seed << "\tbest_score=" << "\t" << best_score << " on " << data_set_filename << endl;
+    experiment_file << "THREAD" << omp_get_thread_num() << " replicate=" << i << "\tseed=" << seed << "\tbest_score=" << "\t" << best_score << " on " << data_set_filename << endl;
 }
 
 mat Net_benchmark::compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme){
@@ -473,7 +485,7 @@ void Net_benchmark::compute_scores_task(unsigned int i, net_topology max_topo, v
     for(unsigned int p=1; tmp_pop_size<(max_pop_size*4); p++) {
 
         // --- create copy of attributes ---
-        Evolutionary_trainer t;
+        Trainer_DE t;
         t.set_epsilon(epsilon);
         t.set_nb_epochs(evo_trainer.get_nb_epochs());
         t.set_population(evo_trainer.get_population());

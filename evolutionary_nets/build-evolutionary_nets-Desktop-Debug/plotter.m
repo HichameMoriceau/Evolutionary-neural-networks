@@ -42,7 +42,7 @@ text(align_right, 34 , strcat("NB inputs            =", num2str(results(end,10))
 text(align_right, 30 , strcat("NB hidden units  =", num2str(results(end,11))) );
 text(align_right, 26 , strcat("NB outputs          =", num2str(results(end,12))) );
 text(align_right, 22 , strcat("NB hidden layers=", num2str(results(end,13))) );
-"here"
+
 plot_name = strcat(data_set_name, "-performancesVSepochs.png")
 data_set_name
 print('-dpng', '-tiff', plot_name)

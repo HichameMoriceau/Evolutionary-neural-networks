@@ -3,7 +3,7 @@
 
 #include "trainer.h"
 
-class Evolutionary_trainer : public Trainer
+class Trainer_DE : public Trainer
 {
 
 private:
@@ -13,16 +13,11 @@ private:
     double              epsilon = 1.0f;
 
 public:
-                        Evolutionary_trainer();
+                        Trainer_DE();
 
-    // various overloaded methods for convenience
     void                train(Data_set data_set, NeuralNet &net);
 
     void                train(Data_set data_set, NeuralNet &net, mat &results_score_evolution);
-
-    void                train_PSO(Data_set data_set, NeuralNet &net, mat &results_score_evolution);
-
-
 
     void                train_weights(data_subset training_set, data_subset validation_set, NeuralNet &net, unsigned int nb_epochs, mat &results_score_evolution);
 
@@ -74,9 +69,6 @@ private:
 
     double              clip(double n, double min, double max);
 
-                        // single iteration of Particle Swarm Optimization
-    void                PSO_topology_evolution(vector<vec> &pop, vector<vec> &velocities, data_subset training_set, net_topology max_topo, vector<NeuralNet> &pBest, NeuralNet gBest, double pop_score_variance);
-
     double              mutation_scheme_DE_rand_1(double F, double x_rand_1, double x_rand_2, double x_rand_3);
 
     vector<NeuralNet>   convert_population_to_nets(vector<vec> genome_population);
@@ -108,13 +100,7 @@ public:
 
     void                set_epsilon(double e);
 
-    NeuralNet           train_topology_plus_weights_PSO(Data_set data_set, net_topology max_topo, mat &results_score_evolution);
-
-    NeuralNet           cross_validation_training_PSO(Data_set data_set, net_topology min_topo, net_topology max_topo, mat &results_score_evolution, double &avrg_score, double &avrg_acc);
-
     double              f_rand(double fMin, double fMax);
-
-    NeuralNet           evolve_through_PSO(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_epochs, mat &results_score_evolution, unsigned int index_cross_validation_section);
 };
 
 #endif // EVOLUTIONARY_TRAINER_H
