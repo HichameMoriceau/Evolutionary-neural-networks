@@ -29,6 +29,66 @@ Net_benchmark::~Net_benchmark(){
     experiment_file.close();
 }
 
+void Net_benchmark::run_benchmark(unsigned int nb_rep) {
+    nb_replicates  = nb_rep;
+    // set end of search space
+    max_topo.nb_input_units             = data_set.training_set.X.n_cols;
+    max_topo.nb_output_units            = 1;
+    max_topo.nb_hidden_layers           = 2;
+    max_topo.nb_units_per_hidden_layer  = max_topo.nb_input_units * 4;
+
+    unsigned int pop_size_GA = 50;
+    unsigned int nb_generations_GA = 100;
+    unsigned int total_nb_data_sets = 1;
+
+    unsigned int selected_opt_alg = OPTIMIZATION_ALG::DE;
+
+    unsigned int MUTATION_SCHEME_RAND = 0;
+    unsigned int MUTATION_SCHEME_BEST = 1;
+    unsigned int mutation_scheme = MUTATION_SCHEME_RAND;
+
+    evo_trainer.initialize_random_population(pop_size_GA, max_topo);
+
+    vector<string> data_set_filenames;
+    //data_set_filenames.push_back("data/iris-data-transformed.csv");
+    data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
+    data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
+    data_set_filenames.push_back("data/haberman-data-transformed.csv");
+
+    string start_time_str = get_current_date_time();
+    auto start_time = system_clock::now();
+    // for each data-set
+    for(unsigned int i=0; i<total_nb_data_sets; i++) {
+        cout << "using data set " << data_set_filenames[i] << endl;
+        // use data requested by user
+        data_set.select_data_set(data_set_filenames[i]);
+        // set largest topology
+        max_topo.nb_input_units = data_set.training_set.X.n_cols;
+        max_topo.nb_units_per_hidden_layer = 10;
+        max_topo.nb_output_units = 1;//data_set.find_nb_prediction_classes(data_set.data);
+        max_topo.nb_hidden_layers = 1;
+
+        // 500 epochs in total is often more than enough
+        double epsilon = -1;//find_termination_criteria_epsilon(200);
+        // save results of cross-validated training
+        train_net_and_save_performances(pop_size_GA, nb_generations_GA, selected_opt_alg, epsilon, mutation_scheme);
+    }
+    auto end_time = system_clock::now();
+    string end_time_str = get_current_date_time();
+    auto experiment_duration = duration_cast<std::chrono::minutes>(end_time-start_time).count();
+
+    cout << endl
+         << "Training started at  : " << start_time_str << endl
+         << "Training finished at : " << end_time_str << " to produce result data "
+         << "USING: " << nb_replicates << " replicates and " << total_nb_data_sets << " data sets)" << endl
+         << "experiment duration :\t" << experiment_duration << " minutes" << endl;
+
+    experiment_file << "Training started at  : " << start_time_str << endl
+                    << "Training finished at : " << end_time_str << " (to produce result data "
+                    << "USING: " << nb_replicates << " replicates and " <<total_nb_data_sets << " data sets)" << endl
+                    << "experiment duration :\t" << experiment_duration << " minutes" << endl;
+}
+
 double Net_benchmark::find_termination_criteria_epsilon(unsigned int many_generations) {
     net_topology min_topo;
     min_topo.nb_input_units = max_topo.nb_input_units;
@@ -67,64 +127,6 @@ double Net_benchmark::find_termination_criteria_epsilon(unsigned int many_genera
          << "highest variance = " << highest_variance << "\tepsilon = " << epsilon << endl
          << "***" << endl;
     return epsilon;
-}
-
-void Net_benchmark::run_benchmark(unsigned int nb_rep) {
-    nb_replicates  = nb_rep;
-    // set end of search space
-    max_topo.nb_input_units             = data_set.training_set.X.n_cols;
-    max_topo.nb_output_units            = 1;
-    max_topo.nb_hidden_layers           = 2;
-    max_topo.nb_units_per_hidden_layer  = max_topo.nb_input_units * 4;
-
-    unsigned int pop_size_GA = 50;
-    unsigned int nb_generations_GA = 100;
-    unsigned int total_nb_data_sets = 3;
-
-    unsigned int MUTATION_SCHEME_RAND = 0;
-    unsigned int MUTATION_SCHEME_BEST = 1;
-    unsigned int mutation_scheme = MUTATION_SCHEME_RAND;
-
-    evo_trainer.initialize_random_population(pop_size_GA, max_topo);
-
-    vector<string> data_set_filenames;
-    //data_set_filenames.push_back("data/iris-data-transformed.csv");
-    data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
-    data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
-    data_set_filenames.push_back("data/haberman-data-transformed.csv");
-
-    string start_time_str = get_current_date_time();
-    auto start_time = system_clock::now();
-    // for each data-set
-    for(unsigned int i=0; i<total_nb_data_sets; i++) {
-        cout << "using data set " << data_set_filenames[i] << endl;
-        // use data requested by user
-        data_set.select_data_set(data_set_filenames[i]);
-        // set largest topology
-        max_topo.nb_input_units = data_set.training_set.X.n_cols;
-        max_topo.nb_units_per_hidden_layer = 10;
-        max_topo.nb_output_units = 1;//data_set.find_nb_prediction_classes(data_set.data);
-        max_topo.nb_hidden_layers = 1;
-
-        // 500 epochs in total is often more than enough
-        double epsilon = find_termination_criteria_epsilon(200);
-        // save results of cross-validated training
-        train_net_and_save_performances(pop_size_GA, nb_generations_GA, epsilon, mutation_scheme);
-    }
-    auto end_time = system_clock::now();
-    string end_time_str = get_current_date_time();
-    auto experiment_duration = duration_cast<std::chrono::minutes>(end_time-start_time).count();
-
-    cout << endl
-         << "Training started at  : " << start_time_str << endl
-         << "Training finished at : " << end_time_str << " to produce result data "
-         << "USING: " << nb_replicates << " replicates and " << total_nb_data_sets << " data sets)" << endl
-         << "experiment duration :\t" << experiment_duration << " minutes" << endl;
-
-    experiment_file << "Training started at  : " << start_time_str << endl
-                    << "Training finished at : " << end_time_str << " (to produce result data "
-                    << "USING: " << nb_replicates << " replicates and " <<total_nb_data_sets << " data sets)" << endl
-                    << "experiment duration :\t" << experiment_duration << " minutes" << endl;
 }
 
 // returns the net with the best score from a population of nets trained with various topologies
@@ -296,7 +298,7 @@ double Net_benchmark::corrected_sample_std_dev(mat score_vector){
     return s;
 }
 
-void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, unsigned int nb_generations_GA, double epsilon, unsigned int selected_mutation_scheme) {
+void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, unsigned int nb_generations_GA, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme) {
 
     set_topology(max_topo);
     evo_trainer.set_nb_epochs(nb_generations_GA);
@@ -332,7 +334,7 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
     // PERFORMANCES DURING TRAINING
     //
     vector<mat> result_matrices_training_perfs;
-    mat averaged_performances   = compute_learning_curves_perfs(result_matrices_training_perfs, epsilon, selected_mutation_scheme);
+    mat averaged_performances   = compute_learning_curves_perfs(result_matrices_training_perfs, selected_opt_alg, epsilon, selected_mutation_scheme);
     mat err_perfs               = compute_replicate_error(result_matrices_training_perfs);
 
     // save results
@@ -387,7 +389,7 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
     */
 }
 
-void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, string data_set_filename, vector<mat> &result_matrices_training_perfs, double epsilon, unsigned int selected_mutation_scheme){
+void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, string data_set_filename, vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_algorithm,double epsilon, unsigned int selected_mutation_scheme){
 
     // --- create copy of attributes ---
     Evolutionary_trainer t;
@@ -412,14 +414,19 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
     std::srand(seed);
 
     // reset net
-    #pragma omp critical
     net = NeuralNet();
 
-    // train net up to largest topology
-    NeuralNet trained_net = t.train_topology_plus_weights(d, max_t, results_score_evolution, selected_mutation_scheme);
-    //NeuralNet trained_net = t.train_topology_plus_weights_PSO(d, max_t, results_score_evolution);
+    NeuralNet trained_net;
+    // train net up to largest topology using chosen trainer
+    switch(selected_opt_algorithm){
+        case OPTIMIZATION_ALG::DE:
+            trained_net = t.train_topology_plus_weights(d, max_t, results_score_evolution, selected_mutation_scheme);
+            break;
+        case OPTIMIZATION_ALG::PSO:
+            trained_net = t.train_topology_plus_weights_PSO(d, max_t, results_score_evolution);
+            break;
+    }
 
-    #pragma omp critical
     net = trained_net;
     // print-out best perfs
     double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
@@ -429,7 +436,7 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
     experiment_file << "THREAD" << omp_get_thread_num() << " replicate=" << i << "\tseed=" << seed << "\tbest_score=" << "\ton" << best_score << data_set_filename << endl;
 }
 
-mat Net_benchmark::compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, double epsilon, unsigned int selected_mutation_scheme){
+mat Net_benchmark::compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme){
     // return variable
     mat averaged_performances;
 
@@ -441,7 +448,7 @@ mat Net_benchmark::compute_learning_curves_perfs(vector<mat> &result_matrices_tr
         {
             for(unsigned int i=0; i<nb_replicates; ++i) {
                 #pragma omp task
-                training_task(i, nb_replicates, data_set.data_set_filename, result_matrices_training_perfs, epsilon, selected_mutation_scheme);
+                training_task(i, nb_replicates, data_set.data_set_filename, result_matrices_training_perfs, selected_opt_alg, epsilon, selected_mutation_scheme);
             }
         }
     }

@@ -15,6 +15,8 @@
 using namespace std;
 using namespace chrono;
 
+enum OPTIMIZATION_ALG{ DE = 0, PSO = 1};
+
 class Net_benchmark
 {
 
@@ -53,9 +55,9 @@ public:
                 // dtor
                 ~Net_benchmark();
 
-   double       find_termination_criteria_epsilon(unsigned int many_generations);
-
    void         run_benchmark(unsigned int nb_rep);
+
+   double       find_termination_criteria_epsilon(unsigned int many_generations);
 
    void         train_topology(NeuralNet &net);
 
@@ -89,11 +91,11 @@ private:
     * @param nb_generations_GA  Maximum number of generations for the Genetic Algorithm
     * @param epsilon            Value of variance of the score of all individuals when Genetic Algorithm has converged
     */
-   void         train_net_and_save_performances(unsigned int pop_size_GA, unsigned int nb_generations_GA, double epsilon, unsigned int selected_mutation_scheme);
+   void         train_net_and_save_performances(unsigned int pop_size_GA, unsigned int nb_generations_GA, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme);
 
-   void         training_task(unsigned int i, unsigned int nb_replicates, string data_set_filename, vector<mat> &result_matrices_training_perfs, double epsilon, unsigned int selected_mutation_scheme);
+   void         training_task(unsigned int i, unsigned int nb_replicates, string data_set_filename, vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_algorithm, double epsilon, unsigned int selected_mutation_scheme);
 
-   mat          compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, double epsilon, unsigned int selected_mutation_scheme);
+   mat          compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme);
 
    void         compute_scores_task(unsigned int i, net_topology max_topo, vector<mat> &replicated_results, mat &pop_sizes, double epsilon, unsigned int selected_mutation_scheme);
 

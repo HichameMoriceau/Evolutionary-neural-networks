@@ -538,3 +538,27 @@ THREAD3 replicate=2	seed=20	best_score=	on78.2609data/haberman-data-transformed.
 Training started at  : 2016-05-12.09:20:11
 Training finished at : 2016-05-12.09:42:47 (to produce result data USING: 4 replicates and 3 data sets)
 experiment duration :	22 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	on94.1176data/breast-cancer-malignantOrBenign-data-transformed.csv
+Training started at  : 2016-05-12.10:14:51
+Training finished at : 2016-05-12.10:18:07 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	3 minutes
