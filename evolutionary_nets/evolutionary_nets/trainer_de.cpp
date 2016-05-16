@@ -124,17 +124,18 @@ NeuralNet Trainer_DE::cross_validation_training(Data_set data_set, net_topology 
     for(unsigned int k=0; k<nb_folds; ++k) {
         cout << "Using validation-set" << k << " of" << nb_folds-1 << endl;
         data_set.subdivide_data_cross_validation(k, nb_folds);
-
         // make sure topology is adequate to data-set
         max_topo.nb_input_units = data_set.training_set.X.n_cols;
-        max_topo.nb_output_units = 1;
+        //max_topo.nb_output_units = 1;
 
         // insert model trained on previous CV section in pop
         insert_individual(tmp_net);
 
         // empty temporary result matrix
         tmp_results_perfs.reset();
+        cout << "test0" << endl;
         tmp_net = evolve_through_generations(data_set, min_topo, max_topo, nb_epochs, tmp_results_perfs, k, selected_mutation_scheme);
+        cout << "test1" << endl;
 
         // update best model
         cross_validated_net.set_topology(tmp_net.get_topology());

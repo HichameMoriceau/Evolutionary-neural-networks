@@ -44,7 +44,7 @@ mat NeuralNet::forward_propagate(mat X) {
         // compute Z
         Zs[i+1] = As[i] * (Thetas[i]).t();
         // compute A
-        prev_activation = sigmoid_matrix( Zs[i+1]);
+        prev_activation = sigmoid_matrix(Zs[i+1]);
     }
     // memorize predictions
     H = As[total_nb_layers-1] = prev_activation;
@@ -151,7 +151,7 @@ vector<mat> NeuralNet::reshape_weights(){
     return Thetas;
 }
 
-void NeuralNet::save_net(ofstream &model_file){
+void NeuralNet::save_net(ofstream &model_file) {
     net_topology t = topology;
     // print topology
     model_file << "------ NET TOPOLOGY ------" << endl
@@ -204,16 +204,38 @@ net_topology NeuralNet::get_topology(){         return topology;  }
 
 void NeuralNet::set_topology(net_topology t) {  topology = t;     }
 
-double NeuralNet::get_accuracy( data_subset data_set) {
+double NeuralNet::get_accuracy(data_subset data_set) {
     //return variable
-    double computed_accuracy = 0.0f;
+    double computed_accuracy = 0;
 
     // make predictions over entire data-set
     mat H = forward_propagate(data_set.X);
     mat Predictions = round(H);
 
-    // compute average accuracy using expected results
-    computed_accuracy = (get_nb_identical_elements(Predictions.col(0), data_set.Y.col(0)) / double(data_set.X.n_rows)) * 100;
+    unsigned int nb_classes = topology.nb_output_units;
+
+    /*
+    if(nb_classes==1){
+        // compute average accuracy using expected results
+        computed_accuracy = (get_nb_identical_elements(Predictions.col(0), data_set.Y.col(0)) / double(data_set.X.n_rows)) * 100;
+    }else if(nb_classes>1){
+        computed_accuracy = ((get_nb_identical_elements(multiclass_formatted_output(Predictions), to_multiclass_output_format(data_set.Y))/nb_classes)/ double(data_set.X.n_rows)) * 100;
+    }
+    */
+
+    // generate confusion matrix
+    mat confusion_matrix(nb_classes, nb_classes);
+    for(unsigned int i=0; i<nb_classes; i++){
+        for(unsigned int j=0; j<nb_classes; j++){
+            confusion_matrix(j,i) = count_nb_identical_occurences(i,j, multiclass_formatted_output(H), to_multiclass_output_format(data_set.Y));
+        }
+    }
+    double TP =0;
+    for(unsigned int i=0; i<nb_classes; i++){
+        TP += confusion_matrix(i,i);
+    }
+    computed_accuracy = (TP/Predictions.n_rows)*100;
+
     // update neural network accuracy
     accuracy = computed_accuracy;
     // return computed accuracy
@@ -222,33 +244,111 @@ double NeuralNet::get_accuracy( data_subset data_set) {
 
 double NeuralNet::get_f1_score(data_subset data_set) {
     // number of correctly classified positives results divided by the number of all positive results
-    double precision = 0.0f;
+    double precision = 0;
     // number of correctly classified positives that were recalled (found)
-    double recall = 0.0f;
+    double recall = 0;
     // computed score is based on precision and recall
-    double computed_score = 0.0f;
+    double computed_score = 0;
     // perform predictions on provided data-set
     mat H = forward_propagate(data_set.X);
+    //H = H.rows(span(0,9));
     mat Predictions = round(H);
-    unsigned int true_positives  = sum(sum(Predictions==1 && data_set.Y==1));
-    unsigned int false_positives = sum(sum(Predictions==1 && data_set.Y==0));
-    unsigned int false_negatives = sum(sum(Predictions==0 && data_set.Y==1));
-    
-    if( !((true_positives + false_positives)==0 || (true_positives + false_negatives)==0)){
-        precision =  ( (double) true_positives) / (true_positives + false_positives);
-        recall    =  ( (double) true_positives) / (true_positives + false_negatives);
-        // compute score
-        computed_score = 2*((precision*recall) / (precision + recall));
-        // make score of same scale as accuracy (better for plotting)
-        computed_score = computed_score * 100;
+
+    unsigned int nb_classes = topology.nb_output_units;
+
+//    cout << "computing multi-class score (" << Predictions.n_rows << " examples here)" << endl;
+//    cout << "original Predictions:" << endl;
+//    cout << H << endl;
+//    cout << "Predictions:" << endl;
+//    cout << multiclass_formatted_output(H) << endl;
+//    cout << "Expected: " << endl;
+//    cout << to_multiclass_output_format(data_set.Y.rows(span(0,9))) << endl;
+    // generate confusion matrix
+    mat confusion_matrix(nb_classes, nb_classes);
+    for(unsigned int i=0; i<nb_classes; i++){
+        for(unsigned int j=0; j<nb_classes; j++){
+            confusion_matrix(j,i) = count_nb_identical_occurences(i,j, multiclass_formatted_output(H), to_multiclass_output_format(data_set.Y));
+        }
     }
-    // check for -NaN
-    if(computed_score != computed_score)
-        computed_score = 0;
+//    cout << "confusion matrix:" << endl;
+//    cout << confusion_matrix << endl;
+    vec scores(nb_classes);
+    // computing f1 score for each label
+    for(unsigned int i=0; i<nb_classes; i++){
+        double TP = confusion_matrix(i,i);
+        double TPplusFN = sum(confusion_matrix.col(i));
+        double TPplusFP = sum(confusion_matrix.row(i));
+        double tmp_precision=TP/TPplusFP;
+        double tmp_recall=TP/TPplusFN;
+        scores[i] = 2*((tmp_precision*tmp_recall)/(tmp_precision+tmp_recall));
+        // check for -NaN
+        if(scores[i] != scores[i])
+            scores[i] = 0;
+        computed_score += scores[i];
+    }
+//        cout << "corresponds to:" << endl;
+//        for(unsigned int i=0; i<nb_classes; i++){
+//            cout << scores[i] << " ";
+//        }
+//        cout << " (" << nb_classes << " classes) ";
+    // general f1 score = average of all classes score
+    computed_score = (computed_score/nb_classes)*100;
+
+//    cout << "avrg score = " << computed_score << endl;
+    //exit(0);
+
     // update net score
     score = computed_score;
     // return net score
     return score;
+}
+
+unsigned int NeuralNet::count_nb_identical_occurences(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations){
+    unsigned int count=0;
+    // for each example
+    for(unsigned int i=0; i<predictions.n_rows; i++){
+        if(predictions(i, predicted_class)==1 && expectations(i, expected_class)==1)
+            count++;
+    }
+    return count;
+}
+
+mat NeuralNet::multiclass_formatted_output(mat predictions){
+    unsigned int nb_classes = predictions.n_cols;
+    mat formatted_predictions(predictions.n_rows, nb_classes);
+    double highest_activation = 0;
+    // for each example
+    for(unsigned int i=0; i<predictions.n_rows; i++){
+        unsigned int index = 0;
+        highest_activation = 0;
+        // the strongest activation is considered the prediction
+        for(unsigned int j=0; j<nb_classes; j++){
+            if(predictions(i,j) > highest_activation){
+                highest_activation = predictions(i,j);
+                index = j;
+            }
+        }
+        mat tmp = zeros(1, nb_classes);
+        tmp(index) = 1;
+        //cout << "formatted prediction = " << endl << formatted_predictions << endl;
+        formatted_predictions.row(i) = tmp;
+    }
+//    cout << "predictions="<< endl;
+//    cout << predictions << endl;
+//    cout << "formatted predictions=" << endl;
+//    cout << formatted_predictions << endl;
+    return formatted_predictions;
+}
+
+mat NeuralNet::to_multiclass_output_format(mat expected_prediction){
+    unsigned int nb_classes = topology.nb_output_units;
+    mat formatted_exp_pred(expected_prediction.n_rows, nb_classes);
+    for(unsigned int i=0; i<expected_prediction.n_rows; i++) {
+        mat tmp = zeros(1, nb_classes);
+        tmp[expected_prediction[i]] = 1;
+        formatted_exp_pred.row(i) =  tmp;
+    }
+    return formatted_exp_pred;
 }
 
 double NeuralNet::get_matthews_correlation_coefficient(data_subset data_set){
@@ -307,4 +407,3 @@ unsigned int NeuralNet::get_nb_identical_elements(mat A, mat B){
                 ++count;
     return count;
 }
-
