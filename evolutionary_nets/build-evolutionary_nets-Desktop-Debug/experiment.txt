@@ -610,3 +610,1653 @@ THREAD0 replicate=0	seed=0	best_score=	96 on data/breast-cancer-malignantOrBenig
 Training started at  : 2016-05-12.12:14:28
 Training finished at : 2016-05-12.12:18:20 (to produce result data USING: 1 replicates and 1 data sets)
 experiment duration :	3 minutes
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_1_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD2 replicate=0	seed=0	best_score=	0.666667 on data/iris-data-transformed.csv
+Training started at  : 2016-05-13.08:35:36
+Training finished at : 2016-05-13.08:37:31 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	100 on data/iris-data-transformed.csv
+Training started at  : 2016-05-14.10:33:26
+Training finished at : 2016-05-14.10:34:34 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	1 minutes
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD3 replicate=0	seed=0	best_score=	100 on data/iris-data-transformed.csv
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD2 replicate=0	seed=0	best_score=	100 on data/breast-cancer-malignantOrBenign-data-transformed.csv
+------------------------------------
+Data-set		data/breast-cancer-recurrence-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD3 replicate=0	seed=0	best_score=	91.9444 on data/breast-cancer-recurrence-data-transformed.csv
+------------------------------------
+Data-set		data/haberman-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	3_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD3 replicate=0	seed=0	best_score=	82.2813 on data/haberman-data-transformed.csv
+Training started at  : 2016-05-14.10:36:16
+Training finished at : 2016-05-14.10:47:59 (to produce result data USING: 1 replicates and 4 data sets)
+experiment duration :	11 minutes
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	100 on data/wine-data-transformed.csv
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD2 replicate=0	seed=0	best_score=	100 on data/iris-data-transformed.csv
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD1 replicate=0	seed=0	best_score=	96.8056 on data/breast-cancer-malignantOrBenign-data-transformed.csv
+------------------------------------
+Data-set		data/breast-cancer-recurrence-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD2 replicate=0	seed=0	best_score=	100 on data/breast-cancer-recurrence-data-transformed.csv
+Training started at  : 2016-05-16.11:26:32
+Training finished at : 2016-05-16.11:36:57 (to produce result data USING: 1 replicates and 4 data sets)
+experiment duration :	10 minutes
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		4
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD3 replicate=2	seed=20	best_score=	100 on data/wine-data-transformed.csv
+THREAD2 replicate=1	seed=10	best_score=	100 on data/wine-data-transformed.csv
+THREAD1 replicate=3	seed=30	best_score=	100 on data/wine-data-transformed.csv
+THREAD0 replicate=0	seed=0	best_score=	100 on data/wine-data-transformed.csv
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		4
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD3 replicate=0	seed=0	best_score=	100 on data/iris-data-transformed.csv
+THREAD1 replicate=2	seed=20	best_score=	100 on data/iris-data-transformed.csv
+THREAD2 replicate=1	seed=10	best_score=	100 on data/iris-data-transformed.csv
+THREAD0 replicate=3	seed=30	best_score=	100 on data/iris-data-transformed.csv
+------------------------------------
+Data-set		data/breast-cancer-malignantOrBenign-data-transformed.csv
+NB replicates		4
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD2 replicate=0	seed=0	best_score=	98.4178 on data/breast-cancer-malignantOrBenign-data-transformed.csv
+THREAD3 replicate=3	seed=30	best_score=	96.8636 on data/breast-cancer-malignantOrBenign-data-transformed.csv
+THREAD1 replicate=1	seed=10	best_score=	100 on data/breast-cancer-malignantOrBenign-data-transformed.csv
+THREAD0 replicate=2	seed=20	best_score=	98.4178 on data/breast-cancer-malignantOrBenign-data-transformed.csv
+------------------------------------
+Data-set		data/breast-cancer-recurrence-data-transformed.csv
+NB replicates		4
+GA population size	50
+Max NB generations	1650
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold150
+End of search space	9_10_2_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		4
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD3 replicate=1	seed=10	best_score=	100 on data/wine-data-transformed.csv
+THREAD2 replicate=2	seed=20	best_score=	100 on data/wine-data-transformed.csv
+THREAD0 replicate=0	seed=0	best_score=	100 on data/wine-data-transformed.csv
+THREAD1 replicate=3	seed=30	best_score=	100 on data/wine-data-transformed.csv
+Training started at  : 2016-05-16.13:18:31
+Training finished at : 2016-05-16.13:29:03 (to produce result data USING: 4 replicates and 1 data sets)
+experiment duration :	10 minutes
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	20
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/wine-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	13_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	50
+Max NB generations	1100
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold100
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		1
+GA population size	40
+Max NB generations	550
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold50
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	100 on data/iris-data-transformed.csv
+Training started at  : 2016-05-16.15:01:05
+Training finished at : 2016-05-16.15:08:51 (to produce result data USING: 1 replicates and 1 data sets)
+experiment duration :	7 minutes
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		4
+GA population size	40
+Max NB generations	550
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold50
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD0 replicate=0	seed=0	best_score=	100 on data/iris-data-transformed.csv
+THREAD3 replicate=1	seed=10	best_score=	100 on data/iris-data-transformed.csv
+THREAD1 replicate=2	seed=20	best_score=	100 on data/iris-data-transformed.csv
+THREAD2 replicate=3	seed=30	best_score=	100 on data/iris-data-transformed.csv
+Training started at  : 2016-05-16.15:12:34
+Training finished at : 2016-05-16.15:16:23 (to produce result data USING: 4 replicates and 1 data sets)
+experiment duration :	3 minutes

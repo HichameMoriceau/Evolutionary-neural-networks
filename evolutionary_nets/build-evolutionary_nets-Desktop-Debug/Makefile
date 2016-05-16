@@ -51,14 +51,16 @@ SOURCES       = ../evolutionary_nets/main.cpp \
 		../evolutionary_nets/trainer.cpp \
 		../evolutionary_nets/net_benchmark.cpp \
 		../evolutionary_nets/trainer_de.cpp \
-		../evolutionary_nets/trainer_pso.cpp 
+		../evolutionary_nets/trainer_pso.cpp \
+		../evolutionary_nets/trainer_ais.cpp 
 OBJECTS       = main.o \
 		neuralnet.o \
 		data_set.o \
 		trainer.o \
 		net_benchmark.o \
 		trainer_de.o \
-		trainer_pso.o
+		trainer_pso.o \
+		trainer_ais.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/shell-unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -280,7 +282,7 @@ qmake_all: FORCE
 
 dist: 
 	@test -d .tmp/evolutionary_nets1.0.0 || mkdir -p .tmp/evolutionary_nets1.0.0
-	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/evolutionary_nets1.0.0/ && $(COPY_FILE) --parents ../evolutionary_nets/neuralnet.h ../evolutionary_nets/data_set.h ../evolutionary_nets/trainer.h ../evolutionary_nets/net_benchmark.h ../evolutionary_nets/trainer_de.h ../evolutionary_nets/trainer_pso.h .tmp/evolutionary_nets1.0.0/ && $(COPY_FILE) --parents ../evolutionary_nets/main.cpp ../evolutionary_nets/neuralnet.cpp ../evolutionary_nets/data_set.cpp ../evolutionary_nets/trainer.cpp ../evolutionary_nets/net_benchmark.cpp ../evolutionary_nets/trainer_de.cpp ../evolutionary_nets/trainer_pso.cpp .tmp/evolutionary_nets1.0.0/ && (cd `dirname .tmp/evolutionary_nets1.0.0` && $(TAR) evolutionary_nets1.0.0.tar evolutionary_nets1.0.0 && $(COMPRESS) evolutionary_nets1.0.0.tar) && $(MOVE) `dirname .tmp/evolutionary_nets1.0.0`/evolutionary_nets1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/evolutionary_nets1.0.0
+	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/evolutionary_nets1.0.0/ && $(COPY_FILE) --parents ../evolutionary_nets/neuralnet.h ../evolutionary_nets/data_set.h ../evolutionary_nets/trainer.h ../evolutionary_nets/net_benchmark.h ../evolutionary_nets/trainer_de.h ../evolutionary_nets/trainer_pso.h ../evolutionary_nets/trainer_ais.h .tmp/evolutionary_nets1.0.0/ && $(COPY_FILE) --parents ../evolutionary_nets/main.cpp ../evolutionary_nets/neuralnet.cpp ../evolutionary_nets/data_set.cpp ../evolutionary_nets/trainer.cpp ../evolutionary_nets/net_benchmark.cpp ../evolutionary_nets/trainer_de.cpp ../evolutionary_nets/trainer_pso.cpp ../evolutionary_nets/trainer_ais.cpp .tmp/evolutionary_nets1.0.0/ && (cd `dirname .tmp/evolutionary_nets1.0.0` && $(TAR) evolutionary_nets1.0.0.tar evolutionary_nets1.0.0 && $(COMPRESS) evolutionary_nets1.0.0.tar) && $(MOVE) `dirname .tmp/evolutionary_nets1.0.0`/evolutionary_nets1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/evolutionary_nets1.0.0
 
 
 clean:compiler_clean 
@@ -322,7 +324,8 @@ main.o: ../evolutionary_nets/main.cpp ../evolutionary_nets/net_benchmark.h \
 		../evolutionary_nets/neuralnet.h \
 		../evolutionary_nets/trainer.h \
 		../evolutionary_nets/trainer_de.h \
-		../evolutionary_nets/trainer_pso.h
+		../evolutionary_nets/trainer_pso.h \
+		../evolutionary_nets/trainer_ais.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../evolutionary_nets/main.cpp
 
 neuralnet.o: ../evolutionary_nets/neuralnet.cpp ../evolutionary_nets/neuralnet.h \
@@ -342,10 +345,14 @@ net_benchmark.o: ../evolutionary_nets/net_benchmark.cpp ../evolutionary_nets/net
 		../evolutionary_nets/neuralnet.h \
 		../evolutionary_nets/trainer.h \
 		../evolutionary_nets/trainer_de.h \
-		../evolutionary_nets/trainer_pso.h
+		../evolutionary_nets/trainer_pso.h \
+		../evolutionary_nets/trainer_ais.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o net_benchmark.o ../evolutionary_nets/net_benchmark.cpp
 
-trainer_de.o: ../evolutionary_nets/trainer_de.cpp 
+trainer_de.o: ../evolutionary_nets/trainer_de.cpp ../evolutionary_nets/trainer_de.h \
+		../evolutionary_nets/trainer.h \
+		../evolutionary_nets/neuralnet.h \
+		../evolutionary_nets/data_set.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o trainer_de.o ../evolutionary_nets/trainer_de.cpp
 
 trainer_pso.o: ../evolutionary_nets/trainer_pso.cpp ../evolutionary_nets/trainer_pso.h \
@@ -353,6 +360,12 @@ trainer_pso.o: ../evolutionary_nets/trainer_pso.cpp ../evolutionary_nets/trainer
 		../evolutionary_nets/neuralnet.h \
 		../evolutionary_nets/data_set.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o trainer_pso.o ../evolutionary_nets/trainer_pso.cpp
+
+trainer_ais.o: ../evolutionary_nets/trainer_ais.cpp ../evolutionary_nets/trainer_ais.h \
+		../evolutionary_nets/trainer.h \
+		../evolutionary_nets/neuralnet.h \
+		../evolutionary_nets/data_set.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o trainer_ais.o ../evolutionary_nets/trainer_ais.cpp
 
 ####### Install
 

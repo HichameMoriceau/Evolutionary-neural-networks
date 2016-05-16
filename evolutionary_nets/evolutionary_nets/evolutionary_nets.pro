@@ -20,7 +20,8 @@ SOURCES += main.cpp \
     trainer.cpp \
     net_benchmark.cpp \
     trainer_de.cpp \
-    trainer_pso.cpp
+    trainer_pso.cpp \
+    trainer_ais.cpp
 
 HEADERS += \
     neuralnet.h \
@@ -28,7 +29,8 @@ HEADERS += \
     trainer.h \
     net_benchmark.h \
     trainer_de.h \
-    trainer_pso.h
+    trainer_pso.h \
+    trainer_ais.h
 
 # arguments for linear algebra library on linux
 LIBS += -llapack -lblas -larmadillo

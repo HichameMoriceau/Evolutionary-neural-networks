@@ -9,6 +9,7 @@
 #include "trainer.h"
 #include "trainer_de.h"
 #include "trainer_pso.h"
+#include "trainer_ais.h"
 #include <thread>
 #include <chrono>
 #include <omp.h>
@@ -16,7 +17,7 @@
 using namespace std;
 using namespace chrono;
 
-enum OPTIMIZATION_ALG{ DE = 0, PSO = 1};
+enum OPTIMIZATION_ALG{ DE, PSO, AIS};
 
 class Net_benchmark
 {
@@ -32,21 +33,6 @@ private:
 
     Trainer_DE                  evo_trainer;
 
-/*
-    // result file Octave variable names:
-
-    string                      octave_variable_name_performances_VS_nb_epochs;
-
-    string                      octave_variable_name_cost_training_set_size;
-
-    string                      octave_variable_name_cost_validation_set_size;
-
-    string                      octave_variable_name_scores_pop_size;
-
-    string                      res_filename;
-
-    string                      data_set_filename;
-*/
     ofstream                    experiment_file;
 
 public:

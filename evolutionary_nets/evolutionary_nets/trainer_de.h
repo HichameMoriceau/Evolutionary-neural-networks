@@ -55,12 +55,23 @@ private:
 
     vector<vec>         generate_random_genome_population(unsigned int quantity, NeuralNet template_net);
 
+    /**
+     * @brief Evolutionary_trainer::generate_genome_population
+     * @param quantity pop size
+     * @param largest_net biggest possible network architecture
+     * @return A pop of random neural nets (represented as
+     *         vector : topology desc. followed by params) where
+     *         each neural net has a topology of smaller or equal
+     *         size to largest_net.
+     */
     vector<vec>         generate_random_topology_genome_population(unsigned int quantity, NeuralNet largest_net);
 
     vector<vec>         generate_random_topology_genome_population(unsigned int quantity, net_topology min_topo, net_topology max_topo);
 
     void                evaluate_population(vector<NeuralNet> &pop, data_subset d);
 
+    // algorithm : https://en.wikipedia.org/wiki/Differential_evolution#Algorithm
+    // mutation schemes : http://www.sciencedirect.com/science/article/pii/S0926985113001845
     void                differential_evolution(vector<NeuralNet> &population, data_subset data_set);
 
     void                differential_evolution_topology_evolution(vector<vec> &population, data_subset training_set, net_topology min_topo, net_topology max_topology, unsigned int selected_mutation_scheme);
@@ -71,6 +82,7 @@ private:
 
     double              mutation_scheme_DE_rand_1(double F, double x_rand_1, double x_rand_2, double x_rand_3);
 
+    // returns a vector of neural networks corresponding to the provided genomes
     vector<NeuralNet>   convert_population_to_nets(vector<vec> genome_population);
 
     vector<vec>         convert_population_to_genomes(vector<NeuralNet> net_pop, net_topology largest_topology);

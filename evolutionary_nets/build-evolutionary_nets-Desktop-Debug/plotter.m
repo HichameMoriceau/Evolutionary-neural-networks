@@ -4,7 +4,7 @@ arg_list = argv ();
 filename = arg_list{1};
 data_set_name = arg_list{2};
 
-fprintf("Plotting curves based on file: \"%s\"\n" , filename);
+fprintf("Plotting curves using \n\t->\"%s\"\n" , filename);
 
 # load experimentation results
 load("-text",filename);
@@ -43,8 +43,7 @@ text(align_right, 30 , strcat("NB hidden units  =", num2str(results(end,11))) );
 text(align_right, 26 , strcat("NB outputs          =", num2str(results(end,12))) );
 text(align_right, 22 , strcat("NB hidden layers=", num2str(results(end,13))) );
 
-plot_name = strcat(data_set_name, "-performancesVSepochs.png")
-data_set_name
+plot_name = strcat(data_set_name, "-performancesVSepochs.png");
 print('-dpng', '-tiff', plot_name)
 hold off;
 

@@ -28,7 +28,6 @@ void Trainer_AIS::train(Data_set data_set, NeuralNet &net, mat &results_score_ev
 }
 
 NeuralNet Trainer_AIS::train_topology_plus_weights(Data_set data_set, net_topology max_topo, mat &results_score_evolution, unsigned int selected_mutation_scheme) {
-    // return variable
     NeuralNet cross_validated_net;
     net_topology min_topo;
     min_topo.nb_input_units = max_topo.nb_input_units;
@@ -58,6 +57,7 @@ NeuralNet Trainer_AIS::cross_validation_training(Data_set data_set, net_topology
     cross_validated_net.set_topology(max_topo);
     mat tmp_results_perfs;
     mat perfs_cross_validation;
+
     unsigned int pop_size = population.size();
     population = convert_population_to_nets(generate_random_topology_genome_population(pop_size,min_topo, max_topo));
 
@@ -118,7 +118,6 @@ NeuralNet Trainer_AIS::cross_validation_training(Data_set data_set, net_topology
 }
 
 NeuralNet Trainer_AIS::evolve_through_generations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_epochs, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme) {
-    // return variable
     NeuralNet trained_model = population[0];
     mat new_line;
     // flag alerting that optimization algorithm has had ~ same results for the past 100 generations
@@ -438,7 +437,6 @@ double Trainer_AIS::compute_score_median(vector<vec> pop, data_subset data_set){
 }
 
 vector<NeuralNet> Trainer_AIS::generate_population(unsigned int pop_size, net_topology t, data_subset training_set) {
-    // return variable
     vector<NeuralNet> pop(pop_size);
     for(unsigned int i = 0 ; i < pop_size; ++i) {
         NeuralNet tmp_net(t);
@@ -450,7 +448,6 @@ vector<NeuralNet> Trainer_AIS::generate_population(unsigned int pop_size, net_to
 }
 
 vector<vec> Trainer_AIS::generate_random_genome_population(unsigned int quantity, NeuralNet largest_net) {
-    // return variable
     vector<vec> pop(quantity);
     for(unsigned int i = 0 ; i < quantity ; ++i) {
         // instantiate new random neural net with set topology
@@ -468,17 +465,7 @@ vector<vec> Trainer_AIS::generate_random_genome_population(unsigned int quantity
     return pop;
 }
 
-/**
- * @brief Evolutionary_trainer::generate_genome_population
- * @param quantity pop size
- * @param largest_net biggest possible network architecture
- * @return A pop of random neural nets (represented as
- *         vector : topology desc. followed by params) where
- *         each neural net has a topology of smaller or equal
- *         size to largest_net.
- */
 vector<vec> Trainer_AIS::generate_random_topology_genome_population(unsigned int quantity, NeuralNet largest_net) {
-    // return variable
     vector<vec> pop(quantity);
     for(unsigned int i = 0 ; i < quantity ; ++i) {
         // instantiate new random neural net with set topology
@@ -496,17 +483,7 @@ vector<vec> Trainer_AIS::generate_random_topology_genome_population(unsigned int
     return pop;
 }
 
-/**
- * @brief Evolutionary_trainer::generate_random_topology_genome_population
- * @param quantity pop size
- * @param min_topo smallest possible network architecture
- * @param max_topo biggest possible network architecture
- * @return A pop of random neural nets (represented as
- *         vector : topology desc. followed by params) where
- *         each neural net belong to the same species (between min_topo and max_topo).
- */
 vector<vec> Trainer_AIS::generate_random_topology_genome_population(unsigned int quantity, net_topology min_topo, net_topology max_topo) {
-    // return variable
     vector<vec> pop(quantity);
     for(unsigned int i = 0 ; i < quantity ; ++i) {
         // instantiate new random neural net with set topology
@@ -552,10 +529,8 @@ void Trainer_AIS::clonal_selection_topology_evolution(vector<vec> &pop, data_sub
     // -- --
 
     unsigned int genome_length = get_genome_length(max_topo);
-//    cout << "running AIS iteration" << endl;
 
     for(unsigned int j=0; j<pop.size()-1; ++j) {
-//        cout << "instantiating subpops" << endl;
         // instantiate subpopulations
         vector<vec>selected_indivs = select(selection_size, pop, training_set, max_topo);
         vector<vector<vec>>pop_clones;
@@ -568,11 +543,9 @@ void Trainer_AIS::clonal_selection_topology_evolution(vector<vec> &pop, data_sub
             pop_clones.push_back(generate_clones(nb_clones, selected_indivs[i]));
         }
 
-//        cout << "mutating" << endl;
         // hyper-mutate (using a DE/RAND/1 mutative-crossover operation)
         for(unsigned int i=0; i<pop_clones.size(); i++) {
             for(unsigned int j=0; j<pop_clones[i].size(); j++){
-
                 // select four random but different individuals from (pop)
                 // declare index variables
                 unsigned int index_x = generate_random_integer_between_range(1, pop.size() - 1);
@@ -612,9 +585,6 @@ void Trainer_AIS::clonal_selection_topology_evolution(vector<vec> &pop, data_sub
 
         // select n best solutions
         pop = select(selection_size, all_clones, training_set, max_topo);
-
-
-        //pop = replace(pop, pop_rand);
     }
     // update population
     population = convert_population_to_nets(pop);
@@ -634,7 +604,6 @@ vector<vec> Trainer_AIS::select(unsigned int quantity, vector<vec> pop, data_sub
     return convert_population_to_genomes(s_pop, max_topo);
 }
 
-// cloning is inversely proportional to affinity (fitness)
 vector<vec> Trainer_AIS::generate_clones(unsigned int nb_clones, vec indiv){
     vector<vec> cloned_pop;
     for(unsigned int i=0; i<nb_clones; i++){
@@ -723,7 +692,6 @@ double Trainer_AIS::mutation_scheme_DE_rand_1(double F, double x_rand_1, double 
 
 // returns a vector of neural networks corresponding to the provided genomes
 vector<NeuralNet> Trainer_AIS::convert_population_to_nets(vector<vec> genome_pop) {
-    // return variable
     vector<NeuralNet> pop;
     // convert genome pop into neural network pop
     for(unsigned int i=0; i<genome_pop.size(); ++i){
@@ -733,7 +701,6 @@ vector<NeuralNet> Trainer_AIS::convert_population_to_nets(vector<vec> genome_pop
 }
 
 vector<vec> Trainer_AIS::convert_population_to_genomes(vector<NeuralNet> net_pop, net_topology largest_topology){
-    // return variable
     vector<vec> genome_pop;
     for(unsigned int i=0; i<net_pop.size(); ++i) {
         genome_pop.push_back(get_genome(net_pop[i], largest_topology));
@@ -748,8 +715,7 @@ NeuralNet Trainer_AIS::get_best_model(vector<NeuralNet> pop){
 }
 
 NeuralNet Trainer_AIS::get_best_model(vector<vec> genome_pop) {
-    // return variable
-    vector<NeuralNet> pop;//(genome_pop.size());
+    vector<NeuralNet> pop;
     // convert genome pop into neural network pop
     pop = convert_population_to_nets(genome_pop);
     // sort pop according to score
@@ -760,7 +726,6 @@ NeuralNet Trainer_AIS::get_best_model(vector<vec> genome_pop) {
 vec Trainer_AIS::get_genome(NeuralNet net, net_topology max_topo) {
     // instantiate genome with largest possible size
     vec genome(get_genome_length(max_topo));
-
     // first four elements contain topology
     genome[0] = net.get_topology().nb_input_units;
     genome[1] = net.get_topology().nb_units_per_hidden_layer;
@@ -774,7 +739,6 @@ vec Trainer_AIS::get_genome(NeuralNet net, net_topology max_topo) {
 }
 
 NeuralNet Trainer_AIS::generate_net(vec genome){
-    // return variable
     NeuralNet net;
     net_topology topology;
     // retrieve topology
@@ -804,7 +768,6 @@ unsigned int Trainer_AIS::get_genome_length(net_topology t){
 unsigned int Trainer_AIS::get_population_size(){   return population.size();   }
 
 mat Trainer_AIS::get_population_scores(data_subset d){
-    // return variable
     mat scores;
     for(unsigned int i=0; i<population.size(); ++i) {
         mat tmp;

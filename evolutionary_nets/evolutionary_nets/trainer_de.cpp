@@ -498,7 +498,6 @@ double Trainer_DE::compute_score_median(vector<vec> pop, data_subset data_set){
 }
 
 vector<NeuralNet> Trainer_DE::generate_population(unsigned int pop_size, net_topology t, data_subset training_set) {
-    // return variable
     vector<NeuralNet> pop(pop_size);
     for(unsigned int i = 0 ; i < pop_size; ++i) {
         NeuralNet tmp_net(t);
@@ -510,7 +509,6 @@ vector<NeuralNet> Trainer_DE::generate_population(unsigned int pop_size, net_top
 }
 
 vector<vec> Trainer_DE::generate_random_genome_population(unsigned int quantity, NeuralNet largest_net) {
-    // return variable
     vector<vec> pop(quantity);
     for(unsigned int i = 0 ; i < quantity ; ++i) {
         // instantiate new random neural net with set topology
@@ -528,15 +526,6 @@ vector<vec> Trainer_DE::generate_random_genome_population(unsigned int quantity,
     return pop;
 }
 
-/**
- * @brief Evolutionary_trainer::generate_genome_population
- * @param quantity pop size
- * @param largest_net biggest possible network architecture
- * @return A pop of random neural nets (represented as
- *         vector : topology desc. followed by params) where
- *         each neural net has a topology of smaller or equal
- *         size to largest_net.
- */
 vector<vec> Trainer_DE::generate_random_topology_genome_population(unsigned int quantity, NeuralNet largest_net) {
     // return variable
     vector<vec> pop(quantity);
@@ -593,12 +582,8 @@ void Trainer_DE::evaluate_population(vector<NeuralNet> &pop, data_subset d) {
 }
 
 void Trainer_DE::differential_evolution(vector<NeuralNet> &pop, data_subset training_set){
-    // algorithm : https://en.wikipedia.org/wiki/Differential_evolution#Algorithm
-    // mutation schemes : http://www.sciencedirect.com/science/article/pii/S0926985113001845
-
-    unsigned int nb_element_vectorized_Theta = pop[0].get_total_nb_weights();
-
     // total nb weights
+    unsigned int nb_element_vectorized_Theta = pop[0].get_total_nb_weights();
     unsigned int problem_dimensionality = nb_element_vectorized_Theta;
     // Crossover Rate [0,1]
     double CR = 0.5;
@@ -667,7 +652,7 @@ void Trainer_DE::differential_evolution(vector<NeuralNet> &pop, data_subset trai
 void Trainer_DE::differential_evolution_topology_evolution(vector<vec> &pop, data_subset training_set, net_topology min_topo, net_topology max_topo, unsigned int selected_mutation_scheme){
     NeuralNet dummyNet(max_topo);
     unsigned int nb_element_vectorized_Theta = dummyNet.get_total_nb_weights() + 4;
-    // total nb of variables in data-set
+    // total nb of variables
     unsigned int problem_dimensionality = nb_element_vectorized_Theta;
     // Crossover Rate [0,1]
     double CR = 0.5;
@@ -708,7 +693,6 @@ void Trainer_DE::differential_evolution_topology_evolution(vector<vec> &pop, dat
 
         // if user selected a DE/BEST/1 mutation scheme
         if(selected_mutation_scheme == MUTATION_SCHEME_BEST){
-
             // use the best individual as first individual
             indiv_a = pop[0];
         }
@@ -809,9 +793,7 @@ double Trainer_DE::mutation_scheme_DE_rand_1(double F, double x_rand_1, double x
     return x_rand_1 + F * (x_rand_2 - x_rand_3);
 }
 
-// returns a vector of neural networks corresponding to the provided genomes
 vector<NeuralNet> Trainer_DE::convert_population_to_nets(vector<vec> genome_pop) {
-    // return variable
     vector<NeuralNet> pop;
     // convert genome pop into neural network pop
     for(unsigned int i=0; i<genome_pop.size(); ++i){
@@ -821,7 +803,6 @@ vector<NeuralNet> Trainer_DE::convert_population_to_nets(vector<vec> genome_pop)
 }
 
 vector<vec> Trainer_DE::convert_population_to_genomes(vector<NeuralNet> net_pop, net_topology largest_topology){
-    // return variable
     vector<vec> genome_pop;
     for(unsigned int i=0; i<net_pop.size(); ++i) {
         genome_pop.push_back(get_genome(net_pop[i], largest_topology));
@@ -836,7 +817,6 @@ NeuralNet Trainer_DE::get_best_model(vector<NeuralNet> pop){
 }
 
 NeuralNet Trainer_DE::get_best_model(vector<vec> genome_pop) {
-    // return variable
     vector<NeuralNet> pop;//(genome_pop.size());
     // convert genome pop into neural network pop
     pop = convert_population_to_nets(genome_pop);
@@ -848,7 +828,6 @@ NeuralNet Trainer_DE::get_best_model(vector<vec> genome_pop) {
 vec Trainer_DE::get_genome(NeuralNet net, net_topology max_topo) {
     // instantiate genome with largest possible size
     vec genome(get_genome_length(max_topo));
-
     // first four elements contain topology
     genome[0] = net.get_topology().nb_input_units;
     genome[1] = net.get_topology().nb_units_per_hidden_layer;
@@ -862,7 +841,6 @@ vec Trainer_DE::get_genome(NeuralNet net, net_topology max_topo) {
 }
 
 NeuralNet Trainer_DE::generate_net(vec genome){
-    // return variable
     NeuralNet net;
     net_topology topology;
     // retrieve topology
@@ -892,7 +870,6 @@ unsigned int Trainer_DE::get_genome_length(net_topology t){
 unsigned int Trainer_DE::get_population_size(){   return population.size();   }
 
 mat Trainer_DE::get_population_scores(data_subset d){
-    // return variable
     mat scores;
     for(unsigned int i=0; i<population.size(); ++i) {
         mat tmp;
@@ -902,14 +879,10 @@ mat Trainer_DE::get_population_scores(data_subset d){
     return scores;
 }
 
-double Trainer_DE::get_epsilon() const
-{
+double Trainer_DE::get_epsilon() const{
     return epsilon;
 }
 
-void Trainer_DE::set_epsilon(double e)
-{
+void Trainer_DE::set_epsilon(double e){
     epsilon = e;
 }
-
-

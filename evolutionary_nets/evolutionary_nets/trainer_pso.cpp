@@ -28,7 +28,6 @@ void Trainer_PSO::train(Data_set data_set, NeuralNet &net, mat &results_score_ev
 }
 
 NeuralNet Trainer_PSO::train_topology_plus_weights(Data_set data_set, net_topology max_topo, mat &results_score_evolution){
-    // return variable
     NeuralNet cross_validated_net;
     net_topology min_topo;
     min_topo.nb_input_units = max_topo.nb_input_units;
@@ -97,7 +96,6 @@ NeuralNet Trainer_PSO::cross_validation_training(Data_set data_set, net_topology
     mat perfs_entire_training_set;
     cross_validated_net = evolve_through_PSO(data_set, min_topo, max_topo, nb_epochs, perfs_entire_training_set, nb_folds);
 
-
     // compute the average score
     double total_accuracies=0;
     double total_scores=0;
@@ -123,7 +121,6 @@ NeuralNet Trainer_PSO::cross_validation_training(Data_set data_set, net_topology
 }
 
 NeuralNet Trainer_PSO::evolve_through_PSO(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_epochs, mat &results_score_evolution, unsigned int index_cross_validation_section) {
-    // return variable
     NeuralNet trained_model = population[0];
     double prediction_accuracy = 0.0f;
     double score = 0.0f;
@@ -423,7 +420,6 @@ double Trainer_PSO::compute_score_mean(vector<vec> pop, data_subset data_set){
         // round after two decimal places
         score_values(i) = (round(score_values(i)) * 100) / 100.0f;
     }
-
     // if mean =  NaN
     if(mean(score_values) != mean(score_values)){
         // display details error
@@ -464,7 +460,6 @@ double Trainer_PSO::compute_score_median(vector<vec> pop, data_subset data_set){
 }
 
 vector<NeuralNet> Trainer_PSO::generate_population(unsigned int pop_size, net_topology t, data_subset training_set) {
-    // return variable
     vector<NeuralNet> pop(pop_size);
     for(unsigned int i = 0 ; i < pop_size; ++i) {
         NeuralNet tmp_net(t);
@@ -476,7 +471,6 @@ vector<NeuralNet> Trainer_PSO::generate_population(unsigned int pop_size, net_to
 }
 
 vector<vec> Trainer_PSO::generate_random_genome_population(unsigned int quantity, NeuralNet largest_net) {
-    // return variable
     vector<vec> pop(quantity);
     for(unsigned int i = 0 ; i < quantity ; ++i) {
         // instantiate new random neural net with set topology
@@ -494,17 +488,7 @@ vector<vec> Trainer_PSO::generate_random_genome_population(unsigned int quantity
     return pop;
 }
 
-/**
- * @brief Evolutionary_trainer::generate_genome_population
- * @param quantity pop size
- * @param largest_net biggest possible network architecture
- * @return A pop of random neural nets (represented as
- *         vector : topology desc. followed by params) where
- *         each neural net has a topology of smaller or equal
- *         size to largest_net.
- */
 vector<vec> Trainer_PSO::generate_random_topology_genome_population(unsigned int quantity, NeuralNet largest_net) {
-    // return variable
     vector<vec> pop(quantity);
     for(unsigned int i = 0 ; i < quantity ; ++i) {
         // instantiate new random neural net with set topology
@@ -522,17 +506,7 @@ vector<vec> Trainer_PSO::generate_random_topology_genome_population(unsigned int
     return pop;
 }
 
-/**
- * @brief Evolutionary_trainer::generate_random_topology_genome_population
- * @param quantity pop size
- * @param min_topo smallest possible network architecture
- * @param max_topo biggest possible network architecture
- * @return A pop of random neural nets (represented as
- *         vector : topology desc. followed by params) where
- *         each neural net belong to the same species (between min_topo and max_topo).
- */
 vector<vec> Trainer_PSO::generate_random_topology_genome_population(unsigned int quantity, net_topology min_topo, net_topology max_topo) {
-    // return variable
     vector<vec> pop(quantity);
     for(unsigned int i = 0 ; i < quantity ; ++i) {
         // instantiate new random neural net with set topology
@@ -576,6 +550,7 @@ double Trainer_PSO::clip(double x, double min, double max) {
 void Trainer_PSO::PSO_topology_evolution(vector<vec> &pop, vector<vec> &velocities, data_subset training_set, net_topology max_topo, vector<NeuralNet> &pBest, NeuralNet gBest, double pop_score_variance){
     NeuralNet dummy_net(max_topo);
     unsigned int genome_size = dummy_net.get_total_nb_weights() + 4;
+
     // ** PSO settings **
     // velocity weight
     double w = 0.729;
@@ -595,7 +570,6 @@ void Trainer_PSO::PSO_topology_evolution(vector<vec> &pop, vector<vec> &velociti
             pBest[p] = generate_net(pop[p]);
         }
     }
-
     // update gBest
     vector<NeuralNet>tmp_pop = convert_population_to_nets(pop);
     for(unsigned int p=0; p<pop.size(); p++){
@@ -604,7 +578,6 @@ void Trainer_PSO::PSO_topology_evolution(vector<vec> &pop, vector<vec> &velociti
             gBest = tmp_pop[p];
         }
     }
-
     // for each particle
     for(unsigned int p=0; p<pop.size(); p++) {
         for(unsigned int i=0; i<genome_size; i++){
@@ -616,7 +589,6 @@ void Trainer_PSO::PSO_topology_evolution(vector<vec> &pop, vector<vec> &velociti
                     + c2*r2 * (gBest.get_params()[i]    - pop[p][i]);
             velocities[p][i] = clip(velocities[p][i], -5, 5);
         }
-
         vec particle = pop[p];
         // update particle data
         for(unsigned int i=0; i<genome_size; i++){
@@ -651,7 +623,6 @@ void Trainer_PSO::PSO_topology_evolution(vector<vec> &pop, vector<vec> &velociti
 
 // returns a vector of neural networks corresponding to the provided genomes
 vector<NeuralNet> Trainer_PSO::convert_population_to_nets(vector<vec> genome_pop) {
-    // return variable
     vector<NeuralNet> pop;
     // convert genome pop into neural network pop
     for(unsigned int i=0; i<genome_pop.size(); ++i){
@@ -661,7 +632,6 @@ vector<NeuralNet> Trainer_PSO::convert_population_to_nets(vector<vec> genome_pop
 }
 
 vector<vec> Trainer_PSO::convert_population_to_genomes(vector<NeuralNet> net_pop, net_topology largest_topology){
-    // return variable
     vector<vec> genome_pop;
     for(unsigned int i=0; i<net_pop.size(); ++i) {
         genome_pop.push_back(get_genome(net_pop[i], largest_topology));
@@ -676,7 +646,6 @@ NeuralNet Trainer_PSO::get_best_model(vector<NeuralNet> pop){
 }
 
 NeuralNet Trainer_PSO::get_best_model(vector<vec> genome_pop) {
-    // return variable
     vector<NeuralNet> pop;//(genome_pop.size());
     // convert genome pop into neural network pop
     pop = convert_population_to_nets(genome_pop);
@@ -688,7 +657,6 @@ NeuralNet Trainer_PSO::get_best_model(vector<vec> genome_pop) {
 vec Trainer_PSO::get_genome(NeuralNet net, net_topology max_topo) {
     // instantiate genome with largest possible size
     vec genome(get_genome_length(max_topo));
-
     // first four elements contain topology
     genome[0] = net.get_topology().nb_input_units;
     genome[1] = net.get_topology().nb_units_per_hidden_layer;
@@ -702,7 +670,6 @@ vec Trainer_PSO::get_genome(NeuralNet net, net_topology max_topo) {
 }
 
 NeuralNet Trainer_PSO::generate_net(vec genome){
-    // return variable
     NeuralNet net;
     net_topology topology;
     // retrieve topology
@@ -732,7 +699,6 @@ unsigned int Trainer_PSO::get_genome_length(net_topology t){
 unsigned int Trainer_PSO::get_population_size(){   return population.size();   }
 
 mat Trainer_PSO::get_population_scores(data_subset d){
-    // return variable
     mat scores;
     for(unsigned int i=0; i<population.size(); ++i) {
         mat tmp;

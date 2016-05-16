@@ -54,8 +54,27 @@ private:
 
     vector<vec>         generate_random_genome_population(unsigned int quantity, NeuralNet template_net);
 
+    /**
+     * @brief Evolutionary_trainer::generate_genome_population
+     * @param quantity pop size
+     * @param largest_net biggest possible network architecture
+     * @return A pop of random neural nets (represented as
+     *         vector : topology desc. followed by params) where
+     *         each neural net has a topology of smaller or equal
+     *         size to largest_net.
+     */
     vector<vec>         generate_random_topology_genome_population(unsigned int quantity, NeuralNet largest_net);
 
+
+    /**
+     * @brief Evolutionary_trainer::generate_random_topology_genome_population
+     * @param quantity pop size
+     * @param min_topo smallest possible network architecture
+     * @param max_topo biggest possible network architecture
+     * @return A pop of random neural nets (represented as
+     *         vector : topology desc. followed by params) where
+     *         each neural net belong to the same species (between min_topo and max_topo).
+     */
     vector<vec>         generate_random_topology_genome_population(unsigned int quantity, net_topology min_topo, net_topology max_topo);
 
     void                evaluate_population(vector<NeuralNet> &pop, data_subset d);
@@ -68,6 +87,7 @@ private:
 
     vector<vec>         select(unsigned int quantity, vector<vec> pop, data_subset training_set, net_topology max_topo);
 
+    // cloning is inversely proportional to affinity (fitness)
     vector<vec>         generate_clones(unsigned int nb_clones, vec indiv);
 
     unsigned int        compute_nb_clones(double beta, int pop_size, int index);
