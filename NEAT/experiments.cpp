@@ -143,7 +143,6 @@ Population *bc_test(int gens){
 
 bool bc_evaluate(Organism *org) {
   Network *net;
-  double out[4]; //The four outputs
   double this_out; //The current output
   int count;
   double errorsum;
@@ -198,6 +197,7 @@ bool bc_evaluate(Organism *org) {
   unsigned int width  = array[0].size()+1; // +1 for biasing
 
   double in[height][width];
+  double out[height]; 
 
   for(unsigned int i=0; i<height; i++){
     for(unsigned int j=0; j<width; j++){
@@ -208,34 +208,36 @@ bool bc_evaluate(Organism *org) {
     }
   }
 
-  /*
-  cout << "now show double array:" << endl;
+  /*  
+  cout<<"content of in[]"<<endl;
   for(unsigned int i=0; i<height; i++){
+    cout<< "i="<<i<<endl;
     for(unsigned int j=0; j<width; j++){
-      cout << in[i][j] << ", ";
+      cout << in[i][j] << " ";
     }
     cout << endl;
   }
-  */
+  */  
 
   iFile.close();
 
   net=org->net; 
   numnodes=((org->gnome)->nodes).size();
-  /*
-  cout<<"there are "<<numnodes<<" nodes"<<endl;
-  cout<<"check, in.size()="<<net->inputs.size()<<endl;
-  */
   net_depth=net->max_depth();
 
   //TEST CODE: REMOVE
   //cout<<"ACTIVATING: "<<org->gnome<<endl;
   //cout<<"DEPTH: "<<net_depth<<endl;
 
-  //cout<<"input array is"<<height<<"x"<<width<<endl;
+  /*
+  cout<<"in[]  is "<<height<<"x"<<width<<endl;
+  cout<<"out[] is "<<
+  cout<<"count="<<endl;
+  */
 
   //Load and activate the network on each input
-  for(count=0;count<=width;count++) {
+  for(count=0;count<height;count++){
+    //cout<<count<<" ";
     net->load_sensors(in[count]);
 
     //Relax net and get output
@@ -276,26 +278,23 @@ bool bc_evaluate(Organism *org) {
     }
 
     org->error=pow(height-true_pred,2);
-
+    
     if(org->error==0){
-      org->fitness=10000;
+      org->fitness=10000000;
       cout<<"error=0 (overfit?)"<<endl;
     }else{
       org->fitness=1/org->error;
     }
-
+    
     org->accuracy=(true_pred/double(height))*100;
 
-    cout<<"true_pred="<<true_pred<<" out of "<<height<<"="<<org->accuracy<<"%acc, err="<<org->error<<endl;
+    //cout<<"true_pred="<<true_pred<<" out of "<<height<<"="<<org->accuracy<<"%acc, err="<<org->error<<endl;
   }
   else {
     //The network is flawed (shouldnt happen)
     errorsum=999.0;
     org->fitness=0.001;
   }
-
-
-  //exit(0);
 
 
   /*
@@ -318,6 +317,7 @@ bool bc_evaluate(Organism *org) {
   }
   */
 
+  org->winner=false;
   return false;
 }
 
@@ -337,11 +337,8 @@ int bc_epoch(Population *pop,int generation,char *filename,int &winnernum,int &w
       cout<<"here0"<<endl;
       win=true;
       winnernum=(*curorg)->gnome->genome_id;
-      cout<<"here1"<<endl;
       winnergenes=(*curorg)->gnome->extrons();
-      cout<<"here2"<<endl;
       winnernodes=((*curorg)->gnome->nodes).size();
-      cout<<"here3"<<endl;
       if (winnernodes==5) {
 	//You could dump out optimal genomes here if desired
 	//(*curorg)->gnome->print_to_filename("xor_optimal");
