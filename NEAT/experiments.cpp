@@ -262,7 +262,15 @@ bool bc_evaluate(Organism *org) {
 
     // calculating Mean Squarred Error, MSE=(1/n)*sigma((pred-exp)^2)
     //errorsum=0;
-    unsigned int true_pred=0;
+
+    double p=-1;
+    double r=-1;
+    double score=-1;
+    unsigned int tp=0; // true  positives
+    unsigned int tn=0; // true  negatives
+    unsigned int fp=0; // false positives
+    unsigned int fn=0; // true  negatives
+
     for(unsigned int i=0; i<height; i++){
       double pred=out[i];
       double expe=in[i][width-2];
@@ -272,23 +280,37 @@ bool bc_evaluate(Organism *org) {
       else if(out[i]>=0.5)
 	pred=1;
       
-      if((pred)==(expe))
-	true_pred++;
-      //cout<<"ex"<<i<<" pred="<<pred<<", expe="<<expe<<" ,true_pred="<<true_pred<<endl;
+      if((pred==1)&&(expe==1))
+	tp++;
+      if((pred==0)&&(expe==0))
+	tn++;
+      if((pred==1)&&(expe==0))
+	fp++;
+      if((pred==0)&&(expe==1))
+	fn++;
+      //cout<<"ex"<<i<<" pred="<<pred<<", expe="<<expe<<" ,tp="<<tp<<endl;
     }
 
-    org->error=pow(height-true_pred,2);
-    
-    if(org->error==0){
-      org->fitness=10000000;
-      cout<<"error=0 (overfit?)"<<endl;
-    }else{
-      org->fitness=1/org->error;
-    }
-    
-    org->accuracy=(true_pred/double(height))*100;
+    if((tp+fp)!=0)
+      p=tp/(tp+fp); // Precision
+    else
+      p=0;
+    if((tp+fn)!=0)
+      r=tp/(tp+fn); // Recall
+    else
+      r=0;
 
-    //cout<<"true_pred="<<true_pred<<" out of "<<height<<"="<<org->accuracy<<"%acc, err="<<org->error<<endl;
+    if((p+r)!=0)
+      score=2*(p*r)/(p+r); // f1 score
+    else
+      score=0.0000123;
+
+
+    org->error=pow(height-(tp+tn), 2);
+    org->fitness=score;
+    org->accuracy=((tp+tn)/double(height))*100;
+    
+    cout<<"tp="<<tp<<", tn="<<tn<<", tp+tn="<<tp+tn<<" out of "<<height<<"="<<org->accuracy<<"%acc, err="<<org->error<<endl;
   }
   else {
     //The network is flawed (shouldnt happen)

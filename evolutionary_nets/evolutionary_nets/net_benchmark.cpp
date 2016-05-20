@@ -41,7 +41,7 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
     unsigned int nb_generations_GA = 50;
     unsigned int total_nb_data_sets = 1;
 
-    unsigned int selected_opt_alg = OPTIMIZATION_ALG::DE;
+    unsigned int selected_opt_alg = OPTIMIZATION_ALG::AIS;
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
@@ -337,7 +337,6 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
     averaged_performances = join_horiz(averaged_performances, ones(averaged_performances.n_rows,1) * nb_replicates);
 
     cout << "results written on " << data_set.result_filename.c_str() << endl;
-    cout << "apparently we have a " << averaged_performances.n_rows << "x" << averaged_performances.n_cols << endl;
 
     // save error amonst replicates
     print_results_octave_format(result_file, averaged_performances, "results"); // data_set.OCTAVE_perfs_VS_nb_epochs

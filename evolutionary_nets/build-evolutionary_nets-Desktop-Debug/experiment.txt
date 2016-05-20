@@ -2260,3 +2260,48 @@ THREAD2 replicate=3	seed=30	best_score=	100 on data/iris-data-transformed.csv
 Training started at  : 2016-05-16.15:12:34
 Training finished at : 2016-05-16.15:16:23 (to produce result data USING: 4 replicates and 1 data sets)
 experiment duration :	3 minutes
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		4
+GA population size	40
+Max NB generations	550
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold50
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		4
+GA population size	40
+Max NB generations	550
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold50
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		4
+GA population size	40
+Max NB generations	550
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold50
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+------------------------------------
+Data-set		data/iris-data-transformed.csv
+NB replicates		4
+GA population size	40
+Max NB generations	550
+GA Termination criterionif population score variance < -1 then stop
+NB generations per fold50
+End of search space	4_10_3_1 (nb inputs_units/layer_nb outputs_nb_hid.lay)
+------------------------------------
+
+
+THREAD2 replicate=2	seed=20	best_score=	100 on data/iris-data-transformed.csv
+THREAD0 replicate=0	seed=0	best_score=	100 on data/iris-data-transformed.csv
+THREAD1 replicate=3	seed=30	best_score=	100 on data/iris-data-transformed.csv
+THREAD3 replicate=1	seed=10	best_score=	100 on data/iris-data-transformed.csv
+Training started at  : 2016-05-17.11:33:02
+Training finished at : 2016-05-17.14:11:04 (to produce result data USING: 4 replicates and 1 data sets)
+experiment duration :	158 minutes

@@ -515,7 +515,7 @@ bool Population::epoch(int generation) {
   for(curorg=organisms.begin();curorg!=organisms.end();++curorg) {
     index++;
     total+=(*curorg)->fitness;
-    std::cout<<"organism "<<index<<" -(fitness:avrg) is ("<<(*curorg)->fitness<<":"<<(*curorg)->accuracy<<")"<<std::endl;
+    //std::cout<<"organism "<<index<<" -(fitness:acc:err) is ("<<(*curorg)->fitness<<":"<<(*curorg)->accuracy<<":"<<(*curorg)->error<<")"<<std::endl;
     all_fitnesses.push_back((*curorg)->fitness);
   }
   overall_average=total/total_organisms;
@@ -576,29 +576,30 @@ bool Population::epoch(int generation) {
   best_species_num=(*(sorted_species.begin()))->id;
 
   /*
-  for(curspecies=sorted_species.begin();curspecies!=sorted_species.end();++curspecies) {
-
+  for(curspecies=sorted_species.begin();curspecies!=sorted_species.end();++curspecies){
     //Print out for Debugging/viewing what's going on 
     std::cout<<"orig fitness of Species"<<(*curspecies)->id<<"(Size "<<(*curspecies)->organisms.size()<<"): "<<(*((*curspecies)->organisms).begin())->orig_fitness<<" last improved "<<((*curspecies)->age-(*curspecies)->age_of_last_improvement)<<std::endl;
   }
-*/
+  */
 
 
 
   //Check for Population-level stagnation
   curspecies=sorted_species.begin();
   (*(((*curspecies)->organisms).begin()))->pop_champ=true; //DEBUG marker of the best of pop
-  double highest_accuracy=((*(((*curspecies)->organisms).begin()))->accuracy);
+  double highest_accuracy=(*(((*curspecies)->organisms).begin()))->accuracy;
+  double lowest_err      =(*(((*curspecies)->organisms).begin()))->error;
   if (((*(((*curspecies)->organisms).begin()))->orig_fitness)>
       highest_fitness) {
-    highest_fitness=((*(((*curspecies)->organisms).begin()))->orig_fitness);
+    highest_fitness =((*(((*curspecies)->organisms).begin()))->orig_fitness);
     highest_accuracy=((*(((*curspecies)->organisms).begin()))->accuracy);
+    lowest_err      =((*(((*curspecies)->organisms).begin()))->error);
     highest_last_changed=0;
     std::cout<<"NEW POPULATION RECORD FITNESS: "<<highest_fitness<<", acc="<<highest_accuracy<<std::endl;
   }
   else {
     ++highest_last_changed;
-    std::cout<<highest_last_changed<<" generations since last population fitness record: "<<highest_fitness<<", acc="<<highest_accuracy<<std::endl;
+    std::cout<<highest_last_changed<<" generations since last population fitness record: "<<highest_fitness<<", acc="<<highest_accuracy<<", err="<<lowest_err<<" equ. "<<sqrt(lowest_err)<<" false preds"<<std::endl;
   }
 
   double variance=var(all_fitnesses);

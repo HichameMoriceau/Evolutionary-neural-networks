@@ -515,9 +515,9 @@ void Trainer_AIS::clonal_selection_topology_evolution(vector<vec> &pop, data_sub
     // Number of individuals retained
     unsigned int selection_size = pop.size()*100/100;
     // Number of random cells incorporated in the population for every generation
-    double nb_rand_cells = pop.size()*10/100;
+    unsigned int nb_rand_cells = (unsigned int)pop.size()*5/100;
     // Scaling factor
-    double clone_rate = 0.25;
+    double clone_rate = 0.15;
 
     // -- Differential Evolution settings (for mutation operation only) --
     // total nb of variables
@@ -613,7 +613,10 @@ vector<vec> Trainer_AIS::generate_clones(unsigned int nb_clones, vec indiv){
 }
 
 unsigned int Trainer_AIS::compute_nb_clones(double beta, int pop_size, int index){
-    return round((beta*pop_size)/index);
+    if (round((beta*pop_size)/index)>0)
+        return round((beta*pop_size)/index);
+    else
+        return 1;
 }
 
 vec Trainer_AIS::hypermutate(vec original, double mutation_rate){
