@@ -52,14 +52,7 @@ Population *bc_test(int gens){
        <<"# columns: "<< 17<<endl;
   oFile.close();
 
-
-
-
-
-
-  oFile.close();
-
-  ifstream iFile("xorstartgenes",ios::in);
+  ifstream iFile("bcstartgenes",ios::in);
 
   cout<<"START BREAST CANCER TEST"<<endl;
 
@@ -253,12 +246,7 @@ bool bc_evaluate(Organism *org) {
       success=net->activate();
       this_out=(*(net->outputs.begin()))->activation;
     }
-
-    // interpret net output
-    if((*(net->outputs.begin()))->activation<0.5)
-      out[count]=0;
-    else if((*(net->outputs.begin()))->activation>0.5)
-      out[count]=1;
+    out[count]=(*(net->outputs.begin()))->activation;
 
     net->flush();
   }
@@ -271,24 +259,34 @@ bool bc_evaluate(Organism *org) {
     */
 
     // calculating Mean Squarred Error, MSE=(1/n)*sigma((pred-exp)^2)
-    errorsum=0;
+    //errorsum=0;
     unsigned int true_pred=0;
     for(unsigned int i=0; i<height; i++){
-      double predicted=0;
-      double expected=in[i][width];
-
-      predicted=out[i];
-      errorsum+=pow(predicted - expected,2);
-
-      if(predicted==expected)
+      double pred=out[i];
+      double expe=in[i][width-2];
+      
+      if(out[i]<0.5)
+	pred=0;
+      else if(out[i]>=0.5)
+	pred=1;
+      
+      if((pred)==(expe))
 	true_pred++;
-      //cout<<"pred="<<predicted<<", expect="<<expected<<", true_pred="<<true_pred<<endl;
+      //cout<<"ex"<<i<<" pred="<<pred<<", expe="<<expe<<" ,true_pred="<<true_pred<<endl;
     }
 
-    org->error=errorsum;
-    errorsum/=height;
-    org->fitness=errorsum;//pow(height-errorsum,2);
-    org->accuracy=(double(true_pred)/double(height))*100;
+    org->error=pow(height-true_pred,2);
+
+    if(org->error==0){
+      org->fitness=10000;
+      cout<<"error=0 (overfit?)"<<endl;
+    }else{
+      org->fitness=1/org->error;
+    }
+
+    org->accuracy=(true_pred/double(height))*100;
+
+    cout<<"true_pred="<<true_pred<<" out of "<<height<<"="<<org->accuracy<<"%acc, err="<<org->error<<endl;
   }
   else {
     //The network is flawed (shouldnt happen)
