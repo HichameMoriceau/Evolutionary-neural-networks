@@ -154,15 +154,6 @@ bool bc_evaluate(Organism *org) {
   int net_depth; //The max depth of the network to be activated
   int relax; //Activates until relaxation
 
-  //The four possible input combinations to xor
-  //The first number is for biasing
-  /*
-    double in[4][3]={{1.0,0.0,0.0},
-		   {1.0,0.0,1.0},
-		   {1.0,1.0,0.0},
-		   {1.0,1.0,1.0}};
-  */
-
   //
   // Reading data-set into 2D array double ar
   //
@@ -225,44 +216,23 @@ bool bc_evaluate(Organism *org) {
   numnodes=((org->gnome)->nodes).size();
   net_depth=net->max_depth();
 
-  //TEST CODE: REMOVE
-  //cout<<"ACTIVATING: "<<org->gnome<<endl;
-  //cout<<"DEPTH: "<<net_depth<<endl;
-
-  /*
-  cout<<"in[]  is "<<height<<"x"<<width<<endl;
-  cout<<"out[] is "<<
-  cout<<"count="<<endl;
-  */
-
   //Load and activate the network on each input
   for(count=0;count<height;count++){
     //cout<<count<<" ";
     net->load_sensors(in[count]);
-
     //Relax net and get output
     success=net->activate();
-
     //use depth to ensure relaxation
     for (relax=0;relax<=net_depth;relax++) {
       success=net->activate();
       this_out=(*(net->outputs.begin()))->activation;
     }
     out[count]=(*(net->outputs.begin()))->activation;
-
     net->flush();
   }
   
   if (success) {
-    /*
-    errorsum=(fabs(out[0])+fabs(1.0-out[1])+fabs(1.0-out[2])+fabs(out[3]));
-    org->fitness=pow((4.0-errorsum),2);
-    org->error=errorsum;
-    */
-
-    // calculating Mean Squarred Error, MSE=(1/n)*sigma((pred-exp)^2)
-    //errorsum=0;
-
+    double errsum=0;
     double p=-1;
     double r=-1;
     double score=-1;
@@ -279,6 +249,8 @@ bool bc_evaluate(Organism *org) {
 	pred=0;
       else if(out[i]>=0.5)
 	pred=1;
+
+      errsum+=pow(pred-expe,2);
       
       if((pred==1)&&(expe==1))
 	tp++;
@@ -290,11 +262,12 @@ bool bc_evaluate(Organism *org) {
 	fn++;
       //cout<<"ex"<<i<<" pred="<<pred<<", expe="<<expe<<" ,tp="<<tp<<endl;
     }
-
+    
     if((tp+fp)!=0)
       p=tp/(tp+fp); // Precision
     else
       p=0;
+
     if((tp+fn)!=0)
       r=tp/(tp+fn); // Recall
     else
@@ -303,19 +276,23 @@ bool bc_evaluate(Organism *org) {
     if((p+r)!=0)
       score=2*(p*r)/(p+r); // f1 score
     else
-      score=0.0000123;
-
-
-    org->error=pow(height-(tp+tn), 2);
-    org->fitness=score;
-    org->accuracy=((tp+tn)/double(height))*100;
+      score=0;
     
-    cout<<"tp="<<tp<<", tn="<<tn<<", tp+tn="<<tp+tn<<" out of "<<height<<"="<<org->accuracy<<"%acc, err="<<org->error<<endl;
+    //cout<<"tp="<<tp<<"\tfp="<<fp<<"\ttn="<<tn<<"\tfn"<<fn<<"\tscore="<<score<<endl;
+    
+    org->error=height/(height-(tp+tn));
+    org->accuracy=((tp+tn)/double(height))*100;
+    org->fitness=1-(errsum/height);
+
+    //cout<<"score="<<score<<"\tacc="<<org->accuracy<<"\terr="<<org->error<<endl;
+
+    //cout<<"tp="<<tp<<", tn="<<tn<<", tp+tn="<<tp+tn<<" out of "<<height<<"="<<org->accuracy<<"%acc, err="<<org->error<<endl;
   }
   else {
     //The network is flawed (shouldnt happen)
-    errorsum=999.0;
-    org->fitness=0.001;
+    org->error   =999.0;
+    org->fitness =0.0000001;
+    org->accuracy=0.0000001;
   }
 
 
@@ -346,65 +323,29 @@ bool bc_evaluate(Organism *org) {
 int bc_epoch(Population *pop,int generation,char *filename,int &winnernum,int &winnergenes,int &winnernodes) {
   vector<Organism*>::iterator curorg;
   vector<Species*>::iterator curspecies;
-  //char cfilename[100];
-  //strncpy( cfilename, filename.c_str(), 100 );
-
-  //ofstream cfilename(filename.c_str());
-
+  
+  Organism* best_org;
+  double best_fit=0;
   bool win=false;
+  unsigned int c=0;
 
   //Evaluate each organism on a test
-  for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg) {
-    if (bc_evaluate(*curorg)) {
-      cout<<"here0"<<endl;
-      win=true;
-      winnernum=(*curorg)->gnome->genome_id;
-      winnergenes=(*curorg)->gnome->extrons();
-      winnernodes=((*curorg)->gnome->nodes).size();
-      if (winnernodes==5) {
-	//You could dump out optimal genomes here if desired
-	//(*curorg)->gnome->print_to_filename("xor_optimal");
-	//cout<<"DUMPED OPTIMAL"<<endl;
-      }
+  for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg)
+    bc_evaluate(*curorg);
+
+  // find fittest
+  for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){
+    std::cout<<"org"<<c<<"\tfit="<<(*curorg)->fitness<<"\tacc="<<(*curorg)->accuracy<<"\tNB nodes="<<(((*curorg)->gnome)->nodes).size()<<std::endl;
+    if((*curorg)->fitness>best_fit){
+      best_fit=(*curorg)->fitness;
+      best_org=(*curorg);
     }
+    c++;
   }
 
-  cout<<"entire pop evaluated"<<endl;
+  std::cout<<"gen"<<generation<<"\tbest.indiv.score="<<(*best_org).fitness<<"\tacc="<<(*best_org).accuracy<<"\terr="<<(*best_org).error<<"\tNB nodes="<<(((*best_org).gnome)->nodes).size()<<endl;
 
-  //Average and max their fitnesses for dumping to file and snapshot
-  for(curspecies=(pop->species).begin();curspecies!=(pop->species).end();++curspecies) {
-
-    //This experiment control routine issues commands to collect ave
-    //and max fitness, as opposed to having the snapshot do it, 
-    //because this allows flexibility in terms of what time
-    //to observe fitnesses at
-
-    (*curspecies)->compute_average_fitness();
-    (*curspecies)->compute_max_fitness();
-  }
-
-  //Take a snapshot of the population, so that it can be
-  //visualized later on
-  //if ((generation%1)==0)
-  //  pop->snapshot();
-
-  //Only print to file every print_every generations
-  if  (win||
-       ((generation%(NEAT::print_every))==0))
-    pop->print_to_file_by_species(filename);
-
-
-  if (win) {
-    for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg) {
-      if ((*curorg)->winner) {
-	cout<<"WINNER IS #"<<((*curorg)->gnome)->genome_id<<endl;
-	//Prints the winner to file
-	//IMPORTANT: This causes generational file output!
-	print_Genome_tofile((*curorg)->gnome,"xor_winner");
-      }
-    }
-    
-  }
+  //numnodes=((org->gnome)->nodes).size();
 
   pop->epoch(generation);
 
@@ -592,11 +533,8 @@ bool xor_evaluate(Organism *org) {
       success=net->activate();
       this_out=(*(net->outputs.begin()))->activation;
     }
-
     out[count]=(*(net->outputs.begin()))->activation;
-
     net->flush();
-
   }
   
   if (success) {
