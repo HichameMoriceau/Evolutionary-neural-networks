@@ -519,7 +519,7 @@ bool Population::epoch(int generation) {
     all_fitnesses.push_back((*curorg)->fitness);
   }
   overall_average=total/total_organisms;
-  std::cout<<"Generation "<<generation<<": "<<"overall_average = "<<overall_average<<std::endl;
+  //std::cout<<"Generation "<<generation<<": "<<"overall_average = "<<overall_average<<std::endl;
 
   //Now compute expected number of offspring for each individual organism
   for(curorg=organisms.begin();curorg!=organisms.end();++curorg) {
@@ -582,8 +582,6 @@ bool Population::epoch(int generation) {
   }
   */
 
-
-
   //Check for Population-level stagnation
   curspecies=sorted_species.begin();
   (*(((*curspecies)->organisms).begin()))->pop_champ=true; //DEBUG marker of the best of pop
@@ -599,7 +597,7 @@ bool Population::epoch(int generation) {
   }
   else {
     ++highest_last_changed;
-    std::cout<<highest_last_changed<<" generations since last population fitness record: "<<highest_fitness<<", acc="<<highest_accuracy<<", err="<<lowest_err<<" equ. "<<sqrt(lowest_err)<<" false preds"<<std::endl;
+    //std::cout<<highest_last_changed<<" generations since last population fitness record: "<<highest_fitness<<", acc="<<highest_accuracy<<", err="<<lowest_err<<" equ. "<<sqrt(lowest_err)<<" false preds"<<std::endl;
   }
 
   double variance=var(all_fitnesses);
@@ -876,7 +874,7 @@ bool Population::epoch(int generation) {
 
     //Move to the next on the list
     curspecies++;
-	  
+    
     //Record where we are
     if (curspecies!=species.end())
       last_id=(*curspecies)->id;

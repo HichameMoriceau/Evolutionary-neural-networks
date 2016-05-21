@@ -11,7 +11,7 @@ node 6 0 1 1
 node 7 0 1 1
 node 8 0 1 1
 node 9 0 1 1
-node 10 0 0 0
+node 10 0 0 1
 node 11 0 0 2
 gene 1 1 11 0.0 0 1 0 1
 gene 2 2 11 0.0 0 2 0 1
