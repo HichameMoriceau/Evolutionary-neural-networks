@@ -159,10 +159,13 @@ bool bc_evaluate(Organism *org) {
   //
 
   ifstream iFile("breast-cancer-malignantOrBenign-data-transformed.csv",ios::in);
+  //ifstream iFile("iris-data-transformed.csv",ios::in);
   string line, field;
 
   vector< vector<double> > array;  // the 2D array
   vector<double> v;                // array of values for one line only
+
+  unsigned int nb_classes=(*org).net->outputs.size();
 
   while(getline(iFile,line)){ // get next line in file
     v.clear();
@@ -188,7 +191,7 @@ bool bc_evaluate(Organism *org) {
   unsigned int width  = array[0].size()+1; // +1 for biasing
 
   double in[height][width];
-  double out[height]; 
+  double out[height][nb_classes]; 
 
   for(unsigned int i=0; i<height; i++){
     for(unsigned int j=0; j<width; j++){
@@ -216,6 +219,7 @@ bool bc_evaluate(Organism *org) {
   numnodes=((org->gnome)->nodes).size();
   net_depth=net->max_depth();
 
+
   //Load and activate the network on each input
   for(count=0;count<height;count++){
     //cout<<count<<" ";
@@ -227,95 +231,101 @@ bool bc_evaluate(Organism *org) {
       success=net->activate();
       this_out=(*(net->outputs.begin()))->activation;
     }
-    out[count]=(*(net->outputs.begin()))->activation;
+    
+    for(unsigned int i=0;i<net->outputs.size(); i++){
+      out[count][i]=(*(net->outputs[i])).activation;
+    }
+    
+    //out[count]=(*(net->outputs.begin()))->activation;
     net->flush();
   }
-  
+  /*
+  cout<<"outputs="<<endl;
+  for(unsigned int i=0;i<height;i++){
+    for(unsigned int j=0;j<nb_classes;j++){
+      cout<<out[i][j]<<" ";
+    }
+    cout<<endl;
+  }
+  */
+
   if (success) {
     double errsum=0;
     double p=-1;
     double r=-1;
     double score=-1;
+    double computed_score=0;
+    double computed_acc=0;
     unsigned int tp=0; // true  positives
     unsigned int tn=0; // true  negatives
     unsigned int fp=0; // false positives
-    unsigned int fn=0; // true  negatives
+    unsigned int fn=0; // false negatives
+    
+    mat preds =zeros(height,nb_classes);
+    mat labels=zeros(height,1);
 
+    //cout<<"evaluating predictions"<<endl;
     for(unsigned int i=0; i<height; i++){
-      double pred=out[i];
+      vec pred(nb_classes);
+      for(unsigned int j=0;j<nb_classes;j++)
+	pred[j]=out[i][j];
       double expe=in[i][width-2];
-      
-      if(out[i]<0.5)
-	pred=0;
-      else if(out[i]>=0.5)
-	pred=1;
 
-      errsum+=pow(pred-expe,2);
-      
-      if((pred==1)&&(expe==1))
-	tp++;
-      if((pred==0)&&(expe==0))
-	tn++;
-      if((pred==1)&&(expe==0))
-	fp++;
-      if((pred==0)&&(expe==1))
-	fn++;
-      //cout<<"ex"<<i<<" pred="<<pred<<", expe="<<expe<<" ,tp="<<tp<<endl;
+      preds.row(i)=pred.t();
+      labels(i)=expe;
     }
+
+    // generate confusion matrix
+    mat conf_mat=zeros(nb_classes, nb_classes);
+
+    for(unsigned int i=0; i<nb_classes; i++){
+        for(unsigned int j=0; j<nb_classes; j++){
+	  mat A = multiclass_formatted_output(preds);
+	  mat B = to_multiclass_output_format(labels, nb_classes);
+	  conf_mat(i,j) = count_nb_identicals(i,j, A, B);
+        }
+    }
+
+    // compute accuracy
+    double TP =0;
+    for(unsigned int i=0; i<nb_classes; i++){
+      TP += conf_mat(i,i);
+    }
+    computed_acc = (TP/height)*100;
     
-    if((tp+fp)!=0)
-      p=tp/(tp+fp); // Precision
-    else
-      p=0;
+    //computed_score=0;
+    vec scores(nb_classes);
+    //cout<<"computing fitness"<<endl;    
+    // computing f1 score for each label
+    for(unsigned int i=0; i<nb_classes; i++){
+      TP = conf_mat(i,i);
+      double TPplusFN = sum(conf_mat.col(i));
+      double TPplusFP = sum(conf_mat.row(i));
+      double tmp_precision=TP/TPplusFP;
+      double tmp_recall=TP/TPplusFN;
+      scores[i] = 2*((tmp_precision*tmp_recall)/(tmp_precision+tmp_recall));
+      // check for -NaN
+      if(scores[i] != scores[i])
+	scores[i] = 0;
+      computed_score += scores[i];
+    }
 
-    if((tp+fn)!=0)
-      r=tp/(tp+fn); // Recall
-    else
-      r=0;
+    // general f1 score = average of all classes score
+    computed_score = (computed_score/nb_classes)*100;
 
-    if((p+r)!=0)
-      score=2*(p*r)/(p+r); // f1 score
-    else
-      score=0;
+    if(computed_score==0)
+      computed_score=0.1;
     
-    //cout<<"tp="<<tp<<"\tfp="<<fp<<"\ttn="<<tn<<"\tfn"<<fn<<"\tscore="<<score<<endl;
-    
-    org->error=height/(height-(tp+tn));
-    org->accuracy=((tp+tn)/double(height))*100;
-    org->fitness=1-(errsum/height);
-
-    //cout<<"score="<<score<<"\tacc="<<org->accuracy<<"\terr="<<org->error<<endl;
-
-    //cout<<"tp="<<tp<<", tn="<<tn<<", tp+tn="<<tp+tn<<" out of "<<height<<"="<<org->accuracy<<"%acc, err="<<org->error<<endl;
+    org->error=errsum;
+    org->accuracy=computed_acc;
+    org->fitness=computed_score;
   }
   else {
     //The network is flawed (shouldnt happen)
     org->error   =999.0;
     org->fitness =0.0000001;
     org->accuracy=0.0000001;
-  }
-
-
-  /*
-#ifndef NO_SCREEN_OUT
-  cout<<"Org "<<(org->gnome)->genome_id<<"                                     error: "<<errorsum<<"  ["<<out[0]<<" "<<out[1]<<" "<<out[2]<<" "<<out[3]<<"]"<<endl;
-  cout<<"Org "<<(org->gnome)->genome_id<<"                                     fitness: "<<org->fitness<<endl;
-#endif
-  */
-  
-  /*
-  //  if (errorsum<0.05) { 
-  //if (errorsum<0.2) {
-  if ((out[0]<0.5)&&(out[1]>=0.5)&&(out[2]>=0.5)&&(out[3]<0.5)) {
-    org->winner=true;
-    return true;
-  }
-  else {
-    org->winner=false;
-    return false;
-  }
-  */
-
+  }  
   org->winner=false;
   return false;
 }
@@ -343,15 +353,55 @@ int bc_epoch(Population *pop,int generation,char *filename,int &winnernum,int &w
     c++;
   }
 
-  std::cout<<"gen"<<generation<<"\tbest.indiv.score="<<(*best_org).fitness<<"\tacc="<<(*best_org).accuracy<<"\terr="<<(*best_org).error<<"\tNB nodes="<<(((*best_org).gnome)->nodes).size()<<endl;
-
-  //numnodes=((org->gnome)->nodes).size();
+  std::cout<<"gen"<<generation<<"\tbest.indiv.fitness="<<(*best_org).fitness<<"\tacc="<<(*best_org).accuracy<<"\terr="<<(*best_org).error<<"\tNB nodes="<<(((*best_org).gnome)->nodes).size()<<endl;
 
   pop->epoch(generation);
 
   if (win) return 1;
   else return 0;
+}
 
+unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations){
+    unsigned int count=0;
+    // for each example
+    for(unsigned int i=0; i<predictions.n_rows; i++){
+        if(predictions(i, predicted_class)==1 && expectations(i, expected_class)==1)
+            count++;
+    }
+    return count;
+}
+
+mat multiclass_formatted_output(mat predictions){
+  unsigned int nb_classes=predictions.n_cols;
+  mat formatted_predictions(predictions.n_rows, nb_classes);
+  double highest_activation = 0;
+  // for each example
+  for(unsigned int i=0; i<predictions.n_rows; i++){
+    unsigned int index = 0;
+    highest_activation = 0;
+    // the strongest activation is considered the prediction
+    for(unsigned int j=0; j<nb_classes; j++){
+      if(predictions(i,j) > highest_activation){
+	highest_activation = predictions(i,j);
+	index = j;
+      }
+    }
+    mat tmp = zeros(1, nb_classes);
+    tmp(index) = 1;
+    //cout << "formatted prediction = " << endl << formatted_predictions << endl;
+    formatted_predictions.row(i) = tmp;
+  }
+  return formatted_predictions;
+}
+
+mat to_multiclass_output_format(mat expected_pred, unsigned int nb_classes){
+  mat formatted_exp_pred(expected_pred.n_rows, nb_classes);
+  for(unsigned int i=0; i<expected_pred.n_rows; i++) {
+    mat tmp = zeros(1, nb_classes);
+    tmp[expected_pred[i]] = 1;
+    formatted_exp_pred.row(i) =  tmp;
+  }
+  return formatted_exp_pred;
 }
 
 //Perform evolution on XOR, for gens generations

@@ -33,6 +33,8 @@
 #include "organism.h"
 #include "genome.h"
 #include "species.h"
+#include <armadillo> // Added by: Hichame Moriceau
+using namespace arma; // Added by: Hichame Moriceau
 
 using namespace std;
 
@@ -42,7 +44,9 @@ using namespace NEAT;
 Population *bc_test(int gens);
 bool bc_evaluate(Organism *org);
 int bc_epoch(Population *pop,int generation,char *filename, int &winnernum, int &winnergenes,int &winnernodes);
-
+unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
+mat multiclass_formatted_output(mat predictions);
+mat to_multiclass_output_format(mat expected_pred,unsigned int nb_classes);
 
 //The XOR evolution routines *****************************************
 Population *xor_test(int gens);
