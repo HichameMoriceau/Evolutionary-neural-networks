@@ -24,103 +24,10 @@ void Trainer_PSO::train(Data_set data_set, NeuralNet &net){
 }
 
 void Trainer_PSO::train(Data_set data_set, NeuralNet &net, mat &results_score_evolution){
-    net = train_topology_plus_weights(data_set, net.get_topology(), results_score_evolution);
+    net = train_topology_plus_weights(data_set, net.get_topology(), results_score_evolution, -1);
 }
 
-NeuralNet Trainer_PSO::train_topology_plus_weights(Data_set data_set, net_topology max_topo, mat &results_score_evolution){
-    NeuralNet cross_validated_net;
-    net_topology min_topo;
-    min_topo.nb_input_units = max_topo.nb_input_units;
-    min_topo.nb_units_per_hidden_layer = 1;
-    min_topo.nb_output_units = max_topo.nb_output_units;
-    min_topo.nb_hidden_layers = 1;
-
-    double avrg_score = 0;
-    double avrg_acc   = 0;
-
-    cross_validated_net = cross_validation_training(data_set, min_topo, max_topo, results_score_evolution, avrg_score, avrg_acc);
-    // append Cross-Validation error to result matrix
-    mat avrg_CV_acc     = ones(results_score_evolution.n_rows,1) * avrg_acc;
-    mat avrg_CV_score   = ones(results_score_evolution.n_rows,1) * avrg_score;
-    results_score_evolution = join_horiz(results_score_evolution, avrg_CV_score);
-    results_score_evolution = join_horiz(results_score_evolution, avrg_CV_acc);
-    cout << "average score and acc on all validation-sets = " << avrg_score << " ~= " << avrg_acc << "%acc" << endl;
-    return cross_validated_net;
-}
-
-
-NeuralNet Trainer_PSO::cross_validation_training(Data_set data_set, net_topology min_topo, net_topology max_topo, mat &results_score_evolution, double &avrg_score, double &avrg_acc){
-    unsigned int nb_folds = 10;
-    NeuralNet tmp_net(max_topo);
-    tmp_net.set_topology(max_topo);
-    NeuralNet cross_validated_net;
-    cross_validated_net.set_topology(max_topo);
-    mat tmp_results_perfs;
-    mat perfs_cross_validation;
-    unsigned int pop_size = population.size();
-    population = convert_population_to_nets(generate_random_topology_genome_population(pop_size,min_topo, max_topo));
-
-    // for each fold
-    for(unsigned int k=0; k<nb_folds; ++k) {
-        cout << "Using validation-set: " << k << " of" << nb_folds-1 << endl;
-        data_set.subdivide_data_cross_validation(k, nb_folds);
-
-        // make sure topology is adequate to data-set
-        max_topo.nb_input_units = data_set.training_set.X.n_cols;
-        max_topo.nb_output_units = 1;
-
-        // insert model trained on previous CV section in pop
-        insert_individual(tmp_net);
-
-        // empty temporary result matrix
-        tmp_results_perfs.reset();
-        tmp_net = evolve_through_PSO(data_set, min_topo, max_topo, nb_epochs, tmp_results_perfs, k);
-
-        // insert model trained on previous CV section in pop
-        insert_individual(tmp_net);
-
-        // update best model
-        cross_validated_net.set_topology(tmp_net.get_topology());
-        cross_validated_net.set_params(tmp_net.get_params());
-
-        // append results for this fold to results to be printed
-        perfs_cross_validation = join_vert(perfs_cross_validation, tmp_results_perfs);
-    }
-    cout << "start last fold" << endl;
-    // force last training cycle to do all epochs
-    set_epsilon(-1);
-    // force last training cycle to make use of entire training set
-    data_set.training_set.X = data_set.data.cols(0,data_set.data.n_cols-2);
-    data_set.training_set.Y = data_set.data.col(data_set.data.n_cols-1);
-    // train net
-    mat perfs_entire_training_set;
-    cross_validated_net = evolve_through_PSO(data_set, min_topo, max_topo, nb_epochs, perfs_entire_training_set, nb_folds);
-
-    // compute the average score
-    double total_accuracies=0;
-    double total_scores=0;
-    for(unsigned int i=0; i<nb_folds; i++){
-        data_set.subdivide_data_cross_validation(i, nb_folds);
-        total_accuracies+=cross_validated_net.get_accuracy(data_set.validation_set);
-        total_scores+=cross_validated_net.get_f1_score(data_set.validation_set);
-    }
-    // force last training cycle to make use of entire training set
-    data_set.training_set.X = data_set.data.cols(0,data_set.data.n_cols-2);
-    data_set.training_set.Y = data_set.data.col(data_set.data.n_cols-1);
-    total_accuracies+=cross_validated_net.get_accuracy(data_set.validation_set);
-    total_scores += cross_validated_net.get_f1_score(data_set.validation_set);
-
-    // return result matrix as reference
-    results_score_evolution = join_vert(perfs_cross_validation, perfs_entire_training_set);
-    // return average accuracy as reference
-    avrg_acc = total_accuracies/(nb_folds+1);
-    // return average score as reference
-    avrg_score = total_scores/(nb_folds+1);
-    // return trained net
-    return cross_validated_net;
-}
-
-NeuralNet Trainer_PSO::evolve_through_PSO(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_epochs, mat &results_score_evolution, unsigned int index_cross_validation_section) {
+NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_epochs, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme) {
     NeuralNet trained_model = population[0];
     double prediction_accuracy = 0.0f;
     double score = 0.0f;
@@ -263,6 +170,190 @@ NeuralNet Trainer_PSO::evolve_through_PSO(Data_set data_set, net_topology min_to
         }
     }
     return trained_model;
+}
+
+void Trainer_PSO::PSO_topology_evolution(vector<vec> &pop, vector<vec> &velocities, data_subset training_set, net_topology max_topo, vector<NeuralNet> &pBest, NeuralNet gBest, double pop_score_variance){
+    NeuralNet dummy_net(max_topo);
+    unsigned int genome_size = dummy_net.get_total_nb_weights() + 4;
+
+    // ** PSO settings **
+    // velocity weight
+    double w = 0.729;
+    // importance of personal best (cognitive weight)
+    double c1 = 1.494;
+    // importance of global best (social weight)
+    double c2 = 1.494;
+    // ** **
+
+    // update pBest of each particle
+    for(unsigned int p=0; p<pop.size(); p++){
+        // calculate fitness
+        double candidate_fitness = generate_net(pop[p]).get_f1_score(training_set);
+        // if particle is closer to target than pBest
+        if(candidate_fitness > pBest[p].get_f1_score(training_set)){
+            // set particle as pBest
+            pBest[p] = generate_net(pop[p]);
+        }
+    }
+    // update gBest
+    vector<NeuralNet>tmp_pop = convert_population_to_nets(pop);
+    for(unsigned int p=0; p<pop.size(); p++){
+        if(pBest[p].get_f1_score(training_set) > gBest.get_f1_score(training_set)){
+            // save best particle as <gBest>
+            gBest = tmp_pop[p];
+        }
+    }
+    // for each particle
+    for(unsigned int p=0; p<pop.size(); p++) {
+        for(unsigned int i=0; i<genome_size; i++){
+            double r1 = f_rand(0,1);
+            double r2 = f_rand(0,1);
+            // calculate velocity
+            velocities[p][i] = w*velocities[p][i]
+                    + c1*r1 * (pBest[p].get_params()[i] - pop[p][i])
+                    + c2*r2 * (gBest.get_params()[i]    - pop[p][i]);
+            velocities[p][i] = clip(velocities[p][i], -5, 5);
+        }
+        vec particle = pop[p];
+        // update particle data
+        for(unsigned int i=0; i<genome_size; i++){
+            switch(i){
+            case 0:
+                // protect NB INPUTS from being altered
+                particle[0] = training_set.X.n_cols;
+                break;
+            case 1:
+                // make sure NB HIDDEN UNITS PER LAYER doesn't exceed genome size
+                particle[1] = round(clip(particle[i] + velocities[p][i], 2, max_topo.nb_units_per_hidden_layer));
+                break;
+            case 2:
+                // protect NB OUTPUTS from being altered
+                particle[2] = 1;
+                break;
+            case 3:
+                // make sure NB HIDDEN LAYERS doesn't exceed genome size
+                particle[3] = round(clip(particle[i] + velocities[p][i], 1, max_topo.nb_hidden_layers));
+                break;
+            default:
+                particle[i] = particle[i] + velocities[p][i];
+                break;
+            }
+        }
+        if(generate_net(particle).get_f1_score(training_set) >= generate_net(pop[p]).get_f1_score(training_set))
+            pop[p] = particle;
+    }
+    // update population
+    population = convert_population_to_nets(pop);
+}
+
+double Trainer_PSO::clip(double x, double min, double max) {
+    // only clamp if necessary
+    if( (x<min)||(x>max) ){
+        double c=x;
+        c=((max-min)/2)*((exp(x) - exp(-x))/(exp(x) + exp(-x))) + max - (max-min)/2;
+        if(c<min) c=min;
+        if(c>max) c=max;
+        // check for -nan values
+        if(c!=c) c = f_rand(min, max);
+        return c;
+    }else
+        return x;
+}
+
+// ---
+
+/*
+NeuralNet Trainer_PSO::train_topology_plus_weights(Data_set data_set, net_topology max_topo, mat &results_score_evolution){
+    NeuralNet cross_validated_net;
+    net_topology min_topo;
+    min_topo.nb_input_units = max_topo.nb_input_units;
+    min_topo.nb_units_per_hidden_layer = 1;
+    min_topo.nb_output_units = max_topo.nb_output_units;
+    min_topo.nb_hidden_layers = 1;
+
+    double avrg_score = 0;
+    double avrg_acc   = 0;
+
+    cross_validated_net = cross_validation_training(data_set, min_topo, max_topo, results_score_evolution, avrg_score, avrg_acc);
+    // append Cross-Validation error to result matrix
+    mat avrg_CV_acc     = ones(results_score_evolution.n_rows,1) * avrg_acc;
+    mat avrg_CV_score   = ones(results_score_evolution.n_rows,1) * avrg_score;
+    results_score_evolution = join_horiz(results_score_evolution, avrg_CV_score);
+    results_score_evolution = join_horiz(results_score_evolution, avrg_CV_acc);
+    cout << "average score and acc on all validation-sets = " << avrg_score << " ~= " << avrg_acc << "%acc" << endl;
+    return cross_validated_net;
+}
+
+
+NeuralNet Trainer_PSO::cross_validation_training(Data_set data_set, net_topology min_topo, net_topology max_topo, mat &results_score_evolution, double &avrg_score, double &avrg_acc){
+    unsigned int nb_folds = 10;
+    NeuralNet tmp_net(max_topo);
+    tmp_net.set_topology(max_topo);
+    NeuralNet cross_validated_net;
+    cross_validated_net.set_topology(max_topo);
+    mat tmp_results_perfs;
+    mat perfs_cross_validation;
+    unsigned int pop_size = population.size();
+    population = convert_population_to_nets(generate_random_topology_genome_population(pop_size,min_topo, max_topo));
+
+    // for each fold
+    for(unsigned int k=0; k<nb_folds; ++k) {
+        cout << "Using validation-set: " << k << " of" << nb_folds-1 << endl;
+        data_set.subdivide_data_cross_validation(k, nb_folds);
+
+        // make sure topology is adequate to data-set
+        max_topo.nb_input_units = data_set.training_set.X.n_cols;
+        max_topo.nb_output_units = 1;
+
+        // insert model trained on previous CV section in pop
+        insert_individual(tmp_net);
+
+        // empty temporary result matrix
+        tmp_results_perfs.reset();
+        tmp_net = evolve_through_iterations(data_set, min_topo, max_topo, nb_epochs, tmp_results_perfs, k);
+
+        // insert model trained on previous CV section in pop
+        insert_individual(tmp_net);
+
+        // update best model
+        cross_validated_net.set_topology(tmp_net.get_topology());
+        cross_validated_net.set_params(tmp_net.get_params());
+
+        // append results for this fold to results to be printed
+        perfs_cross_validation = join_vert(perfs_cross_validation, tmp_results_perfs);
+    }
+    cout << "start last fold" << endl;
+    // force last training cycle to do all epochs
+    set_epsilon(-1);
+    // force last training cycle to make use of entire training set
+    data_set.training_set.X = data_set.data.cols(0,data_set.data.n_cols-2);
+    data_set.training_set.Y = data_set.data.col(data_set.data.n_cols-1);
+    // train net
+    mat perfs_entire_training_set;
+    cross_validated_net = evolve_through_iterations(data_set, min_topo, max_topo, nb_epochs, perfs_entire_training_set, nb_folds);
+
+    // compute the average score
+    double total_accuracies=0;
+    double total_scores=0;
+    for(unsigned int i=0; i<nb_folds; i++){
+        data_set.subdivide_data_cross_validation(i, nb_folds);
+        total_accuracies+=cross_validated_net.get_accuracy(data_set.validation_set);
+        total_scores+=cross_validated_net.get_f1_score(data_set.validation_set);
+    }
+    // force last training cycle to make use of entire training set
+    data_set.training_set.X = data_set.data.cols(0,data_set.data.n_cols-2);
+    data_set.training_set.Y = data_set.data.col(data_set.data.n_cols-1);
+    total_accuracies+=cross_validated_net.get_accuracy(data_set.validation_set);
+    total_scores += cross_validated_net.get_f1_score(data_set.validation_set);
+
+    // return result matrix as reference
+    results_score_evolution = join_vert(perfs_cross_validation, perfs_entire_training_set);
+    // return average accuracy as reference
+    avrg_acc = total_accuracies/(nb_folds+1);
+    // return average score as reference
+    avrg_score = total_scores/(nb_folds+1);
+    // return trained net
+    return cross_validated_net;
 }
 
 double Trainer_PSO::f_rand(double fMin, double fMax){
@@ -532,95 +623,6 @@ void Trainer_PSO::evaluate_population(vector<NeuralNet> &pop, data_subset d) {
     sort(pop.begin(), pop.end());
 }
 
-double Trainer_PSO::clip(double x, double min, double max) {
-    // only clamp if necessary
-    if( (x<min)||(x>max) ){
-        double c=x;
-        c=((max-min)/2)*((exp(x) - exp(-x))/(exp(x) + exp(-x))) + max - (max-min)/2;
-        if(c<min) c=min;
-        if(c>max) c=max;
-        // check for -nan values
-        if(c!=c) c = f_rand(min, max);
-        return c;
-    }else
-        return x;
-}
-
-// single iteration of Particle Swarm Optimization
-void Trainer_PSO::PSO_topology_evolution(vector<vec> &pop, vector<vec> &velocities, data_subset training_set, net_topology max_topo, vector<NeuralNet> &pBest, NeuralNet gBest, double pop_score_variance){
-    NeuralNet dummy_net(max_topo);
-    unsigned int genome_size = dummy_net.get_total_nb_weights() + 4;
-
-    // ** PSO settings **
-    // velocity weight
-    double w = 0.729;
-    // importance of personal best (cognitive weight)
-    double c1 = 1.494;
-    // importance of global best (social weight)
-    double c2 = 1.494;
-    // ** **
-
-    // update pBest of each particle
-    for(unsigned int p=0; p<pop.size(); p++){
-        // calculate fitness
-        double candidate_fitness = generate_net(pop[p]).get_f1_score(training_set);
-        // if particle is closer to target than pBest
-        if(candidate_fitness > pBest[p].get_f1_score(training_set)){
-            // set particle as pBest
-            pBest[p] = generate_net(pop[p]);
-        }
-    }
-    // update gBest
-    vector<NeuralNet>tmp_pop = convert_population_to_nets(pop);
-    for(unsigned int p=0; p<pop.size(); p++){
-        if(pBest[p].get_f1_score(training_set) > gBest.get_f1_score(training_set)){
-            // save best particle as <gBest>
-            gBest = tmp_pop[p];
-        }
-    }
-    // for each particle
-    for(unsigned int p=0; p<pop.size(); p++) {
-        for(unsigned int i=0; i<genome_size; i++){
-            double r1 = f_rand(0,1);
-            double r2 = f_rand(0,1);
-            // calculate velocity
-            velocities[p][i] = w*velocities[p][i]
-                    + c1*r1 * (pBest[p].get_params()[i] - pop[p][i])
-                    + c2*r2 * (gBest.get_params()[i]    - pop[p][i]);
-            velocities[p][i] = clip(velocities[p][i], -5, 5);
-        }
-        vec particle = pop[p];
-        // update particle data
-        for(unsigned int i=0; i<genome_size; i++){
-            switch(i){
-            case 0:
-                // protect NB INPUTS from being altered
-                particle[0] = training_set.X.n_cols;
-                break;
-            case 1:
-                // make sure NB HIDDEN UNITS PER LAYER doesn't exceed genome size
-                particle[1] = round(clip(particle[i] + velocities[p][i], 2, max_topo.nb_units_per_hidden_layer));
-                break;
-            case 2:
-                // protect NB OUTPUTS from being altered
-                particle[2] = 1;
-                break;
-            case 3:
-                // make sure NB HIDDEN LAYERS doesn't exceed genome size
-                particle[3] = round(clip(particle[i] + velocities[p][i], 1, max_topo.nb_hidden_layers));
-                break;
-            default:
-                particle[i] = particle[i] + velocities[p][i];
-                break;
-            }
-        }
-        if(generate_net(particle).get_f1_score(training_set) >= generate_net(pop[p]).get_f1_score(training_set))
-            pop[p] = particle;
-    }
-    // update population
-    population = convert_population_to_nets(pop);
-}
-
 // returns a vector of neural networks corresponding to the provided genomes
 vector<NeuralNet> Trainer_PSO::convert_population_to_nets(vector<vec> genome_pop) {
     vector<NeuralNet> pop;
@@ -707,13 +709,5 @@ mat Trainer_PSO::get_population_scores(data_subset d){
     }
     return scores;
 }
-
-double Trainer_PSO::get_epsilon() const{
-    return epsilon;
-}
-
-void Trainer_PSO::set_epsilon(double e){
-    epsilon = e;
-}
-
+*/
 
