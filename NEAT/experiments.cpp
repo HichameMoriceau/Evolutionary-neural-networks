@@ -158,8 +158,8 @@ bool bc_evaluate(Organism *org) {
   // Reading data-set into 2D array double ar
   //
 
-  ifstream iFile("breast-cancer-malignantOrBenign-data-transformed.csv",ios::in);
-  //ifstream iFile("iris-data-transformed.csv",ios::in);
+  //ifstream iFile("breast-cancer-malignantOrBenign-data-transformed.csv",ios::in);
+  ifstream iFile("iris-data-transformed.csv",ios::in);
   string line, field;
 
   vector< vector<double> > array;  // the 2D array
@@ -264,14 +264,24 @@ bool bc_evaluate(Organism *org) {
     mat preds =zeros(height,nb_classes);
     mat labels=zeros(height,1);
 
-    //cout<<"evaluating predictions"<<endl;
+    unsigned int index=0;
+    double max=-1;
     for(unsigned int i=0; i<height; i++){
-      vec pred(nb_classes);
-      for(unsigned int j=0;j<nb_classes;j++)
-	pred[j]=out[i][j];
       double expe=in[i][width-2];
+      index=0;
+      max=-1;
+      // find highest activation
+      for(unsigned int j=0;j<nb_classes;j++){
+        if(out[i][j]>max){
+	  index=j;
+	  max  =out[i][j];
+	}
+      }
+      
+      if(!(preds[i,expe]==1))
+	errsum++;
 
-      preds.row(i)=pred.t();
+      preds (i)=index;
       labels(i)=expe;
     }
 
@@ -280,25 +290,30 @@ bool bc_evaluate(Organism *org) {
 
     for(unsigned int i=0; i<nb_classes; i++){
         for(unsigned int j=0; j<nb_classes; j++){
-	  mat A = multiclass_formatted_output(preds);
-	  mat B = to_multiclass_output_format(labels, nb_classes);
-	  conf_mat(i,j) = count_nb_identicals(i,j, A, B);
+	  conf_mat(i,j)=count_nb_identicals(i,j,to_multiclass_format(preds),labels);
         }
     }
+
+    /*
+    cout<<"preds"<<endl;
+    cout<<to_multiclass_format(preds)<<endl;
+    cout<<"labels"<<endl;
+    cout<<labels<<endl;
+    cout<<"conf matrix"<<endl;
+    cout<<conf_mat<<endl;
+    */
 
     // compute accuracy
     double TP =0;
     for(unsigned int i=0; i<nb_classes; i++){
       TP += conf_mat(i,i);
     }
+    cout<<"TP="<<TP<<" , height="<<height<<endl;
     computed_acc = (TP/height)*100;
     
-    //computed_score=0;
     vec scores(nb_classes);
-    //cout<<"computing fitness"<<endl;    
     // computing f1 score for each label
     for(unsigned int i=0; i<nb_classes; i++){
-      TP = conf_mat(i,i);
       double TPplusFN = sum(conf_mat.col(i));
       double TPplusFP = sum(conf_mat.row(i));
       double tmp_precision=TP/TPplusFP;
@@ -317,8 +332,8 @@ bool bc_evaluate(Organism *org) {
       computed_score=0.1;
     
     org->error=errsum;
-    org->accuracy=computed_acc;
-    org->fitness=computed_score;
+    org->accuracy=computed_score;
+    org->fitness=computed_acc;
   }
   else {
     //The network is flawed (shouldnt happen)
@@ -343,6 +358,7 @@ int bc_epoch(Population *pop,int generation,char *filename,int &winnernum,int &w
   for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg)
     bc_evaluate(*curorg);
 
+  std::vector<double> all_fitnesses;
   // find fittest
   for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){
     std::cout<<"org"<<c<<"\tfit="<<(*curorg)->fitness<<"\tacc="<<(*curorg)->accuracy<<"\tNB nodes="<<(((*curorg)->gnome)->nodes).size()<<std::endl;
@@ -350,10 +366,17 @@ int bc_epoch(Population *pop,int generation,char *filename,int &winnernum,int &w
       best_fit=(*curorg)->fitness;
       best_org=(*curorg);
     }
+    // memorize organism's fitness
+    all_fitnesses.push_back((*curorg)->fitness);
     c++;
   }
 
-  std::cout<<"gen"<<generation<<"\tbest.indiv.fitness="<<(*best_org).fitness<<"\tacc="<<(*best_org).accuracy<<"\terr="<<(*best_org).error<<"\tNB nodes="<<(((*best_org).gnome)->nodes).size()<<endl;
+  double mean=pop->mean(all_fitnesses);
+  double variance=pop->var(all_fitnesses);
+  double std_dev=pop->stddev(all_fitnesses);
+
+
+  std::cout<<"gen"<<generation<<"\tbest.indiv.fitness="<<(*best_org).fitness<<"\tacc="<<(*best_org).accuracy<<"\terr="<<(*best_org).error<<"\tNB nodes="<<(((*best_org).gnome)->nodes).size()<<"\tpop.mean="<<mean<<"\tpop.var="<<variance<<"\tpop.stddev="<<std_dev<<endl;
 
   pop->epoch(generation);
 
@@ -365,43 +388,31 @@ unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expe
     unsigned int count=0;
     // for each example
     for(unsigned int i=0; i<predictions.n_rows; i++){
-        if(predictions(i, predicted_class)==1 && expectations(i, expected_class)==1)
+        if(predictions(i)==predicted_class && expectations(i)==expected_class)
             count++;
     }
     return count;
 }
 
-mat multiclass_formatted_output(mat predictions){
-  unsigned int nb_classes=predictions.n_cols;
-  mat formatted_predictions(predictions.n_rows, nb_classes);
-  double highest_activation = 0;
-  // for each example
-  for(unsigned int i=0; i<predictions.n_rows; i++){
-    unsigned int index = 0;
-    highest_activation = 0;
-    // the strongest activation is considered the prediction
-    for(unsigned int j=0; j<nb_classes; j++){
-      if(predictions(i,j) > highest_activation){
-	highest_activation = predictions(i,j);
-	index = j;
-      }
+mat to_multiclass_format(mat predictions){
+    unsigned int nb_classes = predictions.n_cols;
+    mat formatted_predictions(predictions.n_rows, 1);
+    double highest_activation = 0;
+    // for each example
+    for(unsigned int i=0; i<predictions.n_rows; i++){
+        unsigned int index = 0;
+        highest_activation = 0;
+        // the strongest activation is considered the prediction
+        for(unsigned int j=0; j<nb_classes; j++){
+            if(predictions(i,j) > highest_activation){
+                highest_activation = predictions(i,j);
+                index = j;
+            }
+        }
+        //cout << "formatted prediction = " << endl << formatted_predictions << endl;
+        formatted_predictions(i) = index;
     }
-    mat tmp = zeros(1, nb_classes);
-    tmp(index) = 1;
-    //cout << "formatted prediction = " << endl << formatted_predictions << endl;
-    formatted_predictions.row(i) = tmp;
-  }
-  return formatted_predictions;
-}
-
-mat to_multiclass_output_format(mat expected_pred, unsigned int nb_classes){
-  mat formatted_exp_pred(expected_pred.n_rows, nb_classes);
-  for(unsigned int i=0; i<expected_pred.n_rows; i++) {
-    mat tmp = zeros(1, nb_classes);
-    tmp[expected_pred[i]] = 1;
-    formatted_exp_pred.row(i) =  tmp;
-  }
-  return formatted_exp_pred;
+    return formatted_predictions;
 }
 
 //Perform evolution on XOR, for gens generations
