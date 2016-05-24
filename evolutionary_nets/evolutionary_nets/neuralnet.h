@@ -119,11 +119,9 @@ public:
      */
     double          get_f1_score(data_subset d);
 
-    unsigned int    count_nb_identical_occurences(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
+    unsigned int    count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
 
-    mat             multiclass_formatted_output(mat predictions);
-
-    mat             to_multiclass_output_format(mat expected_prediction);
+    mat             to_multiclass_format(mat predictions);
 
     /**
      * \brief get_matthews_correlation_coefficient
