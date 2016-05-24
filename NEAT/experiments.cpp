@@ -158,8 +158,8 @@ bool bc_evaluate(Organism *org) {
   // Reading data-set into 2D array double ar
   //
 
-  //ifstream iFile("breast-cancer-malignantOrBenign-data-transformed.csv",ios::in);
-  ifstream iFile("iris-data-transformed.csv",ios::in);
+  ifstream iFile("breast-cancer-malignantOrBenign-data-transformed.csv",ios::in);
+  //ifstream iFile("iris-data-transformed.csv",ios::in);
   string line, field;
 
   vector< vector<double> > array;  // the 2D array
@@ -264,56 +264,25 @@ bool bc_evaluate(Organism *org) {
     mat preds =zeros(height,nb_classes);
     mat labels=zeros(height,1);
 
-    unsigned int index=0;
-    double max=-1;
     for(unsigned int i=0; i<height; i++){
-      double expe=in[i][width-2];
-      index=0;
-      max=-1;
-      // find highest activation
+      double expe=labels(i)=in[i][width-2];
       for(unsigned int j=0;j<nb_classes;j++){
-        if(out[i][j]>max){
-	  index=j;
-	  max  =out[i][j];
-	}
+	preds(i,j)=out[i][j];
       }
-      
       if(!(preds[i,expe]==1))
 	errsum++;
-
-      preds (i)=index;
-      labels(i)=expe;
     }
-
     // generate confusion matrix
     mat conf_mat=zeros(nb_classes, nb_classes);
-
     for(unsigned int i=0; i<nb_classes; i++){
         for(unsigned int j=0; j<nb_classes; j++){
 	  conf_mat(i,j)=count_nb_identicals(i,j,to_multiclass_format(preds),labels);
         }
     }
-
-    /*
-    cout<<"preds"<<endl;
-    cout<<to_multiclass_format(preds)<<endl;
-    cout<<"labels"<<endl;
-    cout<<labels<<endl;
-    cout<<"conf matrix"<<endl;
-    cout<<conf_mat<<endl;
-    */
-
-    // compute accuracy
-    double TP =0;
-    for(unsigned int i=0; i<nb_classes; i++){
-      TP += conf_mat(i,i);
-    }
-    cout<<"TP="<<TP<<" , height="<<height<<endl;
-    computed_acc = (TP/height)*100;
-    
     vec scores(nb_classes);
     // computing f1 score for each label
     for(unsigned int i=0; i<nb_classes; i++){
+      double TP = conf_mat(i,i);
       double TPplusFN = sum(conf_mat.col(i));
       double TPplusFP = sum(conf_mat.row(i));
       double tmp_precision=TP/TPplusFP;
@@ -324,16 +293,24 @@ bool bc_evaluate(Organism *org) {
 	scores[i] = 0;
       computed_score += scores[i];
     }
-
     // general f1 score = average of all classes score
     computed_score = (computed_score/nb_classes)*100;
-
+    // make sure score doesn't hit 0 (NEAT doesn't seem to like that)
     if(computed_score==0)
       computed_score=0.1;
+    // compute accuracy
+    double TP =0;
+    for(unsigned int i=0; i<nb_classes; i++){
+      TP += conf_mat(i,i);
+    }
+    computed_acc = (TP/height)*100;
+
+    cout<<"conf mat="<<endl;
+    cout<<conf_mat<<endl;
     
     org->error=errsum;
-    org->accuracy=computed_score;
-    org->fitness=computed_acc;
+    org->accuracy=computed_acc;
+    org->fitness=computed_score;
   }
   else {
     //The network is flawed (shouldnt happen)
