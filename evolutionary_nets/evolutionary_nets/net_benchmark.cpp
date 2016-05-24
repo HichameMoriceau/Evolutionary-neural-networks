@@ -41,7 +41,7 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
     unsigned int nb_generations_GA = 50;
     unsigned int total_nb_data_sets = 1;
 
-    unsigned int selected_opt_alg = OPTIMIZATION_ALG::AIS;
+    unsigned int selected_opt_alg = OPTIMIZATION_ALG::DE;
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
@@ -50,9 +50,9 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
     evo_trainer.initialize_random_population(pop_size_GA, max_topo);
 
     vector<string> data_set_filenames;
+    data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
     data_set_filenames.push_back("data/iris-data-transformed.csv"); // multi-class
     data_set_filenames.push_back("data/wine-data-transformed.csv"); // multi-class
-    data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
     data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
 
     string start_time_str = get_current_date_time();
@@ -108,7 +108,7 @@ double Net_benchmark::find_termination_criteria_epsilon(unsigned int many_genera
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
-    t.evolve_through_generations(data_set, min_topo, max_topo,many_generations, results_perfs,0, MUTATION_SCHEME_RAND);
+    t.evolve_through_iterations(data_set, min_topo, max_topo,many_generations, results_perfs,0, MUTATION_SCHEME_RAND);
 
     mat variance_values = results_perfs.col(5);
     double highest_variance = 0;
@@ -428,7 +428,7 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
         trainer_pso.set_nb_epochs(evo_trainer.get_nb_epochs());
         trainer_pso.set_epsilon(epsilon);
         trainer_pso.set_population(evo_trainer.get_population());
-        trained_net = trainer_pso.train_topology_plus_weights(d, max_t, results_score_evolution);
+        trained_net = trainer_pso.train_topology_plus_weights(d, max_t, results_score_evolution, -1);
         break;
     case OPTIMIZATION_ALG::AIS:
         // initialize optimization algorithm
