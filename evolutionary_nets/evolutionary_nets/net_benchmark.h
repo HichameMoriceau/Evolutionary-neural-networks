@@ -23,17 +23,17 @@ class Net_benchmark
 {
 
 private:
-    unsigned int                nb_replicates;
+    unsigned int    nb_replicates;
 
-    Data_set                    data_set;
+    Data_set        data_set;
 
-    NeuralNet                   net;
+    NeuralNet       net;
 
-    net_topology                max_topo;
+    net_topology    max_topo;
 
-    Trainer_DE                  evo_trainer;
+    Trainer_DE      evo_trainer;
 
-    ofstream                    experiment_file;
+    ofstream        experiment_file;
 
 public:
                 // ctor

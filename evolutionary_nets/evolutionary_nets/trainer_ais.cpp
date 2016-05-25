@@ -97,7 +97,7 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
         unsigned int outputs            =   trained_model.get_topology().nb_output_units;
         unsigned int nb_hidden_layers   =   trained_model.get_topology().nb_hidden_layers;
         // format result line
-        new_line << i + nb_epochs * index_cross_validation_section
+        new_line << i //+ nb_epochs * index_cross_validation_section
                  << MSE
                  << prediction_accuracy
                  << score

@@ -143,6 +143,7 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
     unsigned int pop_size = population.size();
     population = convert_population_to_nets(generate_random_topology_genome_population(pop_size,min_topo, max_topo));
 
+    /*
     // for each fold
     for(unsigned int k=0; k<nb_folds; ++k) {
         cout << "Using validation-set" << k << " of" << nb_folds-1 << endl;
@@ -168,6 +169,10 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
     cout << "start last fold" << endl;
     // force last training cycle to do all epochs
     set_epsilon(-1);
+    */
+
+    tmp_net = evolve_through_iterations(data_set, min_topo, max_topo, nb_epochs, tmp_results_perfs, 0, selected_mutation_scheme);
+
     // force last training cycle to make use of entire training set
     data_set.training_set.X = data_set.data.cols(0,data_set.data.n_cols-2);
     data_set.training_set.Y = data_set.data.col(data_set.data.n_cols-1);

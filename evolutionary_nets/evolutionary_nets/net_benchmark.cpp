@@ -30,6 +30,13 @@ Net_benchmark::~Net_benchmark(){
 }
 
 void Net_benchmark::run_benchmark(unsigned int nb_rep) {
+
+    vector<string> data_set_filenames;
+    data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
+    data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
+    data_set_filenames.push_back("data/iris-data-transformed.csv"); // multi-class problem
+    data_set_filenames.push_back("data/wine-data-transformed.csv"); // multi-class problem
+
     nb_replicates  = nb_rep;
     // set end of search space
     max_topo.nb_input_units             = data_set.training_set.X.n_cols;
@@ -37,9 +44,9 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
     max_topo.nb_hidden_layers           = 2;
     max_topo.nb_units_per_hidden_layer  = 10;
 
-    unsigned int pop_size_GA = 40;
-    unsigned int nb_generations_GA = 50;
-    unsigned int total_nb_data_sets = 1;
+    unsigned int pop_size_GA = 50;
+    unsigned int nb_generations_GA = 150;
+    unsigned int total_nb_data_sets = 4;
 
     unsigned int selected_opt_alg = OPTIMIZATION_ALG::DE;
 
@@ -48,12 +55,6 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
     unsigned int mutation_scheme = MUTATION_SCHEME_BEST;
 
     evo_trainer.initialize_random_population(pop_size_GA, max_topo);
-
-    vector<string> data_set_filenames;
-    data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
-    data_set_filenames.push_back("data/iris-data-transformed.csv"); // multi-class
-    data_set_filenames.push_back("data/wine-data-transformed.csv"); // multi-class
-    data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
 
     string start_time_str = get_current_date_time();
     auto start_time = system_clock::now();
