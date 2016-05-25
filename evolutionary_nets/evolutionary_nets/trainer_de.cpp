@@ -9,7 +9,7 @@ Trainer_DE::Trainer_DE(){
     net_topology t;
     t.nb_input_units = 1;
     t.nb_units_per_hidden_layer = 5;
-    t.nb_output_units = 1;
+    t.nb_output_units = 2;
     t.nb_hidden_layers = 1;
     NeuralNet ann(t);
     initialize_random_population(50, t);

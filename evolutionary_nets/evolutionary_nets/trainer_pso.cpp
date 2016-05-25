@@ -9,7 +9,7 @@ Trainer_PSO::Trainer_PSO(){
     net_topology t;
     t.nb_input_units = 1;
     t.nb_units_per_hidden_layer = 5;
-    t.nb_output_units = 1;
+    t.nb_output_units = 2;
     t.nb_hidden_layers = 1;
     NeuralNet ann(t);
     initialize_random_population(50, t);
@@ -29,35 +29,31 @@ void Trainer_PSO::train(Data_set data_set, NeuralNet &net, mat &results_score_ev
 
 NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_epochs, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme) {
     NeuralNet trained_model = population[0];
-    double prediction_accuracy = 0.0f;
-    double score = 0.0f;
-    double MSE   = 0.0f;
-    double pop_score_variance = 100.0f;
-    double pop_score_stddev = 0.0f;
-    double pop_score_mean = 0.0f;
-    double pop_score_median = 0.0f;
-    double ensemble_accuracy = 0;
-    double ensemble_score = 0;
-    double pop_score = 0;
+    double prediction_accuracy = 0;
+    double score=0;
+    double MSE=0;
+    double pop_score_variance=100;
+    double pop_score_stddev=0;
+    double pop_score_mean=0;
+    double pop_score_median=0;
+    double ensemble_accuracy=0;
+    double ensemble_score=0;
+    double pop_score=0;
     double pop_accuracy=0;
-
-    cout << "RUNNING PSO" << endl;
-
     mat new_line;
     // flag alerting that optimization algorithm has had ~ same results for the past 100 generations
     bool plateau = false;
     // flag alerting that the GA has converged
     bool has_converged = false;
-
     // initialize particles
     vector<vec> genome_population = convert_population_to_genomes(population, max_topo);
     vector<NeuralNet> ensemble = population;
-
     // initialize velocity of each particle to random [-1, 1]
     unsigned int nb_params = max_topo.get_total_nb_weights()+4;
     // personal best particle
     vector<NeuralNet> pBests = generate_population(population.size(), max_topo, data_set.training_set);
     vector<vec> velocities;
+
     for(unsigned int i=0; i<population.size(); i++){
         vec new_vector(nb_params);
         new_vector = ones(nb_params, 1);
@@ -91,14 +87,12 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
             trained_model = population[0];
         // compute accuracy
         elective_accuracy(population, data_set, pop_accuracy, pop_score);
-
         // get best ensemble
         if(pop_score > ensemble_score){
             ensemble = population;
             ensemble_score = pop_score;
             ensemble_accuracy = pop_accuracy;
         }
-
         genome_population = convert_population_to_genomes(population, max_topo);
         // optimize model params and topology using training-set
         PSO_topology_evolution(genome_population, velocities, data_set.training_set, max_topo, pBests, trained_model, pop_score_variance);
@@ -228,7 +222,7 @@ void Trainer_PSO::PSO_topology_evolution(vector<vec> &pop, vector<vec> &velociti
                 break;
             case 2:
                 // protect NB OUTPUTS from being altered
-                particle[2] = 1;
+                particle[2] = max_topo.nb_output_units;
                 break;
             case 3:
                 // make sure NB HIDDEN LAYERS doesn't exceed genome size

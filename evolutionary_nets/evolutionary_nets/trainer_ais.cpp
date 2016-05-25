@@ -9,7 +9,7 @@ Trainer_AIS::Trainer_AIS(){
     net_topology t;
     t.nb_input_units = 1;
     t.nb_units_per_hidden_layer = 5;
-    t.nb_output_units = 1;
+    t.nb_output_units = 2;
     t.nb_hidden_layers = 1;
     NeuralNet ann(t);
     initialize_random_population(50, t);
@@ -160,7 +160,7 @@ void Trainer_AIS::clonal_selection_topology_evolution(vector<vec> &pop, data_sub
     // Number of random cells incorporated in the population for every generation
     unsigned int nb_rand_cells = (unsigned int)pop.size()*5/100;
     // Scaling factor
-    double clone_rate = 0.15;
+    double clone_rate = 0.02;
 
     // -- Differential Evolution settings (for mutation operation only) --
     // total nb of variables
