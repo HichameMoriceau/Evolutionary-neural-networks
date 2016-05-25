@@ -4,6 +4,7 @@
 #include "neuralnet.h"
 #include "data_set.h"
 #include <vector>
+#include <map>
 #include <cmath>
 #include <algorithm>
 
@@ -42,7 +43,9 @@ public:
 
     // neural nets ensembles interpretation routines
     void                elective_accuracy(vector<NeuralNet> pop, Data_set data_set, double &ensemble_accuracy, double &ensemble_score);
-    unsigned int        get_nb_identical_elements(mat A, mat B);
+    unsigned int        return_highest(map<unsigned int, unsigned int> votes);
+    unsigned int        count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
+    mat                 to_multiclass_format(mat predictions);
 
     // general population-based subroutines
     void                initialize_random_population(unsigned int pop_size, net_topology max_topo);

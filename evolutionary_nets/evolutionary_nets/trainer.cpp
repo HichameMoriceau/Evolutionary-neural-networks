@@ -208,70 +208,114 @@ void Trainer::elective_accuracy(vector<NeuralNet> pop, Data_set data_set, double
     // sort pop by fitness
     evaluate_population(pop, data_set.validation_set);
     unsigned int nb_individuals = pop.size();
-
+    unsigned int nb_classes=pop[0].get_topology().nb_output_units;
+    unsigned int nb_examples=data_set.validation_set.Y.n_rows;
     mat elected_votes(data_set.validation_set.X.n_rows,1);
     mat pos_votes(data_set.validation_set.X.n_rows,1);
     mat neg_votes(data_set.validation_set.X.n_rows,1);
-    for(unsigned int i=0;i<pop.size(); i++){
-        // perform predictions on provided data-set
-        mat H = pop[i].forward_propagate(data_set.validation_set.X);
-        mat Predictions = round(H);
+    // keeps track of number of votes for each class
+    vector<map<unsigned int, unsigned int> >votes(nb_examples);
 
-        // retrieve vote (higher fitnesses weight more)
+    // for each indiv
+    for(unsigned int i=0;i<pop.size(); i++){
+        // perform predictions on data-set
+        mat H = pop[i].forward_propagate(data_set.validation_set.X);
+        mat Predictions = to_multiclass_format(H);
+        // memorize vote
         for(unsigned int p=0; p<Predictions.n_rows; p++){
-            if(Predictions[p] == 0){
-                neg_votes[p] += (nb_individuals/(p+1));
-            }else{
-                pos_votes[p] += (nb_individuals/(p+1));
+            for(unsigned int i=0;i<nb_classes;i++){
+                if(Predictions[p]==i)
+                    votes[p][i]++;
             }
         }
     }
 
-    // apply majority for each example
-    for(unsigned int p=0; p<data_set.validation_set.X.n_rows; p++){
-        if(pos_votes(p) > neg_votes(p))
-            elected_votes(p) = 1;
-        else
-            elected_votes(p) = 0;
+    // generate the ensemble's predictions
+    for(unsigned int p=0; p<nb_examples; p++){
+        // use majority as prediction
+        elected_votes(p)=return_highest(votes[p]);
     }
 
-    // compute ensemble score based on <elected_votes>
-    // How many selected items are relevant ?
-    double precision = 0.0f;
-    // How many relevant items are selected ?
-    double recall = 0.0f;
-    // score is based on precision and recall
-    double computed_score = 0.0f;
-    unsigned int true_positives  = sum(sum(elected_votes==1 && data_set.validation_set.Y==1));
-    unsigned int false_positives = sum(sum(elected_votes==1 && data_set.validation_set.Y==0));
-    unsigned int false_negatives = sum(sum(elected_votes==0 && data_set.validation_set.Y==1));
-    if( !((true_positives + false_positives)==0 || (true_positives + false_negatives)==0)){
-        precision =  ( (double) true_positives) / (true_positives + false_positives);
-        recall    =  ( (double) true_positives) / (true_positives + false_negatives);
-        // compute score
-        computed_score = (2.0f*precision*recall) / (precision + recall);
-        // make score of same scale as accuracy (better for plotting)
-        computed_score = computed_score * 100;
+    // generate confusion matrix
+    mat confusion_matrix(nb_classes, nb_classes);
+    for(unsigned int i=0; i<nb_classes; i++) {
+        for(unsigned int j=0; j<nb_classes; j++){
+            confusion_matrix(i,j) = count_nb_identicals(i,j, elected_votes, data_set.validation_set.Y);
+        }
     }
-    // check for -NaN
-    if(computed_score != computed_score)
-        computed_score = 0;
+
+    vec scores(nb_classes);
+    // averaged f1 score based on precision and recall
+    double computed_score=0;
+    double computed_accuracy=0;
+    // computing f1 score for each label
+    for(unsigned int i=0; i<nb_classes; i++){
+        double TP = confusion_matrix(i,i);
+        double TPplusFN = sum(confusion_matrix.col(i));
+        double TPplusFP = sum(confusion_matrix.row(i));
+        double tmp_precision=TP/TPplusFP;
+        double tmp_recall=TP/TPplusFN;
+        scores[i] = 2*((tmp_precision*tmp_recall)/(tmp_precision+tmp_recall));
+        // check for -NaN
+        if(scores[i] != scores[i])
+            scores[i] = 0;
+        computed_score += scores[i];
+    }
+    // general f1 score = average of all classes score
+    computed_score = (computed_score/nb_classes)*100;
+
+    double TP=0;
+    for(unsigned int i=0;i<nb_classes;i++)
+        TP+=confusion_matrix(i,i);
+    computed_accuracy=(TP/elected_votes.n_rows)*100;
 
     // return ensemble accuracy
-    ensemble_accuracy = (get_nb_identical_elements(elected_votes.col(0), data_set.validation_set.Y.col(0)) / double(data_set.validation_set.X.n_rows)) * 100;
+    ensemble_accuracy = computed_accuracy;
     // return ensemble score
     ensemble_score = computed_score;
 }
 
-unsigned int Trainer::get_nb_identical_elements(mat A, mat B){
-    if(A.n_rows != B.n_rows || A.n_cols != B.n_cols)
-        return 0;
-    unsigned int count = 0;
-    for(unsigned int i = 0 ; i < A.n_rows ; ++i)
-        for(unsigned int j = 0 ; j < A.n_cols ; ++j)
-            if(A(i,j) == B(i,j))
-                ++count;
+unsigned int Trainer::return_highest(map<unsigned int, unsigned int> votes){
+    unsigned int vote=-1;
+    double max=-1;
+    for(unsigned int i=0;i<votes.size();i++){
+        if(votes[i]>max){
+            max=votes[i];
+            vote=i;
+        }
+    }
+    return vote;
+}
+
+unsigned int Trainer::count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations){
+    unsigned int count=0;
+    // for each example
+    for(unsigned int i=0; i<predictions.n_rows; i++){
+        if(predictions(i)==predicted_class && expectations(i)==expected_class)
+            count++;
+    }
     return count;
+}
+
+mat Trainer::to_multiclass_format(mat predictions){
+    unsigned int nb_classes = predictions.n_cols;
+    mat formatted_predictions(predictions.n_rows, 1);
+    double highest_activation = 0;
+    // for each example
+    for(unsigned int i=0; i<predictions.n_rows; i++){
+        unsigned int index = 0;
+        highest_activation = 0;
+        // the strongest activation is considered the prediction
+        for(unsigned int j=0; j<nb_classes; j++){
+            if(predictions(i,j) > highest_activation){
+                highest_activation = predictions(i,j);
+                index = j;
+            }
+        }
+        //cout << "formatted prediction = " << endl << formatted_predictions << endl;
+        formatted_predictions(i) = index;
+    }
+    return formatted_predictions;
 }
 
 void Trainer::initialize_random_population(unsigned int pop_size, net_topology max_topo){
