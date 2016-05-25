@@ -48,7 +48,7 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
     unsigned int nb_generations_GA = 150;
     unsigned int total_nb_data_sets = 4;
 
-    unsigned int selected_opt_alg = OPTIMIZATION_ALG::DE;
+    unsigned int selected_opt_alg = OPTIMIZATION_ALG::PSO;
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
@@ -399,9 +399,7 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
 
     cout << endl
          << "***"
-         << "\tRUNNING REPLICATE " << i+1 << "/" << nb_replicates << "\t "<< data_set_filename
-         << "***"
-         << endl;
+         << "\tRUNNING REPLICATE " << i+1 << "/" << nb_replicates << "\t ";
 
     // set seed
     unsigned int seed=i*10;
@@ -418,6 +416,7 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
     // train net up to largest topology using chosen trainer
     switch(selected_opt_algorithm){
     case OPTIMIZATION_ALG::DE:
+        cout<<"Differential Evolution on "<<data_set_filename<<endl;
         // initialize optimization algorithm
         trainer_de.set_nb_epochs(evo_trainer.get_nb_epochs());
         trainer_de.set_epsilon(epsilon);
@@ -425,13 +424,16 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
         trained_net = trainer_de.train_topology_plus_weights(d, max_t, results_score_evolution, selected_mutation_scheme);
         break;
     case OPTIMIZATION_ALG::PSO:
+        cout<<"Particle Swarm Optimization on "<<data_set_filename<<endl;
         // initialize optimization algorithm
         trainer_pso.set_nb_epochs(evo_trainer.get_nb_epochs());
         trainer_pso.set_epsilon(epsilon);
         trainer_pso.set_population(evo_trainer.get_population());
+        cout<<"nb outputs in topology="<<max_t.nb_output_units<<endl;
         trained_net = trainer_pso.train_topology_plus_weights(d, max_t, results_score_evolution, -1);
         break;
     case OPTIMIZATION_ALG::AIS:
+        cout<<"Clonal Selection on "<<data_set_filename<<endl;
         // initialize optimization algorithm
         trainer_ais.set_nb_epochs(evo_trainer.get_nb_epochs());
         trainer_ais.set_epsilon(epsilon);
@@ -439,10 +441,14 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
         trained_net = trainer_ais.train_topology_plus_weights(d, max_t, results_score_evolution, -1);
         break;
     default:
+        cout<<"Default Differential Evolution on "<<data_set_filename<<endl;
         // initialize optimization algorithm
         trainer_de.set_nb_epochs(evo_trainer.get_nb_epochs());
         trainer_de.set_epsilon(epsilon);
         trainer_de.set_population(evo_trainer.get_population());
+
+        cout<< "***"
+            << endl;
 
         trained_net = trainer_de.train_topology_plus_weights(d, max_t, results_score_evolution, selected_mutation_scheme);
 
