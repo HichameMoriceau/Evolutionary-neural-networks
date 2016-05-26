@@ -3,6 +3,7 @@
 Trainer_DE::Trainer_DE(){
     // default nb generations:
     nb_epochs = 1000;
+    nb_err_func_calls=0;
     // default variance value (convergence treshold for GA stopping criteria)
     epsilon = 1.0f;
     // default topologies for individuals
@@ -29,7 +30,7 @@ void Trainer_DE::train(Data_set data_set, NeuralNet &net, mat &results_score_evo
     net = train_topology_plus_weights(data_set, net.get_topology(), results_score_evolution, MUTATION_SCHEME_RAND);
 }
 
-NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_epochs, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme) {
+NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_gens, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme, unsigned int current_gen){
     // return variable
     NeuralNet trained_model = population[0];
     mat new_line;
@@ -63,17 +64,20 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
      *  TERMINATION CRITERIA:
      *      If all generations were achieved OR if the GA has already converged
     */
-    for(unsigned int i=0; ((i<nb_epochs) && (!has_converged)); ++i) {
+    for(unsigned int i=0; ((i<nb_gens) && (!has_converged)); i++) {
         // update individuals
         population = convert_population_to_nets(genome_population);
+        //genome_population = convert_population_to_genomes(population, max_topo);
+        // optimize model params and topology using training-set
+        differential_evolution_topology_evolution(genome_population, data_set.training_set, min_topo, max_topo, selected_mutation_scheme);
         // evaluate population
         for(unsigned int s=0; s<population.size() ; ++s) {
-            population[s].get_f1_score(data_set.validation_set);
+            population[s].get_f1_score(data_set.training_set);
         }
         // sort from fittest
         sort(population.begin(), population.end());
         // get best model
-        if(population[0].get_f1_score(data_set.validation_set) >= trained_model.get_f1_score(data_set.validation_set))
+        if(population[0].get_f1_score(data_set.training_set) >= trained_model.get_f1_score(data_set.training_set))
             trained_model = population[0];
         // compute accuracy
         elective_accuracy(population, data_set, pop_accuracy, pop_score);
@@ -84,24 +88,23 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
             ensemble_score = pop_score;
             ensemble_accuracy = pop_accuracy;
         }
-        genome_population = convert_population_to_genomes(population, max_topo);
-        // optimize model params and topology using training-set
-        differential_evolution_topology_evolution(genome_population, data_set.training_set, min_topo, max_topo, selected_mutation_scheme);
         // record model performances on new data
-        prediction_accuracy =   trained_model.get_accuracy(data_set.validation_set);
-        score               =   trained_model.get_f1_score(data_set.validation_set);
-        MSE                 =   trained_model.get_MSE(data_set.validation_set);
-        pop_score_variance  =   compute_score_variance(genome_population, data_set.validation_set);
-        pop_score_stddev    =   compute_score_stddev(genome_population, data_set.validation_set);
-        pop_score_mean      =   compute_score_mean(genome_population, data_set.validation_set);
-        pop_score_median    =   compute_score_median(genome_population, data_set.validation_set);
+        prediction_accuracy =   trained_model.get_accuracy(data_set.training_set);
+        score               =   trained_model.get_f1_score(data_set.training_set);
+        MSE                 =   trained_model.get_MSE(data_set.training_set);
+        pop_score_variance  =   compute_score_variance(genome_population, data_set.training_set);
+        pop_score_stddev    =   compute_score_stddev(genome_population, data_set.training_set);
+        pop_score_mean      =   compute_score_mean(genome_population, data_set.training_set);
+        pop_score_median    =   compute_score_median(genome_population, data_set.training_set);
+        double validation_accuracy=trained_model.get_accuracy(data_set.validation_set);
+        double validation_score=trained_model.get_f1_score(data_set.validation_set);
         // record results (performances and topology description)
         unsigned int inputs             =   trained_model.get_topology().nb_input_units;
         unsigned int hidden_units       =   trained_model.get_topology().nb_units_per_hidden_layer;
         unsigned int outputs            =   trained_model.get_topology().nb_output_units;
         unsigned int nb_hidden_layers   =   trained_model.get_topology().nb_hidden_layers;
         // format result line
-        new_line << i // + nb_epochs * index_cross_validation_section
+        new_line << nb_gens*current_gen+i // i + nb_epochs * index_cross_validation_section
                  << MSE
                  << prediction_accuracy
                  << score
@@ -121,13 +124,17 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
 
                  << ensemble_accuracy
                  << ensemble_score
+                 << validation_accuracy
+                 << validation_score
+                 << nb_err_func_calls
+
                  << endr;
 
         // append result line to result matrix
         results_score_evolution = join_vert(results_score_evolution, new_line);
         cout << fixed
              << setprecision(2)
-             << "Gen="            << i
+             << "Gen="            << nb_gens*current_gen+i // i + nb_epochs * index_cross_validation_section
              << "\tscore="          << score
              << "  MSE="            << MSE
              << "  acc="            << prediction_accuracy
@@ -141,9 +148,9 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
 
         // checking for convergence (termination criterion)
         // if 33% of the total_nb_generations have been executed on CV fold
-        if(i>(nb_epochs/3)) {
+        if(i>(nb_gens/3)) {
             // if current best score is similar to best score of 100 generations before
-            if(score < results_score_evolution(results_score_evolution.n_rows-(nb_epochs/10),3)+1)
+            if(score < results_score_evolution(results_score_evolution.n_rows-(nb_gens/10),3)+1)
                 plateau = true;
             else
                 plateau = false;
@@ -152,6 +159,7 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
             // otherwise always force training on first 10% of total generations
             has_converged = false;
         }
+        // added here
     }
     return trained_model;
 }
@@ -170,7 +178,7 @@ void Trainer_DE::differential_evolution_topology_evolution(vector<vec> &pop, dat
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
-    for(unsigned int j=0; j<pop.size()-1; ++j) {
+    for(unsigned int j=0; j<pop.size(); ++j) {
         // select four random but different individuals from (pop)
         // declare index variables
         unsigned int index_x = generate_random_integer_between_range(1, pop.size() - 1);
@@ -212,7 +220,9 @@ void Trainer_DE::differential_evolution_topology_evolution(vector<vec> &pop, dat
         genome_length = get_genome_length(candidate_topology);
 
         double score_best_model         = generate_net(pop[0]).get_f1_score(training_set);
+        nb_err_func_calls++;
         double score_second_best_model  = generate_net(pop[1]).get_f1_score(training_set);
+        nb_err_func_calls++;
 
         // if the first and second best have identical fitness
         if((score_best_model==score_second_best_model) && score_best_model!=0){
@@ -228,7 +238,9 @@ void Trainer_DE::differential_evolution_topology_evolution(vector<vec> &pop, dat
         NeuralNet candidate_net = generate_net(candidate_model);
         // compute performances
         double original_score  = original_net.get_f1_score(training_set);
+        nb_err_func_calls++;
         double candidate_score = candidate_net.get_f1_score(training_set);
+        nb_err_func_calls++;
         // selection
         bool candidate_is_better_than_original = candidate_score > original_score;
         if(candidate_is_better_than_original) {

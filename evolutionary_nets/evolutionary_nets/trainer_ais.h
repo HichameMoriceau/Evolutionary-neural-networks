@@ -10,7 +10,7 @@ public:
                         Trainer_AIS();
     void                train(Data_set data_set, NeuralNet &net);
     void                train(Data_set data_set, NeuralNet &net, mat &results_score_evolution);
-    NeuralNet           evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_epochs, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme);
+    NeuralNet           evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_gens, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme, unsigned int current_gen);
 
     void                clonal_selection_topology_evolution(vector<vec> &population, data_subset training_set, net_topology min_topo, net_topology max_topology, unsigned int selected_mutation_scheme);
     vector<vec>         select(unsigned int quantity, vector<vec> pop, data_subset training_set, net_topology max_topo);

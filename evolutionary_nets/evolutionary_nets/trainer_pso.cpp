@@ -3,6 +3,7 @@
 Trainer_PSO::Trainer_PSO(){
     // default nb generations:
     nb_epochs = 1000;
+    nb_err_func_calls=0;
     // default variance value (convergence treshold for GA stopping criteria)
     epsilon = 1.0f;
     // default topologies for individuals
@@ -27,7 +28,7 @@ void Trainer_PSO::train(Data_set data_set, NeuralNet &net, mat &results_score_ev
     net = train_topology_plus_weights(data_set, net.get_topology(), results_score_evolution, -1);
 }
 
-NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_epochs, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme) {
+NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_gens, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme, unsigned int current_gen) {
     NeuralNet trained_model = population[0];
     double prediction_accuracy = 0;
     double score=0;
@@ -54,6 +55,7 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
     vector<NeuralNet> pBests = generate_population(population.size(), max_topo, data_set.training_set);
     vector<vec> velocities;
 
+    // particle index
     for(unsigned int i=0; i<population.size(); i++){
         vec new_vector(nb_params);
         new_vector = ones(nb_params, 1);
@@ -73,7 +75,7 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
      *  TERMINATION CRITERIA:
      *      If all generations were achieved OR if the algorithm has converged (variance test)
     */
-    for(unsigned int i=0; ((i<nb_epochs) && (!has_converged)); ++i) {
+    for(unsigned int i=0; ((i<nb_gens) && (!has_converged)); ++i) {
         // update individuals
         population = convert_population_to_nets(genome_population);
         // evaluate population
@@ -96,6 +98,7 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
         genome_population = convert_population_to_genomes(population, max_topo);
         // optimize model params and topology using training-set
         PSO_topology_evolution(genome_population, velocities, data_set.training_set, max_topo, pBests, trained_model, pop_score_variance);
+
         // record model performances on new data
         prediction_accuracy =   trained_model.get_accuracy(data_set.validation_set);
         score               =   trained_model.get_f1_score(data_set.validation_set);
@@ -104,6 +107,8 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
         pop_score_stddev    =   compute_score_stddev(genome_population, data_set.validation_set);
         pop_score_mean      =   compute_score_mean(genome_population, data_set.validation_set);
         pop_score_median    =   compute_score_median(genome_population, data_set.validation_set);
+        double validation_accuracy=trained_model.get_accuracy(data_set.validation_set);
+        double validation_score=trained_model.get_f1_score(data_set.validation_set);
         // record results (performances and topology description)
         unsigned int inputs             =   trained_model.get_topology().nb_input_units;
         unsigned int hidden_units       =   trained_model.get_topology().nb_units_per_hidden_layer;
@@ -111,7 +116,7 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
         unsigned int nb_hidden_layers   =   trained_model.get_topology().nb_hidden_layers;
 
         // format result line
-        new_line << i //+ nb_epochs * index_cross_validation_section
+        new_line << nb_gens*current_gen+i  // i + nb_epochs * index_cross_validation_section
                  << MSE
                  << prediction_accuracy
                  << score
@@ -131,13 +136,17 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
 
                  << ensemble_accuracy
                  << ensemble_score
+                 << validation_accuracy
+                 << validation_score
+                 << nb_err_func_calls
+
                  << endr;
 
         // append result line to result matrix
         results_score_evolution = join_vert(results_score_evolution, new_line);
         cout << fixed
              << setprecision(2)
-             << "Gen="            << i
+             << "Gen="            << nb_gens*current_gen+i
              << "  sco="          << score
              << "  MSE="            << MSE
              << "  acc="            << prediction_accuracy
@@ -162,6 +171,7 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
             // otherwise always force training on first 10% of total generations
             has_converged = false;
         }
+        //}
     }
     return trained_model;
 }
@@ -183,20 +193,26 @@ void Trainer_PSO::PSO_topology_evolution(vector<vec> &pop, vector<vec> &velociti
     for(unsigned int p=0; p<pop.size(); p++){
         // calculate fitness
         double candidate_fitness = generate_net(pop[p]).get_f1_score(training_set);
+        nb_err_func_calls++;
+        nb_err_func_calls++;
         // if particle is closer to target than pBest
         if(candidate_fitness > pBest[p].get_f1_score(training_set)){
             // set particle as pBest
             pBest[p] = generate_net(pop[p]);
         }
     }
+
     // update gBest
     vector<NeuralNet>tmp_pop = convert_population_to_nets(pop);
     for(unsigned int p=0; p<pop.size(); p++){
+        nb_err_func_calls++;
+        nb_err_func_calls++;
         if(pBest[p].get_f1_score(training_set) > gBest.get_f1_score(training_set)){
             // save best particle as <gBest>
             gBest = tmp_pop[p];
         }
     }
+
     // for each particle
     for(unsigned int p=0; p<pop.size(); p++) {
         for(unsigned int i=0; i<genome_size; i++){
@@ -233,6 +249,8 @@ void Trainer_PSO::PSO_topology_evolution(vector<vec> &pop, vector<vec> &velociti
                 break;
             }
         }
+        nb_err_func_calls++;
+        nb_err_func_calls++;
         if(generate_net(particle).get_f1_score(training_set) >= generate_net(pop[p]).get_f1_score(training_set))
             pop[p] = particle;
     }
