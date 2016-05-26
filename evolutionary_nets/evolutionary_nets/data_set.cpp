@@ -2,7 +2,7 @@
 
 Data_set::Data_set()
 {
-    select_data_set(0);
+    //select_data_set(0);
 }
 
 Data_set::Data_set(string full_path)
@@ -119,6 +119,7 @@ void Data_set::select_data_set(unsigned int chosen_data_set_index) {
     standardize(D);
     D = shuffle(D);
     data = D;
+    // update nb possible outputs
     find_nb_prediction_classes(D);
     subdivide_data_cross_validation(1,10);
 }
@@ -220,78 +221,30 @@ void Data_set::subdivide_data_cross_validation(unsigned int index_validation_fol
     if(index_validation_fold >= nb_folds) throw new InnapropriateValidationFoldIndex;
 
     nb_prediction_classes = find_nb_prediction_classes(data);
-    if(nb_prediction_classes==2){
-        // count how many element each class contains
-        unsigned int count_pos=0, count_neg=0;
-        for(unsigned int i=0; i<data.n_rows; i++){
-            if(data(i,data.n_cols-1) == 0)
-                count_neg++;
-            else
-                count_pos++;
+    unsigned int range=((data.n_rows)*80/100)/nb_folds;//= data.n_rows / nb_folds;
+    //range--;
+    // build training and validation set while preserving the imbalance ratio
+    mat training_section, validation_section, test_section;
+    for(unsigned int i=0; i<nb_folds; ++i){
+        if(i != index_validation_fold) {
+            cout<<"training section indices: "<<round(i*range)<<" up to "<<(i+1)*range<<endl;
+            training_section = join_vert(training_section, data.rows(round(i*range), (i+1)*range));
+        }else{
+            cout<<"validation section indices: "<<round(i*range)<<" up to "<<(i+1)*range<<endl;
+            validation_section = join_vert(validation_section, data.rows(round(i*range), (i+1)*range));
         }
-
-        // determine which class dominates the other
-        unsigned int outnumbered_type;
-        if(count_pos < count_neg)
-            outnumbered_type = 1;
-        else
-            outnumbered_type = 0;
-
-        // separate data in corresponding subsets
-        mat minority_examples, majority_examples;
-        for(unsigned int i=0; i<data.n_rows; i++){
-            // if current example is one of the outnumbered type
-            if(data(i,data.n_cols-1) == outnumbered_type){
-                minority_examples = join_vert(minority_examples, data.row(i));
-            }else{
-                majority_examples = join_vert(majority_examples, data.row(i));
-            }
-        }
-
-        // compute ratio of how imbalanced the data set is
-        unsigned int minority_range = minority_examples.n_rows / nb_folds;
-        unsigned int majority_range = majority_examples.n_rows / nb_folds;
-
-        // build training and validation set while preserving the imbalance ratio
-        mat training_section, validation_section;
-        for(unsigned int i=0; i<nb_folds; ++i) {
-            if(i != index_validation_fold) {
-                mat majority_section = majority_examples.rows(round(i*majority_range), (i+1)*majority_range);
-                mat minority_section = minority_examples.rows(round(i*minority_range), (i+1)*minority_range);
-                training_section = join_vert(training_section, majority_section);
-                training_section = join_vert(training_section, minority_section);
-            }else{
-                mat majority_section = majority_examples.rows(round(i*majority_range), (i+1)*majority_range);
-                mat minority_section = minority_examples.rows(round(i*minority_range), (i+1)*minority_range);
-                validation_section = join_vert(validation_section, majority_section);
-                validation_section = join_vert(validation_section, minority_section);
-            }
-        }
-        // set training and validation folds
-        unsigned int dataset_nb_features = data.n_cols-1;
-        unsigned int dataset_last_column_index = data.n_cols-1;
-        training_set.X = training_section.cols(0,dataset_nb_features-1);
-        training_set.Y = training_section.col(dataset_last_column_index);
-        validation_set.X = validation_section.cols(0,dataset_nb_features-1);
-        validation_set.Y = validation_section.col(dataset_last_column_index);
-    }else if(nb_prediction_classes>2){
-        unsigned int range = data.n_rows / nb_folds;
-        range--;
-        // build training and validation set while preserving the imbalance ratio
-        mat training_section, validation_section;
-        for(unsigned int i=0; i<nb_folds; ++i){
-            if(i != index_validation_fold) {
-                training_section = join_vert(training_section, data.rows(round(i*range), (i+1)*range));
-            }else{
-                validation_section = join_vert(validation_section, data.rows(round(i*range), (i+1)*range));
-            }
-        }
-        // set training and validation folds
-        unsigned int dataset_nb_features = data.n_cols-1;
-        unsigned int dataset_last_column_index = data.n_cols-1;
-        training_set.X = training_section.cols(0,dataset_nb_features-1);
-        training_set.Y = training_section.col(dataset_last_column_index);
-        validation_set.X = validation_section.cols(0,dataset_nb_features-1);
-        validation_set.Y = validation_section.col(dataset_last_column_index);
     }
+    unsigned int index_low=data.n_rows-(double(data.n_rows)*(20.0/100));
+    unsigned int index_high=data.n_rows-1;
+    cout<<"test section indices: "<<index_low<<" up to "<<index_high<<endl;
+    test_section=data.rows(index_low, index_high);
+    // set training and validation folds
+    unsigned int dataset_nb_features = data.n_cols-1;
+    unsigned int dataset_last_column_index = data.n_cols-1;
+    training_set.X = training_section.cols(0,dataset_nb_features-1);
+    training_set.Y = training_section.col(dataset_last_column_index);
+    validation_set.X = validation_section.cols(0,dataset_nb_features-1);
+    validation_set.Y = validation_section.col(dataset_last_column_index);
+    test_set.X=test_section.cols(0,dataset_nb_features-1);
+    test_set.Y=test_section.col(dataset_last_column_index);
 }

@@ -39,6 +39,8 @@ public:
 
     data_subset     validation_set;
 
+    data_subset     test_set;
+
     string          data_set_filename;
 
     string          OCTAVE_perfs_VS_nb_epochs;
@@ -60,7 +62,6 @@ public:
                     Data_set(unsigned int data_set_index);
 
     void            check_fann_format_available(mat D, string data_set_filename);
-
 
     void            select_data_set(unsigned int chosen_data_set_index);
 
