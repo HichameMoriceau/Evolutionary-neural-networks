@@ -1,6 +1,15 @@
 #include "trainer.h"
 
 
+//user stop flag
+unsigned int usf=0;
+
+void user_interrupt_handler(int a)
+{
+    usf=1;
+    printf("\nUser interruption caught: (^C)\n");
+}
+
 double Trainer::compute_score_variance(vector<NeuralNet> pop, data_subset data_set){
     double variance=0.0f;
     vec score_values(pop.size());
@@ -126,14 +135,14 @@ NeuralNet Trainer::train_topology_plus_weights(Data_set data_set, net_topology m
     mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
     results_score_evolution=join_horiz(results_score_evolution, test_score_m);
     results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
-    cout<<"Performances on test set: "<<test_score<<", acc="<<test_acc<<endl;
+    cout<<"Performances on test set: F1 score="<<test_score<<", acc="<<test_acc<<endl;
     mat mutation_scheme=ones(results_score_evolution.n_rows,1) * selected_mutation_scheme;
     results_score_evolution=join_horiz(results_score_evolution, mutation_scheme);
     return cross_validated_net;
 }
 
 NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min_topo, net_topology max_topo, mat &results_score_evolution, double &test_score, double &test_acc, unsigned int selected_mutation_scheme){
-    unsigned int nb_folds=10;
+    unsigned int nb_folds=data_set.training_set.X.n_rows;
     NeuralNet tmp_net(max_topo), cross_validated_net(max_topo);
     tmp_net.set_topology(max_topo);
     cross_validated_net.set_topology(max_topo);
@@ -142,8 +151,18 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
     unsigned int pop_size=population.size();
     population=convert_population_to_nets(generate_random_topology_genome_population(pop_size,min_topo, max_topo));
 
+    unsigned int nb_cv_gens=(nb_epochs)-(nb_epochs/nb_folds);
+    double freq_change_CV_percent = 1;
+
+
+    // Register signals
+    signal(SIGINT, user_interrupt_handler);
+
+    unsigned int passed_gens=nb_cv_gens;
+
+    cout<<"NB CrossValidated gens="<<nb_cv_gens<<endl;
     // for each generation
-    for(unsigned int i=0; i<(nb_epochs)-(nb_epochs/nb_folds); i++) {
+    for(unsigned int i=0; i<nb_cv_gens/*freq_change_CV_percent*/; i++) {
         unsigned int k=i%nb_folds;
         cout << "Using validation-set" << k << " of" << nb_folds-1 << endl;
         data_set.subdivide_data_cross_validation(k, nb_folds);
@@ -151,9 +170,10 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
         max_topo.nb_input_units=data_set.training_set.X.n_cols;
         max_topo.nb_output_units=data_set.find_nb_prediction_classes(data_set.data);
 
+//        cout<<"running"<<nb_cv_gens/freq_change_CV_percent<<"gens"<<endl;
         // empty temporary result matrix
         tmp_results_perfs.reset();
-        tmp_net=evolve_through_iterations(data_set, min_topo, max_topo, 1, tmp_results_perfs, k, selected_mutation_scheme, i);
+        tmp_net=evolve_through_iterations(data_set, min_topo, max_topo, 1/*nb_cv_gens/freq_change_CV_percent*/, tmp_results_perfs, k, selected_mutation_scheme, i);
 
         if(tmp_net.get_f1_score(data_set.validation_set)>=cross_validated_net.get_f1_score(data_set.validation_set)){
             // update best model
@@ -163,22 +183,33 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
         // append results for this fold to results to be printed
         perfs_cross_validation=join_vert(perfs_cross_validation, tmp_results_perfs);
 
+        // if user stopped experiment
+        if(usf){
+            passed_gens=i;
+            cout<<"early termination"<<endl;
+            break;
+        }
+
     }
+    // reset user stopping flag
+    usf=0;
+
     cout << "start last fold" << endl;
     // force last training cycle to do all epochs
     set_epsilon(-1);
-
-
-    //tmp_net=evolve_through_iterations(data_set, min_topo, max_topo, nb_epochs, tmp_results_perfs, 0, selected_mutation_scheme);
-
     // force last training cycle to make use of entire training set
     data_set.training_set.X=join_vert(data_set.training_set.X,   data_set.training_set.X);
     data_set.training_set.Y=join_vert(data_set.training_set.Y, data_set.training_set.Y);
     // train net
     mat perfs_entire_training_set;
-    for(unsigned int i=0;i<nb_epochs/nb_folds;i++)
-        tmp_net=evolve_through_iterations(data_set, min_topo, max_topo, 1, perfs_entire_training_set, nb_folds, -1, nb_epochs-(nb_epochs/nb_folds)+i);
-
+    for(unsigned int i=0;i<nb_epochs/nb_folds;i++){
+        tmp_net=evolve_through_iterations(data_set, min_topo, max_topo, 1, perfs_entire_training_set, nb_folds, -1, passed_gens+i);
+        // if user stopped experiment
+        if(usf){
+            cout<<"early termination"<<endl;
+            break;
+        }
+    }
     if(tmp_net.get_f1_score(data_set.validation_set)>=cross_validated_net.get_f1_score(data_set.validation_set)){
         // update best model
         cross_validated_net.set_topology(tmp_net.get_topology());
@@ -197,20 +228,20 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
 
 void Trainer::elective_accuracy(vector<NeuralNet> pop, Data_set data_set, double &ensemble_accuracy, double &ensemble_score){
     // sort pop by fitness
-    evaluate_population(pop, data_set.validation_set);
+    evaluate_population(pop, data_set.training_set);
     unsigned int nb_individuals=pop.size();
     unsigned int nb_classes=pop[0].get_topology().nb_output_units;
-    unsigned int nb_examples=data_set.validation_set.Y.n_rows;
-    mat elected_votes(data_set.validation_set.X.n_rows,1);
-    mat pos_votes(data_set.validation_set.X.n_rows,1);
-    mat neg_votes(data_set.validation_set.X.n_rows,1);
+    unsigned int nb_examples=data_set.training_set.Y.n_rows;
+    mat elected_votes(data_set.training_set.X.n_rows,1);
+    mat pos_votes(data_set.training_set.X.n_rows,1);
+    mat neg_votes(data_set.training_set.X.n_rows,1);
     // keeps track of number of votes for each class
     vector<map<unsigned int, unsigned int> >votes(nb_examples);
 
     // for each indiv
     for(unsigned int i=0;i<pop.size(); i++){
         // perform predictions on data-set
-        mat H=pop[i].forward_propagate(data_set.validation_set.X);
+        mat H=pop[i].forward_propagate(data_set.training_set.X);
         mat Predictions=to_multiclass_format(H);
         // memorize vote
         for(unsigned int p=0; p<Predictions.n_rows; p++){
@@ -231,7 +262,7 @@ void Trainer::elective_accuracy(vector<NeuralNet> pop, Data_set data_set, double
     mat confusion_matrix(nb_classes, nb_classes);
     for(unsigned int i=0; i<nb_classes; i++) {
         for(unsigned int j=0; j<nb_classes; j++){
-            confusion_matrix(i,j)=count_nb_identicals(i,j, elected_votes, data_set.validation_set.Y);
+            confusion_matrix(i,j)=count_nb_identicals(i,j, elected_votes, data_set.training_set.Y);
         }
     }
 
