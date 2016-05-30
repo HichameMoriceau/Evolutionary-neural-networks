@@ -5,7 +5,7 @@ NeuralNet::NeuralNet(){
     net_topology t;
     t.nb_input_units   = 1;
     t.nb_hidden_layers = 1;
-    t.nb_output_units  = 1;
+    t.nb_output_units  = 2;
     t.nb_units_per_hidden_layer = 1;
 
     accuracy     = 0.0f;
@@ -179,6 +179,10 @@ unsigned int NeuralNet::get_total_nb_weights(){
 
 vec NeuralNet::generate_random_model(){
     vec random_model = randu<vec>(get_total_nb_weights());
+    random_model[0]=topology.nb_input_units;
+    random_model[1]=topology.nb_units_per_hidden_layer;
+    random_model[2]=topology.nb_output_units;
+    random_model[3]=topology.nb_hidden_layers;
     return random_model;
 }
 
@@ -215,13 +219,11 @@ double NeuralNet::get_accuracy(data_subset data_set) {
             confusion_matrix(i,j) = count_nb_identicals(i,j, to_multiclass_format(H), data_set.Y);
         }
     }
-
     double TP =0;
     for(unsigned int i=0; i<nb_classes; i++){
         TP += confusion_matrix(i,i);
     }
     computed_accuracy = (TP/H.n_rows)*100;
-
     // update neural network accuracy
     accuracy = computed_accuracy;
     // return computed accuracy
@@ -233,11 +235,10 @@ double NeuralNet::get_f1_score(data_subset data_set) {
     double computed_score = 0;
     // perform predictions on provided data-set
     mat H = forward_propagate(data_set.X);
-
     unsigned int nb_classes = topology.nb_output_units;
     // generate confusion matrix
     mat confusion_matrix(nb_classes, nb_classes);
-    for(unsigned int i=0; i<nb_classes; i++){
+    for(unsigned int i=0; i<nb_classes; i++) {
         for(unsigned int j=0; j<nb_classes; j++){
             confusion_matrix(i,j) = count_nb_identicals(i,j, to_multiclass_format(H), data_set.Y);
         }
@@ -290,7 +291,6 @@ mat NeuralNet::to_multiclass_format(mat predictions){
                 index = j;
             }
         }
-        //cout << "formatted prediction = " << endl << formatted_predictions << endl;
         formatted_predictions(i) = index;
     }
     return formatted_predictions;
@@ -323,11 +323,22 @@ double NeuralNet::get_matthews_correlation_coefficient(data_subset data_set){
 
 double NeuralNet::get_MSE(data_subset d){
     double total_error = 0;
+    unsigned int nb_classes=get_topology().nb_output_units;
     for(unsigned int i=0; i<d.X.n_rows; i++){
         mat prediction = forward_propagate(d.X.row(i));
-        total_error += pow(d.Y(i) - prediction(0), 2);
+        double max=-1;
+        unsigned int index=-1;
+        // search for most activated output
+        for(unsigned int j=0; j<nb_classes; j++){
+            unsigned int p=prediction(j);
+            if(p>max){
+                max=p;
+                index=j;
+            }
+        }
+        total_error += pow(as_scalar(to_multiclass_format(prediction))-d.Y(i), 2);
     }
-    return total_error/d.X.n_rows;
+    return (total_error/d.X.n_rows);
 }
 
 double NeuralNet::sigmoid(double z) {
