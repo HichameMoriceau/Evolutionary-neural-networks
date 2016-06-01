@@ -227,16 +227,16 @@ void Data_set::subdivide_data_cross_validation(unsigned int index_validation_fol
     mat training_section, validation_section, test_section;
     for(unsigned int i=0; i<nb_folds; ++i){
         if(i != index_validation_fold) {
-            cout<<"training section indices: "<<round(i*range)<<" up to "<<(i+1)*range<<endl;
+            //cout<<"training section indices: "<<round(i*range)<<" up to "<<(i+1)*range<<endl;
             training_section = join_vert(training_section, data.rows(round(i*range), (i+1)*range));
         }else{
-            cout<<"validation section indices: "<<round(i*range)<<" up to "<<(i+1)*range<<endl;
+            //cout<<"validation section indices: "<<round(i*range)<<" up to "<<(i+1)*range<<endl;
             validation_section = join_vert(validation_section, data.rows(round(i*range), (i+1)*range));
         }
     }
     unsigned int index_low=data.n_rows-(double(data.n_rows)*(20.0/100));
     unsigned int index_high=data.n_rows-1;
-    cout<<"test section indices: "<<index_low<<" up to "<<index_high<<endl;
+    //cout<<"test section indices: "<<index_low<<" up to "<<index_high<<endl;
     test_section=data.rows(index_low, index_high);
     // set training and validation folds
     unsigned int dataset_nb_features = data.n_cols-1;

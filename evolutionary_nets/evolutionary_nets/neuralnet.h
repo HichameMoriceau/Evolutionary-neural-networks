@@ -25,9 +25,9 @@ struct net_topology{
   unsigned int get_total_nb_weights(){
       // return variable
       unsigned int nb_weights = 0;
-      unsigned int nb_input_weights  = (this->nb_input_units+1) * this->nb_units_per_hidden_layer;
-      unsigned int nb_hidden_weights = (this->nb_units_per_hidden_layer+1) * (this->nb_units_per_hidden_layer) * (this->nb_hidden_layers-1);
-      unsigned int nb_output_weights = (this->nb_units_per_hidden_layer+1) * this->nb_output_units;
+      unsigned int nb_input_weights =(this->nb_input_units+1)*this->nb_units_per_hidden_layer;
+      unsigned int nb_hidden_weights=(this->nb_units_per_hidden_layer+1)*(this->nb_units_per_hidden_layer)*(this->nb_hidden_layers-1);
+      unsigned int nb_output_weights=(this->nb_units_per_hidden_layer+1)*this->nb_output_units;
       nb_weights = nb_input_weights + nb_output_weights;
       if(this->nb_hidden_layers > 1)
           nb_weights += nb_hidden_weights;

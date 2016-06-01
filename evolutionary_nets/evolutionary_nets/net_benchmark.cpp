@@ -1,5 +1,5 @@
 #include "net_benchmark.h"
-#include "data_set.h"
+//#include "data_set.h"
 
 Net_benchmark::Net_benchmark() {
     // set default data-set
@@ -32,10 +32,10 @@ Net_benchmark::~Net_benchmark(){
 void Net_benchmark::run_benchmark(unsigned int nb_rep) {
 
     vector<string> data_set_filenames;
-    data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
+    data_set_filenames.push_back("data/wine-data-transformed.csv"); // multi-class problem
     data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
     data_set_filenames.push_back("data/iris-data-transformed.csv"); // multi-class problem
-    data_set_filenames.push_back("data/wine-data-transformed.csv"); // multi-class problem
+    data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
 
     nb_replicates  = nb_rep;
     // set end of search space
@@ -44,8 +44,8 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
     max_topo.nb_hidden_layers           = 2;
     max_topo.nb_units_per_hidden_layer  = 10;
 
-    unsigned int pop_size_GA = 50;
-    unsigned int nb_generations_GA = 150;
+    unsigned int pop_size_GA = 120;
+    unsigned int nb_generations_GA = 200;
     unsigned int total_nb_data_sets = 4;
 
     unsigned int selected_opt_alg = OPTIMIZATION_ALG::PSO;
@@ -99,7 +99,7 @@ double Net_benchmark::find_termination_criteria_epsilon(unsigned int many_genera
     min_topo.nb_hidden_layers = 1;
 
     mat results_perfs;
-    cout << "search termination criteria epsilon with " << many_generations << " generations"<< endl;
+    cout<<"search termination criteria epsilon with "<<many_generations<<" generations"<<endl;
 
     // initial *generous* run of many generations
     Trainer_DE t;
@@ -109,7 +109,8 @@ double Net_benchmark::find_termination_criteria_epsilon(unsigned int many_genera
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
-    t.evolve_through_iterations(data_set, min_topo, max_topo,many_generations, results_perfs,0, MUTATION_SCHEME_RAND);
+    for(unsigned int i=0;i<many_generations;i++)
+        t.evolve_through_iterations(data_set, min_topo, max_topo,1, results_perfs,0, MUTATION_SCHEME_RAND,i);
 
     mat variance_values = results_perfs.col(5);
     double highest_variance = 0;
@@ -234,7 +235,6 @@ mat Net_benchmark::evaluate_backprop_general_performances() {
     }
     return results_cost_relative_to_training_set_size;
 }
-
 
 void Net_benchmark::print_results_octave_format(ofstream &result_file, mat recorded_performances, string octave_variable_name){
     // Create header in MATLAB format
@@ -628,7 +628,6 @@ mat Net_benchmark::compute_learning_curves_dataset_size(vector<mat> &result_matr
 }
 
 mat Net_benchmark::average_matrices(vector<mat> results){
-
     unsigned int smallest_nb_rows = INT_MAX;
     // find lowest and highest nb rows
     for(unsigned int i=0; i<results.size() ;i++){

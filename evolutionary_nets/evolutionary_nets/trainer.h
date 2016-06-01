@@ -7,8 +7,14 @@
 #include <map>
 #include <cmath>
 #include <algorithm>
+#include <csignal>
+#include <signal.h>
+#include <stdio.h>
 
 using namespace std;
+
+//volatile sig_atomic_t user_stop_flag = 0;
+
 
 class Trainer
 {
