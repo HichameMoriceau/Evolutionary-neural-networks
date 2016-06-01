@@ -13,10 +13,10 @@ Trainer_PSO::Trainer_PSO(){
     t.nb_output_units = 2;
     t.nb_hidden_layers = 1;
     NeuralNet ann(t);
-    initialize_random_population(50, t);
+    initialize_random_population(120, t);
 
     // default population size: 100
-    population = convert_population_to_nets(generate_random_genome_population(100,ann));
+    population = convert_population_to_nets(generate_random_genome_population(120,ann));
 }
 
 void Trainer_PSO::train(Data_set data_set, NeuralNet &net){
@@ -80,12 +80,12 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
         population = convert_population_to_nets(genome_population);
         // evaluate population
         for(unsigned int s=0; s<population.size() ; ++s) {
-            population[s].get_f1_score(data_set.validation_set);
+            population[s].get_f1_score(data_set.training_set);
         }
         // sort from fittest
         sort(population.begin(), population.end());
         // get best model
-        if(population[0].get_f1_score(data_set.validation_set) >= trained_model.get_f1_score(data_set.validation_set))
+        if(population[0].get_f1_score(data_set.training_set) >= trained_model.get_f1_score(data_set.training_set))
             trained_model = population[0];
         // compute accuracy
         elective_accuracy(population, data_set, pop_accuracy, pop_score);
@@ -100,13 +100,13 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
         PSO_topology_evolution(genome_population, velocities, data_set.training_set, max_topo, pBests, trained_model, pop_score_variance);
 
         // record model performances on new data
-        prediction_accuracy =   trained_model.get_accuracy(data_set.validation_set);
-        score               =   trained_model.get_f1_score(data_set.validation_set);
-        MSE                 =   trained_model.get_MSE(data_set.validation_set);
-        pop_score_variance  =   compute_score_variance(genome_population, data_set.validation_set);
-        pop_score_stddev    =   compute_score_stddev(genome_population, data_set.validation_set);
-        pop_score_mean      =   compute_score_mean(genome_population, data_set.validation_set);
-        pop_score_median    =   compute_score_median(genome_population, data_set.validation_set);
+        prediction_accuracy =   trained_model.get_accuracy(data_set.training_set);
+        score               =   trained_model.get_f1_score(data_set.training_set);
+        MSE                 =   trained_model.get_MSE(data_set.training_set);
+        pop_score_variance  =   compute_score_variance(genome_population, data_set.training_set);
+        pop_score_stddev    =   compute_score_stddev(genome_population, data_set.training_set);
+        pop_score_mean      =   compute_score_mean(genome_population, data_set.training_set);
+        pop_score_median    =   compute_score_median(genome_population, data_set.training_set);
         double validation_accuracy=trained_model.get_accuracy(data_set.validation_set);
         double validation_score=trained_model.get_f1_score(data_set.validation_set);
         // record results (performances and topology description)
@@ -156,6 +156,7 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
              << "  NB.hid.units="   << hidden_units
              << "\tens.acc=" << ensemble_accuracy
              << "  ens.sco=" << ensemble_score
+             << "  NB err.func.calls="<<nb_err_func_calls
              << endl;
 
         // checking for convergence (termination criterion)

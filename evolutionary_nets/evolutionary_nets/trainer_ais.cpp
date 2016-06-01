@@ -13,7 +13,7 @@ Trainer_AIS::Trainer_AIS(){
     t.nb_output_units=2;
     t.nb_hidden_layers=1;
     NeuralNet ann(t);
-    initialize_random_population(50, t);
+    initialize_random_population(40, t);
 
     // default population size: 100
     population=convert_population_to_nets(generate_random_genome_population(100,ann));
@@ -143,6 +143,7 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
              << "  NB.hid.units="   << hidden_units
              << "\tens.acc=" << ensemble_accuracy
              << "  ens.score=" << ensemble_score
+             << "  NB err.func.calls="<<nb_err_func_calls
              << endl;
 
         // checking for convergence (termination criterion)
@@ -168,9 +169,9 @@ void Trainer_AIS::clonal_selection_topology_evolution(vector<vec> &pop, data_sub
     // Number of individuals retained
     unsigned int selection_size=pop.size()*100/100;
     // Number of random cells incorporated in the population for every generation
-    unsigned int nb_rand_cells=(unsigned int)pop.size()*5/100;
+    unsigned int nb_rand_cells=(unsigned int)pop.size()*2/100;
     // Scaling factor
-    double clone_rate=0.02;
+    double clone_rate=0.0005;
 
     // -- Differential Evolution settings (for mutation operation only) --
     // total nb of variables

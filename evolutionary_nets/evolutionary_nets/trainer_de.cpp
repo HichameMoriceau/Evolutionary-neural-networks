@@ -67,7 +67,7 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
     for(unsigned int i=0; ((i<nb_gens) && (!has_converged)); i++) {
         // update individuals
         population = convert_population_to_nets(genome_population);
-        //genome_population = convert_population_to_genomes(population, max_topo);
+        genome_population = convert_population_to_genomes(population, max_topo);
         // optimize model params and topology using training-set
         differential_evolution_topology_evolution(genome_population, data_set.training_set, min_topo, max_topo, selected_mutation_scheme);
         // evaluate population
@@ -144,6 +144,7 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
              << "  NB.hid.units="   << hidden_units
              << "\tens.acc=" << ensemble_accuracy
              << "  ens.score=" << ensemble_score
+             << "  NB err.func.calls="<<nb_err_func_calls
              << endl;
 
         // checking for convergence (termination criterion)
@@ -231,6 +232,7 @@ void Trainer_DE::differential_evolution_topology_evolution(vector<vec> &pop, dat
             indiv_b = pop[1];
             mutative_crossover(problem_dimensionality, 1, 1, genome_length, min_topo, max_topo, original_model, candidate_model, indiv_a, indiv_b, indiv_c);
         }
+
         // traditional random crossover
         mutative_crossover(problem_dimensionality, CR, F, genome_length, min_topo, max_topo, original_model, candidate_model, indiv_a, indiv_b, indiv_c);
 
