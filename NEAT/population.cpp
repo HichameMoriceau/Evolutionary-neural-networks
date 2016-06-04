@@ -602,7 +602,7 @@ bool Population::epoch(int generation) {
 
   double variance=var(all_fitnesses);
   double standard_deviation=stddev(all_fitnesses);
-
+  /*
   std::ofstream oFile("results-neat.mat",std::ios::app);
   oFile<<std::setprecision(7)<<std::fixed
        <<generation<<" " // gens
@@ -627,7 +627,7 @@ bool Population::epoch(int generation) {
        <<"-1"<<" " // ann ensemble score
        <<std::endl;
   oFile.close();
-
+  */
   //Check for stagnation- if there is stagnation, perform delta-coding
   if (highest_last_changed>=NEAT::dropoff_age+5) {
 

@@ -15,133 +15,24 @@
 */
 #include "experiments.h"
 #include <cstring>
+#include <omp.h> // Added by: Hichame Moriceau
 
-//#define NO_SCREEN_OUT 
+#define NO_SCREEN_OUT 
 
-Population *bc_test(int gens){
-  Population *pop=0;
-  Genome *start_genome;
-  char curword[20];
-  int id;
-
-  ostringstream *fnamebuf;
-  int gen;
- 
-  int evals[NEAT::num_runs];  //Hold records for each run
-  int genes[NEAT::num_runs];
-  int nodes[NEAT::num_runs];
-  int winnernum;
-  int winnergenes;
-  int winnernodes;
-  //For averaging
-  int totalevals=0;
-  int totalgenes=0;
-  int totalnodes=0;
-  int expcount;
-  int samples;  //For averaging
-
-  memset (evals, 0, NEAT::num_runs * sizeof(int));
-  memset (genes, 0, NEAT::num_runs * sizeof(int));
-  memset (nodes, 0, NEAT::num_runs * sizeof(int));
-
-  std::ofstream oFile("results-neat.mat",std::ios::out);
-  oFile<<"# Created by experiment.cpp"<<endl
-       <<"# name: results"<<endl
-       <<"# type: matrix"<<endl
-       <<"# rows: "<<gens<<endl
-       <<"# columns: "<< 17<<endl;
-  oFile.close();
-
-  ifstream iFile("bcstartgenes",ios::in);
-
-  cout<<"START BREAST CANCER TEST"<<endl;
-
-  cout<<"Reading in the start genome"<<endl;
-  //Read in the start Genome
-  iFile>>curword;
-  iFile>>id;
-  cout<<"Reading in Genome id "<<id<<endl;
-  start_genome=new Genome(id,iFile);
-  iFile.close();
-
-  for(expcount=0;expcount<NEAT::num_runs;expcount++) {
-    //Spawn the Population
-    cout<<"Spawning Population off Genome2"<<endl;
-
-    pop=new Population(start_genome,NEAT::pop_size);
-      
-    cout<<"Verifying Spawned Pop"<<endl;
-    pop->verify();
-      
-    for (gen=1;gen<=gens;gen++) {
-      //This is how to make a custom filename
-      fnamebuf=new ostringstream();
-      (*fnamebuf)<<"gen_"<<gen<<ends;  //needs end marker
-      
-      /*
-#ifndef NO_SCREEN_OUT
-      cout<<"name of fname: "<<fnamebuf->str()<<endl;
-#endif
-      */
-
-      char temp[50];
-      sprintf (temp, "gen_%d", gen);
-
-      //Check for success
-      if (bc_epoch(pop,gen,temp,winnernum,winnergenes,winnernodes)) {
-	//Collect Stats on end of experiment
-	evals[expcount]=NEAT::pop_size*(gen-1)+winnernum;
-	genes[expcount]=winnergenes;
-	nodes[expcount]=winnernodes;
-	gen=gens;
-      }
-	
-      //cout << "Epoch " << gen << ", fitness= " << pop->highest_fitness << endl;
-
-      //Clear output filename
-      fnamebuf->clear();
-      delete fnamebuf;
-    }
-
-    if (expcount<NEAT::num_runs-1)
-      delete pop;
-      
-  }
-
-  //Average and print stats
-  cout<<"Nodes: "<<endl;
-  for(expcount=0;expcount<NEAT::num_runs;expcount++) {
-    cout<<nodes[expcount]<<endl;
-    totalnodes+=nodes[expcount];
-  }
-    
-  cout<<"Genes: "<<endl;
-  for(expcount=0;expcount<NEAT::num_runs;expcount++) {
-    cout<<genes[expcount]<<endl;
-    totalgenes+=genes[expcount];
-  }
-    
-  cout<<"Evals "<<endl;
-  samples=0;
-  for(expcount=0;expcount<NEAT::num_runs;expcount++) {
-    cout<<evals[expcount]<<endl;
-    if (evals[expcount]>0)
-      {
-	totalevals+=evals[expcount];
-	samples++;
-      }
-  }
-
-  cout<<"Failures: "<<(NEAT::num_runs-samples)<<" out of "<<NEAT::num_runs<<" runs"<<endl;
-  cout<<"Average Nodes: "<<(samples>0 ? (double)totalnodes/samples : 0)<<endl;
-  cout<<"Average Genes: "<<(samples>0 ? (double)totalgenes/samples : 0)<<endl;
-  cout<<"Average Evals: "<<(samples>0 ? (double)totalevals/samples : 0)<<endl;
-
-  return pop;
+void bcm_test(int gens){
+  std::ofstream oFile("results-neat-bcm.mat",std::ios::out);
+  vector<mat> res_mats_training_perfs;
+  mat avrg_mat=compute_learning_curves_perfs(gens,res_mats_training_perfs);
+  mat res_mat_err = compute_replicate_error(res_mats_training_perfs);
+  // plot results
+  print_results_octave_format(oFile,avrg_mat,"results");
+  print_results_octave_format(oFile,res_mat_err,"err_results");
 }
 
-
-bool bc_evaluate(Organism *org) {
+bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
+  static unsigned int bcm_nb_err_func_calls=0;
+  bcm_nb_err_func_calls++;
+  nb_calls=bcm_nb_err_func_calls;
   Network *net;
   double this_out; //The current output
   int count;
@@ -219,7 +110,6 @@ bool bc_evaluate(Organism *org) {
   numnodes=((org->gnome)->nodes).size();
   net_depth=net->max_depth();
 
-
   //Load and activate the network on each input
   for(count=0;count<height;count++){
     //cout<<count<<" ";
@@ -239,6 +129,7 @@ bool bc_evaluate(Organism *org) {
     //out[count]=(*(net->outputs.begin()))->activation;
     net->flush();
   }
+  
   /*
   cout<<"outputs="<<endl;
   for(unsigned int i=0;i<height;i++){
@@ -305,9 +196,6 @@ bool bc_evaluate(Organism *org) {
     }
     computed_acc = (TP/height)*100;
 
-    cout<<"conf mat="<<endl;
-    cout<<conf_mat<<endl;
-    
     org->error=errsum;
     org->accuracy=computed_acc;
     org->fitness=computed_score;
@@ -317,12 +205,12 @@ bool bc_evaluate(Organism *org) {
     org->error   =999.0;
     org->fitness =0.0000001;
     org->accuracy=0.0000001;
-  }  
+  }
   org->winner=false;
   return false;
 }
 
-int bc_epoch(Population *pop,int generation,char *filename,int &winnernum,int &winnergenes,int &winnernodes) {
+int bcm_epoch(Population *pop,int generation,char *filename,int &winnernum,int &winnergenes,int &winnernodes, mat &res_mat) {
   vector<Organism*>::iterator curorg;
   vector<Species*>::iterator curspecies;
   
@@ -331,14 +219,16 @@ int bc_epoch(Population *pop,int generation,char *filename,int &winnernum,int &w
   bool win=false;
   unsigned int c=0;
 
+  unsigned int bcm_nb_err_func_calls=-2;
+
   //Evaluate each organism on a test
   for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg)
-    bc_evaluate(*curorg);
+    bcm_evaluate(*curorg,bcm_nb_err_func_calls);
 
   std::vector<double> all_fitnesses;
   // find fittest
   for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){
-    std::cout<<"org"<<c<<"\tfit="<<(*curorg)->fitness<<"\tacc="<<(*curorg)->accuracy<<"\tNB nodes="<<(((*curorg)->gnome)->nodes).size()<<std::endl;
+    //std::cout<<"org"<<c<<"\tfit="<<(*curorg)->fitness<<"\tacc="<<(*curorg)->accuracy<<"\tNB nodes="<<(((*curorg)->gnome)->nodes).size()<<std::endl;
     if((*curorg)->fitness>best_fit){
       best_fit=(*curorg)->fitness;
       best_org=(*curorg);
@@ -348,48 +238,326 @@ int bc_epoch(Population *pop,int generation,char *filename,int &winnernum,int &w
     c++;
   }
 
-  double mean=pop->mean(all_fitnesses);
-  double variance=pop->var(all_fitnesses);
-  double std_dev=pop->stddev(all_fitnesses);
+  mat line;
+  double pop_score_mean=pop->mean(all_fitnesses);
+  double pop_score_variance=pop->var(all_fitnesses);
+  double pop_score_stddev=pop->stddev(all_fitnesses);
+  double score=(*best_org).fitness;
+  double prediction_accuracy=(*best_org).accuracy;
+  double MSE=(*best_org).error;
+  unsigned int hidden_units=(((*best_org).gnome)->nodes).size();
+
+  std::cout<<"gen"<<generation
+	   <<"\tbest.indiv.fitness="<<score
+	   <<"\tacc="<<prediction_accuracy
+	   <<"\terr="<<MSE
+	   <<"\tNB nodes="<<hidden_units
+	   <<"\tpop.mean="<<pop_score_mean
+	   <<"\tpop.var="<<pop_score_variance
+	   <<"\tpop.stddev="<<pop_score_stddev<<endl;
+
+  // format result line
+  line << generation  // i + nb_epochs * index_cross_validation_section
+       << MSE
+       << prediction_accuracy
+       << score
+       << pop_score_variance
+
+       << pop_score_stddev
+       << pop_score_mean
+       << -1//pop_score_median
+       << pop->organisms.size()
+       << (*best_org).net->inputs.size() // inputs
+
+       << hidden_units
+       << (*best_org).net->outputs.size()//outputs
+       << -1//nb_hidden_layers
+       << true
+       << -1//selected_mutation_scheme
+
+       << -1//ensemble_accuracy
+       << -1//ensemble_score
+       << -1//validation_accuracy
+       << -1//validation_score
+       << bcm_nb_err_func_calls
+
+       << endr;
 
 
-  std::cout<<"gen"<<generation<<"\tbest.indiv.fitness="<<(*best_org).fitness<<"\tacc="<<(*best_org).accuracy<<"\terr="<<(*best_org).error<<"\tNB nodes="<<(((*best_org).gnome)->nodes).size()<<"\tpop.mean="<<mean<<"\tpop.var="<<variance<<"\tpop.stddev="<<std_dev<<endl;
-
+  // Write results on file
+  res_mat=join_vert(res_mat,line);
   pop->epoch(generation);
 
   if (win) return 1;
   else return 0;
 }
 
-unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations){
-    unsigned int count=0;
-    // for each example
-    for(unsigned int i=0; i<predictions.n_rows; i++){
-        if(predictions(i)==predicted_class && expectations(i)==expected_class)
-            count++;
+mat compute_learning_curves_perfs(unsigned int gens,vector<mat> &result_matrices_training_perfs){
+    // return variable
+    mat averaged_performances;
+
+    // for each replicate
+#pragma omp parallel
+    {
+        // kick off a single thread
+#pragma omp single
+        {
+            for(unsigned int i=0; i<NEAT::num_runs; ++i) {
+#pragma omp task
+	      bcm_training_task(i, NEAT::num_runs,gens,result_matrices_training_perfs);
+            }
+        }
     }
-    return count;
+
+    // average PERFS of all replicates
+    averaged_performances = average_matrices(result_matrices_training_perfs);
+    return averaged_performances;
+}
+
+void bcm_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs){
+  // result matrices (to be interpreted by Octave script <Plotter.m>)
+  mat results_score_evolution;
+
+  cout << endl
+       << "***"
+       << "\tRUNNING REPLICATE " << i+1 << "/" << nb_reps << "\t ";
+
+  // set seed
+  unsigned int seed=i*10;
+  std::srand(seed);
+
+  Population *pop=0;
+  Genome *start_genome;
+  char curword[20];
+  int id;
+
+  ostringstream *fnamebuf;
+  int gen;
+ 
+  int evals[NEAT::num_runs];  //Hold records for each run
+  int genes[NEAT::num_runs];
+  int nodes[NEAT::num_runs];
+  int winnernum;
+  int winnergenes;
+  int winnernodes;
+  //For averaging
+  int totalevals=0;
+  int totalgenes=0;
+  int totalnodes=0;
+  int expcount;
+  int samples;  //For averaging
+
+  memset (evals, 0, NEAT::num_runs * sizeof(int));
+  memset (genes, 0, NEAT::num_runs * sizeof(int));
+  memset (nodes, 0, NEAT::num_runs * sizeof(int));
+
+  mat res_mat;
+
+  ifstream iFile("bcstartgenes",ios::in);
+
+  cout<<"START BREAST CANCER TEST"<<endl;
+
+  cout<<"Reading in the start genome"<<endl;
+  //Read in the start Genome
+  iFile>>curword;
+  iFile>>id;
+  cout<<"Reading in Genome id "<<id<<endl;
+  start_genome=new Genome(id,iFile);
+  iFile.close();
+
+  for(expcount=0;expcount<NEAT::num_runs;expcount++) {
+    //Spawn the Population
+    cout<<"Spawning Population off Genome2"<<endl;
+
+    pop=new Population(start_genome,NEAT::pop_size);
+      
+    cout<<"Verifying Spawned Pop"<<endl;
+    pop->verify();
+      
+    for (gen=1;gen<=gens;gen++) {
+      //This is how to make a custom filename
+      fnamebuf=new ostringstream();
+      (*fnamebuf)<<"gen_"<<gen<<ends;  //needs end marker
+
+      char temp[50];
+      sprintf (temp, "gen_%d", gen);
+
+      //Check for success
+      if (bcm_epoch(pop,gen,temp,winnernum,winnergenes,winnernodes, res_mat)) {
+	//Collect Stats on end of experiment
+	evals[expcount]=NEAT::pop_size*(gen-1)+winnernum;
+	genes[expcount]=winnergenes;
+	nodes[expcount]=winnernodes;
+	gen=gens;
+      }
+      
+      //Clear output filename
+      fnamebuf->clear();
+      delete fnamebuf;
+    }
+
+    if (expcount<NEAT::num_runs-1)
+      delete pop;
+  }
+
+  //Average and print stats
+  cout<<"Nodes: "<<endl;
+  for(expcount=0;expcount<NEAT::num_runs;expcount++) {
+    cout<<nodes[expcount]<<endl;
+    totalnodes+=nodes[expcount];
+  }
+    
+  cout<<"Genes: "<<endl;
+  for(expcount=0;expcount<NEAT::num_runs;expcount++) {
+    cout<<genes[expcount]<<endl;
+    totalgenes+=genes[expcount];
+  }
+    
+  cout<<"Evals "<<endl;
+  samples=0;
+  for(expcount=0;expcount<NEAT::num_runs;expcount++) {
+    cout<<evals[expcount]<<endl;
+    if (evals[expcount]>0)
+      {
+	totalevals+=evals[expcount];
+	samples++;
+      }
+  }
+  
+  ofstream experiment_file("experiment.txt",ios::out);
+
+  // print-out best perfs
+  double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
+
+  res_mats_training_perfs.push_back(results_score_evolution);
+  cout           <<"THREAD"<<-1/*omp_get_thread_num()*/<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<"Breast Cancer Malignancy data set"<<endl;
+  experiment_file<<"THREAD"<<-1/*omp_get_thread_num()*/<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<"Breast Cancer Malignancy data set"<<endl;
+  experiment_file.close();
+}
+
+unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations){
+  unsigned int count=0;
+  // for each example
+  for(unsigned int i=0; i<predictions.n_rows; i++){
+    if(predictions(i)==predicted_class && expectations(i)==expected_class)
+      count++;
+  }
+  return count;
 }
 
 mat to_multiclass_format(mat predictions){
-    unsigned int nb_classes = predictions.n_cols;
-    mat formatted_predictions(predictions.n_rows, 1);
-    double highest_activation = 0;
-    // for each example
-    for(unsigned int i=0; i<predictions.n_rows; i++){
-        unsigned int index = 0;
-        highest_activation = 0;
-        // the strongest activation is considered the prediction
-        for(unsigned int j=0; j<nb_classes; j++){
-            if(predictions(i,j) > highest_activation){
-                highest_activation = predictions(i,j);
-                index = j;
-            }
-        }
-        //cout << "formatted prediction = " << endl << formatted_predictions << endl;
-        formatted_predictions(i) = index;
+  unsigned int nb_classes = predictions.n_cols;
+  mat formatted_predictions(predictions.n_rows, 1);
+  double highest_activation = 0;
+  // for each example
+  for(unsigned int i=0; i<predictions.n_rows; i++){
+    unsigned int index = 0;
+    highest_activation = 0;
+    // the strongest activation is considered the prediction
+    for(unsigned int j=0; j<nb_classes; j++){
+      if(predictions(i,j) > highest_activation){
+	highest_activation = predictions(i,j);
+	index = j;
+      }
     }
-    return formatted_predictions;
+    //cout << "formatted prediction = " << endl << formatted_predictions << endl;
+    formatted_predictions(i) = index;
+  }
+  return formatted_predictions;
+}
+
+mat average_matrices(vector<mat> results){
+    unsigned int smallest_nb_rows = INT_MAX;
+    // find lowest and highest nb rows
+    for(unsigned int i=0; i<results.size() ;i++){
+        if(results[i].n_rows < smallest_nb_rows){
+            smallest_nb_rows = results[i].n_rows;
+        }
+    }
+    mat total_results;
+    total_results.zeros(smallest_nb_rows, results[0].n_cols);
+
+    // keep only up to the shortest learning curve
+    vector<mat> processed_results;
+    for(unsigned int i=0; i<results.size(); i++){
+        processed_results.push_back( (mat)results[i].rows(0, smallest_nb_rows-1));
+    }
+
+    for(unsigned int i=0; i<results.size(); i++){
+        total_results += processed_results[i];
+    }
+    mat averaged_results = total_results / results.size();
+    return averaged_results;
+}
+
+mat compute_replicate_error(vector<mat> results){
+  // return variable
+  mat err_vec;
+
+  unsigned int smallest_nb_rows = INT_MAX;
+  // find lowest and highest nb rows
+  for(unsigned int i=0; i<results.size() ;i++){
+    if(results[i].n_rows < smallest_nb_rows){
+      smallest_nb_rows = results[i].n_rows;
+    }
+  }
+  mat best_scores;
+  // for each generation
+  for(unsigned int i=0; i<smallest_nb_rows; i++) {
+    best_scores.reset();
+    // for each replica
+    for(unsigned int r=0; r<NEAT::num_runs; r++) { // NEAT::num_runs=nb replicates
+      // get best score
+      best_scores = join_vert(best_scores, to_matrix(results[r](i,3)));
+    }
+    // append std dev of all best scores for current generation to error vector
+    err_vec = join_vert( err_vec, to_matrix(corrected_sample_std_dev(best_scores)));
+  }
+  return err_vec;
+}
+
+void print_results_octave_format(ofstream &result_file, mat recorded_performances, string octave_variable_name){
+  // Create header in MATLAB format
+  result_file << "# Created by main.cpp, " << get_current_date_time() << endl
+	      << "# name: " << octave_variable_name << endl
+	      << "# type: matrix"  << endl
+	      << "# rows: " << recorded_performances.n_rows << endl
+	      << "# columns: " << recorded_performances.n_cols << endl;
+
+  // append content of recorded performances into same file
+  for(unsigned int i=0; i<recorded_performances.n_rows; ++i){
+    for(unsigned int j=0; j<recorded_performances.n_cols; ++j){
+      result_file << recorded_performances(i,j) << " ";
+    }
+    result_file << endl;
+  }
+  result_file << endl;
+}
+
+mat to_matrix(double a){
+    mat A;
+    A << a;
+    return A;
+}
+
+double corrected_sample_std_dev(mat score_vector){
+    // return variable
+    double s = 0;
+    double N = score_vector.n_rows;
+    mat mean_vector = ones(score_vector.size(),1) * mean(score_vector);
+    s = (1/(N-1)) * ((double) as_scalar(sum(pow(score_vector - mean_vector, 2))));
+    s = sqrt(s);
+    return s;
+}
+
+// returns current date/time in format YYYY-MM-DD.HH:mm:ss
+const string get_current_date_time() {
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buffer[80];
+    tstruct = *localtime(&now);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d.%X", &tstruct);
+    return buffer;
 }
 
 //Perform evolution on XOR, for gens generations

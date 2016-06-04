@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
       p=xor_test(100);
       break;
     case 5:
-      p=bc_test(10000);
+      /*p=*/bcm_test(10);
       break;
     default:
       cout<<"Not an available option."<<endl;

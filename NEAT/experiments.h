@@ -34,18 +34,28 @@
 #include "genome.h"
 #include "species.h"
 #include <armadillo> // Added by: Hichame Moriceau
+
 using namespace arma; // Added by: Hichame Moriceau
-
 using namespace std;
-
 using namespace NEAT;
 
 
-Population *bc_test(int gens);
-bool bc_evaluate(Organism *org);
-int bc_epoch(Population *pop,int generation,char *filename, int &winnernum, int &winnergenes,int &winnernodes);
+// The Breast Cancer Malignancy (BCM) routines *****************************
+void bcm_test(int gens);
+bool bcm_evaluate(Organism *org, unsigned int &nb_calls);
+int bcm_epoch(Population *pop,int generation,char *filename, int &winnernum, int &winnergenes,int &winnernodes, mat &res_mat);
+
+// utility routines for Classification problems (BCM, Iris etc.)
+mat compute_learning_curves_perfs(unsigned int gens,vector<mat> &result_matrices_training_perfs);
+void bcm_training_task(unsigned int i, unsigned int nb_replicates, unsigned int gens, vector<mat> &result_matrices_training_perfs);
 unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
 mat to_multiclass_format(mat predictions);
+mat average_matrices(vector<mat> results);
+mat compute_replicate_error(vector<mat> results);
+void print_results_octave_format(ofstream &result_file, mat recorded_performances, string octave_variable_name);
+mat to_matrix(double a);
+double corrected_sample_std_dev(mat score_vector);
+const string get_current_date_time();
 
 //The XOR evolution routines *****************************************
 Population *xor_test(int gens);
