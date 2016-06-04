@@ -61,3 +61,33 @@ Makefile*
 
 # QtCtreator CMake
 CMakeLists.txt.user
+
+# Emacs backup files
+*#
+*~
+
+# LaTeX temporary files
+*.aux
+*.log
+*.toc
+*.ps
+
+# PDF output - usually a bad idea to keep this in Git
+*.pdf
+
+# Latexmk
+*.fdb_latexmk
+
+# SyncTeX
+*.synctex.gz
+
+# LaTeX Beamer
+*.snm
+*.vrb
+*.nav
+*.out
+
+# BibTeX
+*.bbl
+*.blg
+
