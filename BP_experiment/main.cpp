@@ -1,10 +1,12 @@
 #include<iostream>
 #include<string>
+#include<sstream>
 #include<vector>
 #include<fann.h>
 #include<armadillo>
 using namespace std;
 using namespace arma;
+
 
 vector<string> split(const string& str, int delimiter(int) = ::isspace){
   vector<string> result;
@@ -20,15 +22,7 @@ vector<string> split(const string& str, int delimiter(int) = ::isspace){
   return result;
 }
 
-/**
-   Experiment: Running multiple instances of a neural network
-   trained using Gradient Descent and the Back Propagation algorithm.
-   Author: Hichame Moriceau
-   Compile & Run with: 
-   # g++ -std=c++11 main.cpp -larmadillo -lfann -o runme
-   # ./runme
-*/
-int main(){
+double fixed_topo_exp(){
   //const char* ds_filename="data/breast-cancer-recurrence-data-transformed.data";//"data_sets/breast-cancer-malignantOrBenign-data-transformed.data";
   unsigned int nb_opt_algs=5;
   
@@ -76,7 +70,6 @@ int main(){
   fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
   fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
 
-//fann_train_on_file(ann,ds_filename,max_epochs,epochs_between_reports, desired_error);
   cout<<"training model"<<endl;
   double min=10;
   for(unsigned int b=0;b<nb_opt_algs;b++){
@@ -92,16 +85,58 @@ int main(){
       min=mse;
   }
   
-  cout<<"lowest err obtained after "<<nb_opt_algs<<" != runs of BP for "<<max_epochs<<" epochs is "<<min<<endl;
+  cout<<"lowest err obtained after "<<nb_opt_algs<<" != runs of BP for "<<max_epochs<<" epochs is "<<min<<endl<<endl;
 
-  cout<<"net topology:"<<endl
-      <<"nb inputs     ="<<fann_get_num_input(ann)<<endl
-      <<"total nb connections ="<<fann_get_total_connections(ann)<<endl
-      <<"nb outputs    ="<<fann_get_num_output(ann)<<endl
-      <<"nb hid. layers="<<fann_get_num_layers(ann)<<endl;
-
+  cout<<"Using the same topology for all networks:"<<endl
+      <<"\tNb inputs            = "<<fann_get_num_input(ann)<<endl
+      <<"\tTotal nb connections = "<<fann_get_total_connections(ann)<<endl
+      <<"\tNb outputs           = "<<fann_get_num_output(ann)<<endl
+      <<"\tNb hid. layers       = "<<fann_get_num_layers(ann)<<endl;
 
   //fann_save(ann, "bcm_float.net");
   fann_destroy(ann);
+}
+
+ /**
+   Experiment: Running multiple instances of a neural network
+   trained using Gradient Descent and the Back Propagation algorithm.
+   Author: Hichame Moriceau
+   Compile & Run with: 
+   # g++ -std=c++11 main.cpp -larmadillo -lfann -o runme
+   # ./runme 0 30 # run 30 replicates of the first experiment
+*/
+int main(int argc, char * argv []){
+  if(argc<(2+1)){ 
+    cout<<"Too few args provided. Expected: './runme EXP_INDEX NB_REPLICATES'"<<endl;
+    return 0;
+  }
+  // experiment choice
+  unsigned exp_index=atoi(argv[1]);
+  // number of replicates
+  unsigned int nb_reps=atoi(argv[2]);
+  // recorded best error value
+  double res=0;
+
+  stringstream ss;
+  ss<<"running experiment ";
+
+  switch(exp_index){
+  case 0:
+    ss<<"IDENTICAL_TOPOLOGY using "<<nb_reps<<" replicates\n";
+    cout<<ss.str();
+    res=fixed_topo_exp();
+    break;
+  case 1:
+    ss<<"DIVERSE_TOPOLOGY using "<<nb_reps<<" replicates\n";
+    cout<<ss.str();
+    break;
+  default:
+    ss<<"IDENTICAL_TOPOLOGY using "<<nb_reps<<" replicates\n";
+    cout<<ss.str();
+    res=fixed_topo_exp();
+  }
+
+  cout<<"Finished "<<ss.str();
+
   return 0;
 }
