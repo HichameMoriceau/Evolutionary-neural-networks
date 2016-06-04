@@ -41,12 +41,12 @@ using namespace NEAT;
 
 
 // The Breast Cancer Malignancy (BCM) routines *****************************
-void bcm_test(int gens);
+void bcm_test(int gens, unsigned int nb_reps);
 bool bcm_evaluate(Organism *org, unsigned int &nb_calls);
 int bcm_epoch(Population *pop,int generation,char *filename, int &winnernum, int &winnergenes,int &winnernodes, mat &res_mat);
 
 // utility routines for Classification problems (BCM, Iris etc.)
-mat compute_learning_curves_perfs(unsigned int gens,vector<mat> &result_matrices_training_perfs);
+mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs);
 void bcm_training_task(unsigned int i, unsigned int nb_replicates, unsigned int gens, vector<mat> &result_matrices_training_perfs);
 unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
 mat to_multiclass_format(mat predictions);

@@ -593,7 +593,7 @@ bool Population::epoch(int generation) {
     highest_accuracy=((*(((*curspecies)->organisms).begin()))->accuracy);
     lowest_err      =((*(((*curspecies)->organisms).begin()))->error);
     highest_last_changed=0;
-    std::cout<<"NEW POPULATION RECORD FITNESS: "<<highest_fitness<<", acc="<<highest_accuracy<<std::endl;
+    //std::cout<<"NEW POPULATION RECORD FITNESS: "<<highest_fitness<<", acc="<<highest_accuracy<<std::endl;
   }
   else {
     ++highest_last_changed;

@@ -19,10 +19,10 @@
 
 #define NO_SCREEN_OUT 
 
-void bcm_test(int gens){
+void bcm_test(int gens, unsigned int nb_reps){
   std::ofstream oFile("results-neat-bcm.mat",std::ios::out);
   vector<mat> res_mats_training_perfs;
-  mat avrg_mat=compute_learning_curves_perfs(gens,res_mats_training_perfs);
+  mat avrg_mat=compute_learning_curves_perfs(gens,nb_reps,res_mats_training_perfs);
   mat res_mat_err = compute_replicate_error(res_mats_training_perfs);
   // plot results
   print_results_octave_format(oFile,avrg_mat,"results");
@@ -68,16 +68,6 @@ bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
     array.push_back(v);  // add the 1D array to the 2D array
   }
 
-  /*
-  cout << "print out what was read in" << endl;
-  for (size_t i=0; i<array.size(); ++i){
-    for (size_t j=0; j<array[i].size(); ++j){
-      // (separate fields by |)
-      cout << array[i][j] << ", "; 
-    }
-    cout << "\n";
-  }
-  */
   unsigned int height = array.size();
   unsigned int width  = array[0].size()+1; // +1 for biasing
 
@@ -92,18 +82,6 @@ bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
 	in[i][j] = array[i][j];
     }
   }
-
-  /*  
-  cout<<"content of in[]"<<endl;
-  for(unsigned int i=0; i<height; i++){
-    cout<< "i="<<i<<endl;
-    for(unsigned int j=0; j<width; j++){
-      cout << in[i][j] << " ";
-    }
-    cout << endl;
-  }
-  */  
-
   iFile.close();
 
   net=org->net; 
@@ -130,16 +108,6 @@ bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
     net->flush();
   }
   
-  /*
-  cout<<"outputs="<<endl;
-  for(unsigned int i=0;i<height;i++){
-    for(unsigned int j=0;j<nb_classes;j++){
-      cout<<out[i][j]<<" ";
-    }
-    cout<<endl;
-  }
-  */
-
   if (success) {
     double errsum=0;
     double p=-1;
@@ -292,7 +260,7 @@ int bcm_epoch(Population *pop,int generation,char *filename,int &winnernum,int &
   else return 0;
 }
 
-mat compute_learning_curves_perfs(unsigned int gens,vector<mat> &result_matrices_training_perfs){
+mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs){
     // return variable
     mat averaged_performances;
 
@@ -302,9 +270,9 @@ mat compute_learning_curves_perfs(unsigned int gens,vector<mat> &result_matrices
         // kick off a single thread
 #pragma omp single
         {
-            for(unsigned int i=0; i<NEAT::num_runs; ++i) {
+            for(unsigned int i=0; i<nb_reps; ++i) {
 #pragma omp task
-	      bcm_training_task(i, NEAT::num_runs,gens,result_matrices_training_perfs);
+	      bcm_training_task(i, nb_reps,gens,result_matrices_training_perfs);
             }
         }
     }
@@ -365,6 +333,8 @@ void bcm_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,ve
   start_genome=new Genome(id,iFile);
   iFile.close();
 
+  cout<<fixed<<setprecision(3);
+
   for(expcount=0;expcount<NEAT::num_runs;expcount++) {
     //Spawn the Population
     cout<<"Spawning Population off Genome2"<<endl;
@@ -389,49 +359,28 @@ void bcm_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,ve
 	genes[expcount]=winnergenes;
 	nodes[expcount]=winnernodes;
 	gen=gens;
+	
+	
+	//cout<<"res sc evol"<<endl;
+	//results_score_evolution.print();
       }
-      
+
       //Clear output filename
       fnamebuf->clear();
       delete fnamebuf;
     }
-
+    results_score_evolution=join_vert(results_score_evolution, res_mat);
     if (expcount<NEAT::num_runs-1)
       delete pop;
   }
 
-  //Average and print stats
-  cout<<"Nodes: "<<endl;
-  for(expcount=0;expcount<NEAT::num_runs;expcount++) {
-    cout<<nodes[expcount]<<endl;
-    totalnodes+=nodes[expcount];
-  }
-    
-  cout<<"Genes: "<<endl;
-  for(expcount=0;expcount<NEAT::num_runs;expcount++) {
-    cout<<genes[expcount]<<endl;
-    totalgenes+=genes[expcount];
-  }
-    
-  cout<<"Evals "<<endl;
-  samples=0;
-  for(expcount=0;expcount<NEAT::num_runs;expcount++) {
-    cout<<evals[expcount]<<endl;
-    if (evals[expcount]>0)
-      {
-	totalevals+=evals[expcount];
-	samples++;
-      }
-  }
-  
   ofstream experiment_file("experiment.txt",ios::out);
-
   // print-out best perfs
   double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
-
   res_mats_training_perfs.push_back(results_score_evolution);
-  cout           <<"THREAD"<<-1/*omp_get_thread_num()*/<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<"Breast Cancer Malignancy data set"<<endl;
-  experiment_file<<"THREAD"<<-1/*omp_get_thread_num()*/<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<"Breast Cancer Malignancy data set"<<endl;
+
+  cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<"Breast Cancer Malignancy data set"<<endl;
+  experiment_file<<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<"Breast Cancer Malignancy data set"<<endl;
   experiment_file.close();
 }
 

@@ -35,35 +35,14 @@
 #include "experiments.h"
 using namespace std;
 
-
-//  double testdoubval() {
-//    return *testdoub;
-//  }
-
-//  double testdoubset(double val) {
-//    *testdoub=val;
-//  }
-
 int main(int argc, char *argv[]) {
 
-  //list<NNode*> nodelist;
-
   int pause;
-
   NEAT::Population *p=0;
-
-  /* GTKMM */
-//    myapp=new Gtk::Main(argc, argv);
-
-//    testdoub=&val;
-
-  //***********RANDOM SETUP***************//
-  /* Seed the random-number generator with current time so that
-      the numbers will be different every time we run.    */
   srand( (unsigned)time( NULL ) );
 
-  if (argc != 2) {
-    cerr << "A NEAT parameters file (.ne file) is required to run the experiments!" << endl;
+  if (argc != 4) {
+    cerr << "Invalid arguments:\n\tArg1=NEAT parameters file (.ne file)\n\tArg2=CHOSEN EXPERIMENT INDEX\n\tArg3=NB REPLICATES" << endl;
     return -1;
   }
 
@@ -72,30 +51,9 @@ int main(int argc, char *argv[]) {
 
   cout<<"loaded"<<endl;
   
+  int choice=atoi(argv[2]);
+  unsigned int nb_reps=atoi(argv[3]);
   /*
-  //Test a genome file on pole balancing
-  Genome *g;
-  Network *n;
-  CartPole *thecart;
-  thecart=new CartPole(true,0);
-  g=Genome::new_Genome_load("tested");
-  n=g->genesis(1);
-  Organism *org= new Organism(0, g, 1);
-  thecart->nmarkov_long=true;
-  thecart->generalization_test=false;
-  pole2_evaluate(org,0,thecart);
-  cout<<"made score "<<org->fitness<<endl;
-  cin>>pause;
-  */
-
-
-  //Here is an example of how to run an experiment directly from main
-  //and then visualize the speciation that took place
-
-  //p=xor_test(100);  //100 generation XOR experiment
-
-  int choice;
-
   cout<<"Please choose an experiment: "<<endl;
   cout<<"1 - 1-pole balancing"<<endl;
   cout<<"2 - 2-pole balancing, velocity info provided"<<endl;
@@ -105,6 +63,7 @@ int main(int argc, char *argv[]) {
   cout<<"Number: ";
 
   cin>>choice;
+  */
 
   switch ( choice )
     {
@@ -121,7 +80,7 @@ int main(int argc, char *argv[]) {
       p=xor_test(100);
       break;
     case 5:
-      /*p=*/bcm_test(10);
+      /*p=*/bcm_test(10,nb_reps);
       break;
     default:
       cout<<"Not an available option."<<endl;
