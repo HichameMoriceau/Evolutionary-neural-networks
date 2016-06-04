@@ -20,10 +20,10 @@
 #define NO_SCREEN_OUT 
 
 void bcm_test(int gens, unsigned int nb_reps){
-  std::ofstream oFile("results-neat-bcm.mat",std::ios::out);
+  std::ofstream oFile("data/results-neat-bcm.mat",std::ios::out);
   vector<mat> res_mats_training_perfs;
   mat avrg_mat=compute_learning_curves_perfs(gens,nb_reps,res_mats_training_perfs);
-  mat res_mat_err = compute_replicate_error(res_mats_training_perfs);
+  mat res_mat_err = compute_replicate_error(nb_reps,res_mats_training_perfs);
   // plot results
   print_results_octave_format(oFile,avrg_mat,"results");
   print_results_octave_format(oFile,res_mat_err,"err_results");
@@ -49,7 +49,7 @@ bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
   // Reading data-set into 2D array double ar
   //
 
-  ifstream iFile("breast-cancer-malignantOrBenign-data-transformed.csv",ios::in);
+  ifstream iFile("data/breast-cancer-malignantOrBenign-data-transformed.csv",ios::in);
   //ifstream iFile("iris-data-transformed.csv",ios::in);
   string line, field;
 
@@ -439,10 +439,9 @@ mat average_matrices(vector<mat> results){
     return averaged_results;
 }
 
-mat compute_replicate_error(vector<mat> results){
+mat compute_replicate_error(unsigned int nb_reps,vector<mat> results){
   // return variable
   mat err_vec;
-
   unsigned int smallest_nb_rows = INT_MAX;
   // find lowest and highest nb rows
   for(unsigned int i=0; i<results.size() ;i++){
@@ -455,7 +454,7 @@ mat compute_replicate_error(vector<mat> results){
   for(unsigned int i=0; i<smallest_nb_rows; i++) {
     best_scores.reset();
     // for each replica
-    for(unsigned int r=0; r<NEAT::num_runs; r++) { // NEAT::num_runs=nb replicates
+    for(unsigned int r=0; r<nb_reps; r++) { // NEAT::num_runs=nb replicates
       // get best score
       best_scores = join_vert(best_scores, to_matrix(results[r](i,3)));
     }

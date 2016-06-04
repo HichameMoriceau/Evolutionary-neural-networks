@@ -51,7 +51,7 @@ void bcm_training_task(unsigned int i, unsigned int nb_replicates, unsigned int 
 unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
 mat to_multiclass_format(mat predictions);
 mat average_matrices(vector<mat> results);
-mat compute_replicate_error(vector<mat> results);
+mat compute_replicate_error(unsigned int nb_reps,vector<mat> results);
 void print_results_octave_format(ofstream &result_file, mat recorded_performances, string octave_variable_name);
 mat to_matrix(double a);
 double corrected_sample_std_dev(mat score_vector);

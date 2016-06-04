@@ -41,46 +41,34 @@ int main(int argc, char *argv[]) {
   NEAT::Population *p=0;
   srand( (unsigned)time( NULL ) );
 
-  if (argc != 4) {
-    cerr << "Invalid arguments:\n\tArg1=NEAT parameters file (.ne file)\n\tArg2=CHOSEN EXPERIMENT INDEX\n\tArg3=NB REPLICATES" << endl;
+  if (argc != 5) {
+    cerr << "Invalid arguments:\n\tArg1=NEAT parameters file (.ne file)\n\tArg2=CHOSEN EXPERIMENT INDEX\n\tArg3=NB REPLICATES\n\tNB GENERATIONS" << endl;
     return -1;
   }
 
   //Load in the params
   NEAT::load_neat_params(argv[1],true);
 
-  cout<<"loaded"<<endl;
-  
   int choice=atoi(argv[2]);
   unsigned int nb_reps=atoi(argv[3]);
-  /*
-  cout<<"Please choose an experiment: "<<endl;
-  cout<<"1 - 1-pole balancing"<<endl;
-  cout<<"2 - 2-pole balancing, velocity info provided"<<endl;
-  cout<<"3 - 2-pole balancing, no velocity info provided (non-markov)"<<endl;
-  cout<<"4 - XOR"<<endl;
-  cout<<"5 - Breast Cancer"<<endl;
-  cout<<"Number: ";
-
-  cin>>choice;
-  */
+  unsigned int nb_gens=atoi(argv[4]);
 
   switch ( choice )
     {
     case 1:
-      p = pole1_test(100);
+      p = pole1_test(nb_gens);
       break;
     case 2:
-      p = pole2_test(100,1);
+      p = pole2_test(nb_gens,1);
       break;
     case 3:
-      p = pole2_test(100,0);
+      p = pole2_test(nb_gens,0);
       break;
     case 4:
-      p=xor_test(100);
+      p=xor_test(nb_gens);
       break;
     case 5:
-      /*p=*/bcm_test(10,nb_reps);
+      /*p=*/bcm_test(nb_gens,nb_reps);
       break;
     default:
       cout<<"Not an available option."<<endl;
