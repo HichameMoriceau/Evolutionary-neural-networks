@@ -423,5 +423,3 @@ void Trainer_DE::mutative_crossover(unsigned int problem_dimensionality, double 
 double Trainer_DE::mutation_scheme_DE_rand_1(double F, double x_rand_1, double x_rand_2, double x_rand_3){
     return x_rand_1 + F * (x_rand_2 - x_rand_3);
 }
-
-// ---

@@ -1,9 +1,10 @@
 #include "trainer.h"
 
-
 //user stop flag
 unsigned int usf=0;
 
+// used to allow researchers to prematurely stop the experiment
+// This automatically triggers averaging and printing of the results
 void user_interrupt_handler(int a)
 {
     usf=1;
@@ -142,6 +143,7 @@ NeuralNet Trainer::train_topology_plus_weights(Data_set data_set, net_topology m
 }
 
 NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min_topo, net_topology max_topo, mat &results_score_evolution, double &test_score, double &test_acc, unsigned int selected_mutation_scheme){
+    // Using 'leave-one-out cross-validation' (exhaustive cross validation: particular case of k-fold CV)
     unsigned int nb_folds=data_set.training_set.X.n_rows;
     NeuralNet tmp_net(max_topo), cross_validated_net(max_topo);
     tmp_net.set_topology(max_topo);
@@ -153,7 +155,6 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
 
     unsigned int nb_cv_gens=(nb_epochs)-(nb_epochs/nb_folds);
     double freq_change_CV_percent = 1;
-
 
     // Register signals
     signal(SIGINT, user_interrupt_handler);
@@ -170,7 +171,6 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
         max_topo.nb_input_units=data_set.training_set.X.n_cols;
         max_topo.nb_output_units=data_set.find_nb_prediction_classes(data_set.data);
 
-//        cout<<"running"<<nb_cv_gens/freq_change_CV_percent<<"gens"<<endl;
         // empty temporary result matrix
         tmp_results_perfs.reset();
         tmp_net=evolve_through_iterations(data_set, min_topo, max_topo, 1/*nb_cv_gens/freq_change_CV_percent*/, tmp_results_perfs, k, selected_mutation_scheme, i);
@@ -334,7 +334,6 @@ mat Trainer::to_multiclass_format(mat predictions){
                 index=j;
             }
         }
-        //cout << "formatted prediction=" << endl << formatted_predictions << endl;
         formatted_predictions(i)=index;
     }
     return formatted_predictions;
@@ -543,28 +542,3 @@ double Trainer::clip(double x, double min, double max) {
 unsigned int Trainer::generate_random_integer_between_range(unsigned int min, unsigned int max) {
     return min + ( std::rand() % ( max - min + 1 ) );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

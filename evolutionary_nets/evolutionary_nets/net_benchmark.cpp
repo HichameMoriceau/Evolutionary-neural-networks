@@ -152,7 +152,7 @@ void Net_benchmark::train_topology(NeuralNet &evolved_net){
         evo_trainer.train( data_set, current_net);
         // record quality of the model
         current_perf = current_net.get_f1_score(data_set.validation_set);
-
+        // save best network
         if(current_perf >= best_perf){
             best_net = current_net;
             best_perf  = current_perf;
@@ -203,33 +203,27 @@ mat Net_benchmark::evaluate_backprop_general_performances() {
     double model_accuracy_training_set   = 0.0f;
     double model_score_validation_set    = 0.0f;
     double model_accuracy_validation_set = 0.0f;
-
     mat new_line;
 
     // aggregate score and accuracy values for increasingly large proportion of training-set
     for(unsigned int i = 1 ; i < training_set.X.n_rows ; ++i) {
-
         model_score_training_set      = 0.0f;
         model_accuracy_training_set   = 0.0f;
         model_score_validation_set    = 0.0f;
         model_accuracy_validation_set = 0.0f;
-
         // i designates the index limit of the training-set subset
         training_set_subset.X = training_set.X.rows(0, i);
         training_set_subset.Y = training_set.Y.rows(0, i);
-
         // perform prediction using optimized model on training-subset and record performances
         compute_perfs_test_validation( model_score_training_set,
                                        model_accuracy_training_set,
                                        model_score_validation_set,
                                        model_accuracy_validation_set);
-
         // create new vector with model's performances on training-set and validation-set
         new_line << i
                  << model_accuracy_training_set   << model_score_training_set
                  << model_accuracy_validation_set << model_score_validation_set
                  << endr;
-
         // append results for that size to result matrix
         results_cost_relative_to_training_set_size= join_vert(results_cost_relative_to_training_set_size,new_line);
     }
@@ -243,7 +237,6 @@ void Net_benchmark::print_results_octave_format(ofstream &result_file, mat recor
                 << "# type: matrix"  << endl
                 << "# rows: " << recorded_performances.n_rows << endl
                 << "# columns: " << recorded_performances.n_cols << endl;
-
     // append content of recorded performances into same file
     for(unsigned int i=0; i<recorded_performances.n_rows; ++i){
         for(unsigned int j=0; j<recorded_performances.n_cols; ++j){
@@ -260,9 +253,7 @@ void Net_benchmark::print_results_octave_format(ofstream &result_file, vector<ma
                 << "# type: cell"  << endl
                 << "# rows: 1" << endl
                 << "# columns: " << recorded_performances.size() << endl;
-
     string new_line = "";
-
     //print as cell array
     for(unsigned int i=0; i<recorded_performances.size(); i++) {
         new_line = "";
@@ -276,9 +267,9 @@ void Net_benchmark::print_results_octave_format(ofstream &result_file, vector<ma
             new_line += " " + std::to_string(recorded_performances[i](e));
         }
         // print all scores
-        result_file << new_line << endl;
-
-        result_file << endl
+        result_file << new_line
+                    << endl
+                    << endl
                     << endl
                     << endl;
     }
@@ -296,10 +287,8 @@ double Net_benchmark::corrected_sample_std_dev(mat score_vector){
 }
 
 void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, unsigned int nb_generations_GA, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme) {
-
     set_topology(max_topo);
     evo_trainer.set_nb_epochs(nb_generations_GA);
-
     // experiment.txt header
     experiment_file << "------------------------------------" << endl
                     << "Data-set\t\t"               << data_set.data_set_filename  << endl
@@ -342,58 +331,14 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
     // save error amonst replicates
     print_results_octave_format(result_file, averaged_performances, "results"); // data_set.OCTAVE_perfs_VS_nb_epochs
     print_results_octave_format(result_file, err_perfs, "err_results"); // data_set.OCTAVE_perfs_VS_nb_epochs
-
-
-    //
-    // PERFORMANCES AS DATA-SET SIZE INCREASES
-    //
-    /*
-    vector<mat> result_matrices_perfs_data_set_size;
-    mat averaged_perfs_data_set_size = compute_learning_curves_dataset_size(result_matrices_perfs_data_set_size, epsilon);
-    mat err_perfs_data_set_size = compute_replicate_error(result_matrices_perfs_data_set_size);
-
-    print_results_octave_format(result_file, averaged_perfs_pop_size, octave_variable_name_cost_training_set_size);
-    */
-
-
-
-
-
-    /*
-    //
-    // PERFORMANCES AS POPULATION SIZE INCREASES
-    //
-    vector<mat> result_matrices_perfs_pop_size;
-    mat pop_sizes;
-    mat averaged_perfs_pop_size     = compute_learning_curves_population_size(result_matrices_perfs_pop_size, pop_sizes, epsilon);
-
-    cout << "Score matrix for each replicate" << endl;
-    for(unsigned int i=0; i<result_matrices_perfs_pop_size.size(); i++){
-        cout << "replicate " << i << " scores:" << endl;
-        result_matrices_perfs_pop_size[i].print();
-    }
-    cout << "POP SIZE - AVERAGE MATRIX :" << endl;
-    averaged_perfs_pop_size.print();
-    mat err_perfs_pop_size          = compute_pop_size_replicate_error(result_matrices_perfs_pop_size);
-    cout << "POP SIZE - ERROR" << endl;
-    err_perfs_pop_size.print();
-    cout << "for each average score I have an error? " << (err_perfs_pop_size.n_rows == averaged_perfs_pop_size.n_rows) << endl;
-
-    print_results_octave_format(result_file, pop_sizes, "pop_sizes");
-    print_results_octave_format(result_file, averaged_perfs_pop_size, octave_variable_name_scores_pop_size);
-    print_results_octave_format(result_file, err_perfs_pop_size, "err_" + octave_variable_name_scores_pop_size);
-    */
 }
 
 void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, string data_set_filename, vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_algorithm,double epsilon, unsigned int selected_mutation_scheme){
     // return variable
     NeuralNet trained_net;
-
     // --- create copy of attributes ---
     Data_set d = data_set;
     net_topology max_t = max_topo;
-    // --- ---
-
     // result matrices (to be interpreted by Octave script <Plotter.m>)
     mat results_score_evolution;
 
@@ -449,15 +394,13 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
 
         cout<< "***"
             << endl;
-
         trained_net = trainer_de.train_topology_plus_weights(d, max_t, results_score_evolution, selected_mutation_scheme);
-
     }
 
     net = trained_net;
     // print-out best perfs
     double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
-
+    // save obtained results in memory
     result_matrices_training_perfs.push_back(results_score_evolution);
     cout            << "THREAD" << omp_get_thread_num() << " replicate=" << i << "\tseed=" << seed << "\tbest_score=" << "\t" << best_score << " on " << data_set_filename << endl;
     experiment_file << "THREAD" << omp_get_thread_num() << " replicate=" << i << "\tseed=" << seed << "\tbest_score=" << "\t" << best_score << " on " << data_set_filename << endl;
@@ -466,7 +409,6 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
 mat Net_benchmark::compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme){
     // return variable
     mat averaged_performances;
-
     // for each replicate
 #pragma omp parallel
     {
@@ -481,24 +423,19 @@ mat Net_benchmark::compute_learning_curves_perfs(vector<mat> &result_matrices_tr
     }
     // reset net
     net = NeuralNet();
-
     // average PERFS of all replicates
     averaged_performances = average_matrices(result_matrices_training_perfs);
     return averaged_performances;
 }
 
 void Net_benchmark::compute_scores_task(unsigned int i, net_topology max_topo, vector<mat> &replicated_results, mat &population_sizes, double epsilon, unsigned int selected_mutation_scheme){
-
     unsigned int max_pop_size = evo_trainer.get_population_size();
     unsigned int tmp_pop_size=0;
     mat results_score_evolution;
-
     mat scores;
     mat pop_sizes;
-
     // for up to twice the size of the original pop
     for(unsigned int p=1; tmp_pop_size<(max_pop_size*4); p++) {
-
         // --- create copy of attributes ---
         Trainer_DE t;
         t.set_epsilon(epsilon);
@@ -507,7 +444,6 @@ void Net_benchmark::compute_scores_task(unsigned int i, net_topology max_topo, v
         Data_set d = data_set;
         net_topology max_t = max_topo;
         // --- ---
-
         unsigned int step_size = (max_pop_size/11);
         tmp_pop_size = (p*step_size)+5;
 
@@ -545,7 +481,6 @@ void Net_benchmark::compute_scores_task(unsigned int i, net_topology max_topo, v
 }
 
 mat Net_benchmark::compute_learning_curves_population_size(vector<mat> &result_matrices_perfs_pop_size, mat &pop_sizes, double epsilon, unsigned int selected_mutation_scheme){
-    // return variable
     mat average_scores;
     // for each replicate
 #pragma omp parallel
@@ -557,7 +492,6 @@ mat Net_benchmark::compute_learning_curves_population_size(vector<mat> &result_m
             compute_scores_task(i, max_topo, result_matrices_perfs_pop_size, pop_sizes, epsilon, selected_mutation_scheme);
         }
     }
-
     average_scores = average_matrices(result_matrices_perfs_pop_size);
     // return averaged scores of all populations
     return average_scores;
@@ -635,6 +569,7 @@ mat Net_benchmark::average_matrices(vector<mat> results){
             smallest_nb_rows = results[i].n_rows;
         }
     }
+
     mat total_results;
     total_results.zeros(smallest_nb_rows, results[0].n_cols);
 

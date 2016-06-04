@@ -88,7 +88,7 @@ vector<mat> NeuralNet::reshape_weights(){
     unsigned int width  = -1;
     unsigned int previous_last_index = -1;
 
-    // breaks down single vector<double> into corresponding weight matrices
+    // breaks down single vector<double> into multiple corresponding weight matrices
     for(unsigned int i = 0 ; i < Thetas.size() ; ++i) {
         index_start  = 0;
         index_end    = 0;
@@ -114,34 +114,17 @@ vector<mat> NeuralNet::reshape_weights(){
             height = t.nb_units_per_hidden_layer;
             width  = t.nb_units_per_hidden_layer + 1;
         }
-        /*
-        // where Thetas[0] is first matrix of parameters of net
-        Thetas[i] = reshape(params( span( index_start , index_end )),
-                            height,
-                            width);
-        */
-        //cout << endl;
 
-        unsigned int sub_range = width-1;//((index_end-index_start) / height) ;
-        /*
-        cout << "dimensions  = " << height << "by" << width << endl;
-        cout << "sub-range   = " << sub_range << endl;
-        cout << "index start = " << index_start << endl;
-        cout << "index end   = " << index_end << endl;
-        cout << endl;
-        */
+        unsigned int sub_range = width-1;
         mat tmp;
 
         // each row *i* influence its corresponding neuron *i* in the next layer
         for(unsigned int i=0; i<height; ++i){
             unsigned int from = (index_start+i*sub_range)+i;
             unsigned int to   = index_start+(i+1)*sub_range+i;
-            //cout << "from " << from << " to " << to << endl;
             tmp = join_vert(tmp, params(span(from, to)).t());
         }
-        //cout << "tmp dimensions: " << size(tmp) << endl;
         Thetas[i] = tmp;
-
         // memorize end-index of this chunk
         previous_last_index = index_end;
     }
@@ -210,7 +193,6 @@ double NeuralNet::get_accuracy(data_subset data_set) {
     double computed_accuracy = 0;
     // make predictions over entire data-set
     mat H = forward_propagate(data_set.X);
-
     unsigned int nb_classes = topology.nb_output_units;
     // generate confusion matrix
     mat confusion_matrix(nb_classes, nb_classes);

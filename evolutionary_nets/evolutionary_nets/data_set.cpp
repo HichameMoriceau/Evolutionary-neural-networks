@@ -2,22 +2,26 @@
 
 Data_set::Data_set()
 {
-    //select_data_set(0);
+
 }
 
 Data_set::Data_set(string full_path)
 {
     mat D;
     D.load(full_path);
+    // perform feature scaling
     standardize(D);
+    // randomize the order of the examples
     D = shuffle(D);
     data = D;
+    // divide into training, validation and test sections
     subdivide_data_cross_validation(9,10);
 }
 
 Data_set::Data_set(unsigned int data_set_index)
 {
     select_data_set(data_set_index);
+    // divide into training, validation and test sections
     subdivide_data_cross_validation(9,10);
 }
 
@@ -116,11 +120,14 @@ void Data_set::select_data_set(unsigned int chosen_data_set_index) {
 
     mat D;
     D.load(data_set_filename);
+    // perform feature scaling
     standardize(D);
+    // randomize the order of the examples
     D = shuffle(D);
     data = D;
     // update nb possible outputs
     find_nb_prediction_classes(D);
+    // divide into training, validation and test sections
     subdivide_data_cross_validation(1,10);
 }
 
@@ -143,7 +150,9 @@ void Data_set::select_data_set(string filename) {
     // load corresponding data set
     mat D;
     D.load(data_set_filename);
+    // perform feature scaling
     standardize(D);
+    // randomize the order of the examples
     D = shuffle(D);
     data = D;
     // update nb possible outputs
@@ -157,9 +166,12 @@ void Data_set::set_data_set(unsigned int chosen_data_set_index, string &data_set
     select_data_set( chosen_data_set_index);
     mat D;
     D.load(data_set_filename);
+    // perform feature scaling
     standardize(D);
+    // randomize the order of the examples
     D = shuffle(D);
     data = D;
+    // divide into training, validation and test sections
     subdivide_data_cross_validation(1,10);
 }
 
@@ -203,8 +215,6 @@ void Data_set::standardize(mat &D){
         for(unsigned int j=0; j<D.n_cols-1; ++j){
             // apply feature scaling and mean normalization
             D(i,j) = (D(i,j) - mean(D.col(j))) / (max(D.col(j))-min(D.col(j)));
-            // round after one decimal places
-            //normalized_D(i,j) = round(D(i,j) * 10) / 10.0f;
         }
     }
 }
@@ -222,7 +232,6 @@ void Data_set::subdivide_data_cross_validation(unsigned int index_validation_fol
 
     nb_prediction_classes = find_nb_prediction_classes(data);
     unsigned int range=((data.n_rows)*80/100)/nb_folds;//= data.n_rows / nb_folds;
-    //range--;
     // build training and validation set while preserving the imbalance ratio
     mat training_section, validation_section, test_section;
     for(unsigned int i=0; i<nb_folds; ++i){
