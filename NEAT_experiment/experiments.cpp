@@ -39,11 +39,11 @@ int multiclass_epoch(Population *pop,int generation,char *filename,int &winnernu
   double best_fit=0;
   bool win=false;
   unsigned int c=0;
-  unsigned int bcm_nb_err_func_calls;
+  unsigned int nb_calls_err_func;
 
   //Evaluate each organism on a test
   for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg)
-    multiclass_evaluate(*curorg,bcm_nb_err_func_calls,ef.dataset_filename);
+    multiclass_evaluate(*curorg,nb_calls_err_func,ef.dataset_filename);
 
   std::vector<double> all_fitnesses;
   // find fittest
@@ -102,7 +102,7 @@ int multiclass_epoch(Population *pop,int generation,char *filename,int &winnernu
        << -1//ensemble_score
        << validation_accuracy
        << validation_score
-       << bcm_nb_err_func_calls
+       << nb_calls_err_func
 
        << endr;
 
@@ -115,9 +115,9 @@ int multiclass_epoch(Population *pop,int generation,char *filename,int &winnernu
 }
 
 bool multiclass_evaluate(Organism *org, unsigned int &nb_calls, string dataset_filename) {
-  static unsigned int bcm_nb_err_func_calls=0;
-  bcm_nb_err_func_calls++;
-  nb_calls=bcm_nb_err_func_calls;
+  static unsigned int nb_calls_err_func=0;
+  nb_calls_err_func++;
+  nb_calls=nb_calls_err_func;
   Network *net;
 
   unsigned int nb_examples=-1,nb_attributes=-1;
@@ -225,17 +225,23 @@ void evaluate_perfs(double** data,
     mat labels=zeros(nb_examples,1);
 
     for(unsigned int i=0; i<nb_examples; i++){
-      double expe=labels(i)=data[i][nb_attributes_pls_bias-2];
+      labels(i)=data[i][nb_attributes_pls_bias-2];
       for(unsigned int j=0;j<nb_classes;j++)
 	preds(i,j)=out[i][j];
-      if(!(preds[i,expe]==1))
-	errsum++;
     }
-    error=errsum;
 
     // generate confusion matrix
-    mat conf_mat=generate_conf_mat(nb_classes, preds, labels);
-    compute_score_acc(conf_mat,accuracy,fitness);
+    mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
+    compute_error_score_acc(conf_mat, labels,error,accuracy,fitness);
+    /*
+    cout<<"preds:"<<endl;
+    preds.print();
+    cout<<"labels:"<<endl;
+    labels.print();
+    cout<<"NB examples"<<labels.n_rows<<endl;
+    cout<<"score="<<fitness<<", acc="<<accuracy<<", err="<<error<<endl;
+    exit(0);
+*/
   }
   else {
     //The network is flawed (shouldnt happen)
@@ -253,7 +259,6 @@ double** load_data_array(string dataset_filename,unsigned int &height,unsigned i
   vector<double> v;                // array of values for one line only
 
   ifstream iFile(dataset_filename.c_str(),ios::in);
-  //ifstream iFile("iris-data-transformed.csv",ios::in);
   while(getline(iFile,line)){ // get next line in file
     v.clear();
     stringstream ss(line);
@@ -282,6 +287,27 @@ double** load_data_array(string dataset_filename,unsigned int &height,unsigned i
   return data;
 }
 
+unsigned int count_nb_classes(mat labels){
+  vector<unsigned int> array;
+  bool is_known_class = false;
+  // compute nb output units required
+  for(unsigned int i=0; i<labels.n_rows; i++) {
+    unsigned int current_pred_class = labels(i);
+    is_known_class=false;
+    // for each known prediction classes
+    for(unsigned int j=0;j<array.size(); j++) {
+      // if current output is different from prediction class
+      if(current_pred_class==array[j]){
+	is_known_class = true;
+      }
+    }
+    if(array.empty() || (!is_known_class)){
+      array.push_back(current_pred_class);
+    }
+  }
+  return array.size();
+}
+
 mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels){
   mat conf_mat=zeros(nb_classes, nb_classes);
   for(unsigned int i=0; i<nb_classes; i++){
@@ -292,8 +318,10 @@ mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels){
   return conf_mat;
 }
 
-void compute_score_acc(mat conf_mat,double& accuracy,double& fitness){
+void compute_error_score_acc(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness){
   unsigned int nb_classes=conf_mat.n_cols;
+  // number of class present in the current subset of the data set
+  unsigned int nb_local_classes=count_nb_classes(labels);
   unsigned int nb_examples=0;
   for(unsigned int i=0;i<nb_classes;i++)
     nb_examples+=sum(conf_mat.row(i));
@@ -307,13 +335,13 @@ void compute_score_acc(mat conf_mat,double& accuracy,double& fitness){
     double tmp_precision=TP/TPplusFP;
     double tmp_recall=TP/TPplusFN;
     scores[i] = 2*((tmp_precision*tmp_recall)/(tmp_precision+tmp_recall));
-    // check for -NaN
+    // prevent -nan
     if(scores[i] != scores[i])
       scores[i] = 0;
     computed_score += scores[i];
   }
   // general f1 score = average of all classes score
-  computed_score = (computed_score/nb_classes)*100;
+  computed_score = (computed_score/nb_local_classes)*100;
   // make sure score doesn't hit 0 (NEAT doesn't seem to like that)
   if(computed_score==0)
     computed_score=0.1;
@@ -323,7 +351,11 @@ void compute_score_acc(mat conf_mat,double& accuracy,double& fitness){
     TP += conf_mat(i,i);
   }
   computed_acc = (TP/nb_examples)*100;
-
+  // prevent -nan values
+  if(computed_acc!=computed_acc)
+    computed_acc=0;
+  // compute error
+  error=(nb_examples-TP)/nb_examples;
   accuracy=computed_acc;
   fitness=computed_score;
 }
@@ -431,7 +463,7 @@ void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int 
       delete pop;
   }
 
-  ofstream experiment_file("experiment.txt",ios::app);
+  ofstream experiment_file("random-seeds.txt",ios::app);
   // print-out best perfs
   double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
   res_mats_training_perfs.push_back(results_score_evolution);
@@ -466,7 +498,6 @@ mat to_multiclass_format(mat predictions){
 	index = j;
       }
     }
-    //cout << "formatted prediction = " << endl << formatted_predictions << endl;
     formatted_predictions(i) = index;
   }
   return formatted_predictions;

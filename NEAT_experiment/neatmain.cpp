@@ -38,46 +38,55 @@ int main(int argc, char *argv[]) {
 
   //Load in the params
   NEAT::load_neat_params(argv[1],true);
-
-  int choice=atoi(argv[2]);
+  unsigned int choice =atoi(argv[2]);
   unsigned int nb_reps=atoi(argv[3]);
   unsigned int nb_gens=atoi(argv[4]);
 
   exp_files expfiles;
 
-  switch ( choice )
-    {
-    case 1:
-      p = pole1_test(nb_gens);
-      break;
-    case 2:
-      p = pole2_test(nb_gens,1);
-      break;
-    case 3:
-      p = pole2_test(nb_gens,0);
-      break;
-    case 4:
-      p=xor_test(nb_gens);
-      break;
-    case 5: // BREAST CANCER MALIGNANCY
-      expfiles.startgene="bcstartgenes";
-      expfiles.dataset_filename="data/breast-cancer-malignantOrBenign-data-transformed.csv";
-      expfiles.result_file="data/results-neat-bcm.mat";
-      multiclass_test(nb_gens,nb_reps, expfiles);
-      break;
-    default:
-      cout<<"Not an available option."<<endl;
-    }
-
-
-  //p = pole1_test(100); // 1-pole balancing
-  //p = pole2_test(100,1); // 2-pole balancing, velocity
-  //p = pole2_test(100,0); // 2-pole balancing, no velocity (non-markov)
+  switch(choice){
+  case 1:
+    p = pole1_test(nb_gens);
+    break;
+  case 2:
+    p = pole2_test(nb_gens,1);
+    break;
+  case 3:
+    p = pole2_test(nb_gens,0);
+    break;
+  case 4:
+    p=xor_test(nb_gens);
+    break;
+  case 5: // BREAST CANCER MALIGNANCY
+    expfiles.startgene="bcmstartgenes";
+    expfiles.dataset_filename="data/breast-cancer-malignantOrBenign-data-transformed.csv";
+    expfiles.result_file="data/results-neat-bcm.mat";
+    multiclass_test(nb_gens,nb_reps, expfiles);
+    break;
+  case 6: // IRIS
+    expfiles.startgene="irisstartgenes";
+    expfiles.dataset_filename="data/iris-data-transformed.csv";
+    expfiles.result_file="data/results-neat-iris.mat";
+    multiclass_test(nb_gens,nb_reps, expfiles);
+    break;
+  case 7: // WINE
+    expfiles.startgene="winestartgenes";
+    expfiles.dataset_filename="data/wine-data-transformed.csv";
+    expfiles.result_file="data/results-neat-wine.mat";
+    multiclass_test(nb_gens,nb_reps, expfiles);
+    break;
+  case 8: // BREAST CANCER RECURRENCE
+    expfiles.startgene="bcrstartgenes";
+    expfiles.dataset_filename="breast-cancer-recurrence-data-transformed.csv";
+    expfiles.result_file="data/results-neat-bcr.mat";
+    multiclass_test(nb_gens,nb_reps, expfiles);
+    break;
+  default:
+    cout<<"Not an available option."<<endl;
+  }
 
   if (p)
     delete p;
-
-  return(0);
- 
+  return 0;
 }
 

@@ -1,1 +1,0 @@
-THREAD2 replicate=2	seed=20	best_score=	95.8554 on Breast Cancer Malignancy data set

@@ -49,8 +49,9 @@ bool multiclass_evaluate(Organism* org,unsigned int& nb_calls,string dataset_fil
 // utility routines for Classification problems (BCM, Iris etc.)
 void evaluate_perfs(double** data, unsigned int nb_examples, unsigned int nb_attributes_pls_bias, Network* net, double& error, double& fitness, double& accuracy);
 double** load_data_array(string dataset_filename,unsigned int &height, unsigned int &width);
-mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels);
-void compute_score_acc(mat conf_mat,double& accuracy,double& fitness);
+unsigned int count_nb_classes(mat labels);
+mat generate_conf_mat(unsigned int nb_classes, mat preds,mat labels);
+void compute_error_score_acc(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness);
 mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_files ef);
 void multiclass_training_task(unsigned int i, unsigned int nb_replicates, unsigned int gens, vector<mat> &result_matrices_training_perfs, exp_files ef);
 unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
