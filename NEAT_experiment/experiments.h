@@ -46,6 +46,13 @@ bool bcm_evaluate(Organism *org, unsigned int &nb_calls);
 int bcm_epoch(Population *pop,int generation,char *filename, int &winnernum, int &winnergenes,int &winnernodes, mat &res_mat);
 
 // utility routines for Classification problems (BCM, Iris etc.)
+void evaluate_perfs(double** data,
+		    unsigned int nb_examples,
+		    unsigned int nb_attributes_pls_bias,
+		    Network* net, 
+		    double& error, 
+		    double& fitness, 
+		    double& accuracy);
 double** load_data_array(string dataset_filename,unsigned int &height, unsigned int &width);
 mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels);
 void compute_score_acc(mat conf_mat,double& accuracy,double& fitness);

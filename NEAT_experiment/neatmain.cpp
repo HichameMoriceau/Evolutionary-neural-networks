@@ -13,21 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-//#include <stdlib.h>
-//#include <stdio.h>
-//#include <iostream>
-//#include <iomanip>
-//#include <sstream>
-//#include <list>
-//#include <vector>
-//#include <algorithm>
-//#include <cmath>
-//#include <iostream.h>
-//#include "networks.h"
-//#include "neat.h"
-//#include "genetics.h"
-//#include "experiments.h"
-//#include "neatmain.h"
 #include <iostream>
 #include <vector>
 #include "neat.h"
@@ -35,6 +20,12 @@
 #include "experiments.h"
 using namespace std;
 
+
+/**
+ * Compile & Run with:
+ * $ make
+ * $ ./neat test.ne 5 4 100 # experiment 5, 4 replicates, 100 generations
+ */
 int main(int argc, char *argv[]) {
 
   int pause;

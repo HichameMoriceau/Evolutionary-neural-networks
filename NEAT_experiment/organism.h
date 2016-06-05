@@ -33,7 +33,15 @@ namespace NEAT {
   class Organism {
 
   public:
-    double accuracy; // ADDED by Hichame Moriceau
+     // *ADDED by Hichame Moriceau*
+    double training_accuracy; 
+    double validation_accuracy;
+    double test_accuracy;
+    double training_fitness;
+    double validation_fitness;
+    double test_fitness;
+    // **
+
     double fitness;  //A measure of fitness for the Organism
     double orig_fitness;  //A fitness measure that won't change during adjustments
     double error;  //Used just for reporting purposes

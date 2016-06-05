@@ -585,12 +585,12 @@ bool Population::epoch(int generation) {
   //Check for Population-level stagnation
   curspecies=sorted_species.begin();
   (*(((*curspecies)->organisms).begin()))->pop_champ=true; //DEBUG marker of the best of pop
-  double highest_accuracy=(*(((*curspecies)->organisms).begin()))->accuracy;
+  double highest_accuracy=(*(((*curspecies)->organisms).begin()))->training_accuracy;
   double lowest_err      =(*(((*curspecies)->organisms).begin()))->error;
   if (((*(((*curspecies)->organisms).begin()))->orig_fitness)>
       highest_fitness) {
     highest_fitness =((*(((*curspecies)->organisms).begin()))->orig_fitness);
-    highest_accuracy=((*(((*curspecies)->organisms).begin()))->accuracy);
+    highest_accuracy=((*(((*curspecies)->organisms).begin()))->training_accuracy);
     lowest_err      =((*(((*curspecies)->organisms).begin()))->error);
     highest_last_changed=0;
     //std::cout<<"NEW POPULATION RECORD FITNESS: "<<highest_fitness<<", acc="<<highest_accuracy<<std::endl;

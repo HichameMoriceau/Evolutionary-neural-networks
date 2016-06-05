@@ -29,36 +29,22 @@ void bcm_test(int gens, unsigned int nb_reps){
   print_results_octave_format(oFile,res_mat_err,"err_results");
 }
 
-bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
-  static unsigned int bcm_nb_err_func_calls=0;
-  bcm_nb_err_func_calls++;
-  nb_calls=bcm_nb_err_func_calls;
-  Network *net;
-  double this_out; //The current output
-  int count;
-  double errorsum;
+void evaluate_perfs(double** data,
+		    unsigned int nb_examples,
+		    unsigned int nb_attributes_pls_bias,
+		    Network* net, 
+		    double& error, 
+		    double& fitness, 
+		    double& accuracy){
   bool success;  //Check for successful activation
-  int numnodes;  /* Used to figure out how many nodes
-		    should be visited during activation */
-  int net_depth; //The max depth of the network to be activated
-  int relax; //Activates until relaxation
-
-  unsigned int nb_classes=(*org).net->outputs.size();
-  unsigned int nb_examples=-1,nb_attributes_pls_bias=-1;
-
-  double** data=load_data_array("data/breast-cancer-malignantOrBenign-data-transformed.csv",nb_examples, nb_attributes_pls_bias);
-
-  double out[nb_examples][nb_classes];
-  double training_data[nb_examples*(60/100)][nb_attributes_pls_bias];
-  double validation_data[nb_examples*(20/100)][nb_attributes_pls_bias];
-  double test_data[nb_examples*(20/100)][nb_attributes_pls_bias];
-
-  net=org->net; 
-  numnodes=((org->gnome)->nodes).size();
-  net_depth=net->max_depth();
-
   //Load and activate the network on each input
-  for(count=0;count<nb_examples;count++){
+  int net_depth=net->max_depth(); //The max depth of the network to be activated
+  int relax; //Activates until relaxation
+  double this_out; //The current output
+  unsigned int nb_classes=net->outputs.size();
+  double out[nb_examples][nb_classes];
+
+  for(int count=0;count<nb_examples;count++){
     net->load_sensors(data[count]);
     //Relax net and get output
     success=net->activate();
@@ -73,14 +59,11 @@ bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
   }
   
   if (success) {
-    double errsum=0;
-    double p=-1;
-    double r=-1;
-    double score=-1;
-    double computed_score=0,computed_acc=0;
+    double errsum=0,computed_score=0,computed_acc=0;
     // true/false  positives/negatives,
     unsigned int tp=0,tn=0,fp=0,fn=0;
-    
+    double p=-1, r=-1, score=-1;
+
     mat preds =zeros(nb_examples,nb_classes);
     mat labels=zeros(nb_examples,1);
 
@@ -91,23 +74,104 @@ bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
       if(!(preds[i,expe]==1))
 	errsum++;
     }
-    org->error=errsum;
+    error=errsum;
 
     // generate confusion matrix
     mat conf_mat=generate_conf_mat(nb_classes, preds, labels);
-    compute_score_acc(conf_mat,org->accuracy,org->fitness);
-    
-    // clean-up memory
-    for (unsigned int i=0; i<nb_examples; i++)
-	delete [] data[i];
-    delete [] data;
+    compute_score_acc(conf_mat,accuracy,fitness);
   }
   else {
     //The network is flawed (shouldnt happen)
-    org->error   =999.0;
-    org->fitness =0.0000001;
-    org->accuracy=0.0000001;
+    error   =999.0;
+    fitness =0.0000001;
+    accuracy=0.0000001;
   }
+
+}
+
+bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
+  static unsigned int bcm_nb_err_func_calls=0;
+  bcm_nb_err_func_calls++;
+  nb_calls=bcm_nb_err_func_calls;
+  Network *net;
+
+  int numnodes;  /* Used to figure out how many nodes
+		    should be visited during activation */
+  unsigned int nb_examples=-1,nb_attributes=-1;
+
+  double** data=load_data_array("data/breast-cancer-malignantOrBenign-data-transformed.csv",nb_examples, nb_attributes);
+
+  unsigned int training_height=nb_examples*(double(60)/100);
+  unsigned int validation_height=nb_examples*(double(20)/100);
+  unsigned int test_height=nb_examples*(double(20)/100);
+
+  double** training_data=0;//[training_height][nb_attributes];
+  double** validation_data=0;//[validation_height][nb_attributes];
+  double** test_data=0;//[test_height][nb_attributes];
+  
+  unsigned int training_index=training_height;
+  unsigned int validation_index=training_height+validation_height;
+  unsigned int test_index=nb_examples;
+
+  net=org->net; 
+  numnodes=((org->gnome)->nodes).size();
+  /*  
+  cout<<"training height="<<training_height<<endl;
+  cout<<"training index="<<training_index<<endl;
+  cout<<"validation height="<<validation_height<<endl;
+  cout<<"validation index="<<validation_index<<endl;
+  cout<<"test height="<<test_height<<endl;
+  cout<<"test index="<<test_index<<endl;
+  */
+
+  training_data=new double*[training_height];
+  // populate <training_data>
+  for(unsigned int i=0;i<training_height;i++){
+    training_data[i]=new double[nb_attributes];
+    for(unsigned int j=0;j<nb_attributes;j++)
+      training_data[i][j]=data[i][j];
+  }
+
+  validation_data=new double*[validation_height];
+  // populate <validation_data>
+  for(unsigned int i=0;i<validation_height;i++){
+    validation_data[i]=new double[nb_attributes];
+    for(unsigned int j=0;j<nb_attributes;j++)
+      validation_data[i][j]=data[training_height+i][j];
+  }
+
+  test_data=new double*[test_height];
+  // populate <test_data>
+  for(unsigned int i=0;i<test_height;i++){
+    test_data[i]=new double[nb_attributes];
+    for(unsigned int j=0;j<nb_attributes;j++)
+      test_data[i][j]=data[training_height+validation_height+i][j];
+  }
+
+  // training data is used last for org->error to take precedence over previous runs
+  evaluate_perfs(test_data      ,test_height,      nb_attributes,net,org->error, org->test_fitness,       org->test_accuracy);
+  evaluate_perfs(validation_data,validation_height,nb_attributes,net,org->error, org->validation_fitness, org->validation_accuracy);
+  evaluate_perfs(training_data  ,training_height,  nb_attributes,net,org->error, org->training_fitness,   org->training_accuracy); 
+
+  org->fitness=org->training_fitness;
+
+  // clean-up memory
+  for (unsigned int i=0; i<nb_examples; i++)
+    delete [] data[i];
+  delete [] data;
+
+  for (unsigned int i=0; i<training_height; i++)
+    delete [] training_data[i];
+  delete [] training_data;
+
+  for (unsigned int i=0; i<validation_height; i++)
+    delete [] validation_data[i];
+  delete [] validation_data;
+
+  for (unsigned int i=0; i<test_height; i++)
+    delete [] test_data[i];
+  delete [] test_data;
+
   org->winner=false;
   return false;
 }
@@ -132,11 +196,11 @@ int bcm_epoch(Population *pop,int generation,char *filename,int &winnernum,int &
   for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){
     //std::cout<<"org"<<c<<"\tfit="<<(*curorg)->fitness<<"\tacc="<<(*curorg)->accuracy<<"\tNB nodes="<<(((*curorg)->gnome)->nodes).size()<<std::endl;
     if((*curorg)->fitness>best_fit){
-      best_fit=(*curorg)->fitness;
+      best_fit=(*curorg)->training_fitness;
       best_org=(*curorg);
     }
     // memorize organism's fitness
-    all_fitnesses.push_back((*curorg)->fitness);
+    all_fitnesses.push_back((*curorg)->training_fitness);
     c++;
   }
 
@@ -144,8 +208,10 @@ int bcm_epoch(Population *pop,int generation,char *filename,int &winnernum,int &
   double pop_score_mean=pop->mean(all_fitnesses);
   double pop_score_variance=pop->var(all_fitnesses);
   double pop_score_stddev=pop->stddev(all_fitnesses);
+  double prediction_accuracy=(*best_org).training_accuracy;
   double score=(*best_org).fitness;
-  double prediction_accuracy=(*best_org).accuracy;
+  double validation_accuracy=(*best_org).validation_accuracy;
+  double validation_score=(*best_org).validation_fitness;
   double MSE=(*best_org).error;
   unsigned int hidden_units=(((*best_org).gnome)->nodes).size();
 
@@ -179,8 +245,8 @@ int bcm_epoch(Population *pop,int generation,char *filename,int &winnernum,int &
 
        << -1//ensemble_accuracy
        << -1//ensemble_score
-       << -1//validation_accuracy
-       << -1//validation_score
+       << validation_accuracy
+       << validation_score
        << bcm_nb_err_func_calls
 
        << endr;
@@ -215,7 +281,6 @@ double** load_data_array(string dataset_filename,unsigned int &height,unsigned i
   height = array.size();
   width  = array[0].size()+1; // +1 for biasing
 
-    //  double data[height][width];
   data=new double*[height];
   for(unsigned int i=0; i<height; i++){
     data[i]=new double[width];
