@@ -20,7 +20,6 @@
 #include "experiments.h"
 using namespace std;
 
-
 /**
  * Compile & Run with:
  * $ make
@@ -44,6 +43,8 @@ int main(int argc, char *argv[]) {
   unsigned int nb_reps=atoi(argv[3]);
   unsigned int nb_gens=atoi(argv[4]);
 
+  exp_files expfiles;
+
   switch ( choice )
     {
     case 1:
@@ -58,8 +59,11 @@ int main(int argc, char *argv[]) {
     case 4:
       p=xor_test(nb_gens);
       break;
-    case 5:
-      /*p=*/bcm_test(nb_gens,nb_reps);
+    case 5: // BREAST CANCER MALIGNANCY
+      expfiles.startgene="bcstartgenes";
+      expfiles.dataset_filename="data/breast-cancer-malignantOrBenign-data-transformed.csv";
+      expfiles.result_file="data/results-neat-bcm.mat";
+      multiclass_test(nb_gens,nb_reps, expfiles);
       break;
     default:
       cout<<"Not an available option."<<endl;

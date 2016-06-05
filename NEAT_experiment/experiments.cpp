@@ -19,55 +19,120 @@
 
 #define NO_SCREEN_OUT 
 
-void bcm_test(int gens, unsigned int nb_reps){
-  std::ofstream oFile("data/results-neat-bcm.mat",std::ios::out);
+void multiclass_test(int gens, unsigned int nb_reps, exp_files ef){
+  std::ofstream oFile(ef.result_file.c_str(),std::ios::out);
   vector<mat> res_mats_training_perfs;
-  mat avrg_mat=compute_learning_curves_perfs(gens,nb_reps,res_mats_training_perfs);
+  mat avrg_mat=compute_learning_curves_perfs(gens,nb_reps,res_mats_training_perfs,ef);
   mat res_mat_err = compute_replicate_error(nb_reps,res_mats_training_perfs);
-
   // save results
   avrg_mat = join_horiz(avrg_mat, ones(avrg_mat.n_rows,1) * nb_reps);
-
-
   // plot results
   print_results_octave_format(oFile,avrg_mat,"results");
   print_results_octave_format(oFile,res_mat_err,"err_results");
 }
 
-bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
+int multiclass_epoch(Population *pop,int generation,char *filename,int &winnernum,int &winnergenes,int &winnernodes, mat &res_mat,exp_files ef) {
+  vector<Organism*>::iterator curorg;
+  vector<Species*>::iterator curspecies;
+  
+  Organism* best_org;
+  double best_fit=0;
+  bool win=false;
+  unsigned int c=0;
+  unsigned int bcm_nb_err_func_calls;
+
+  //Evaluate each organism on a test
+  for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg)
+    multiclass_evaluate(*curorg,bcm_nb_err_func_calls,ef.dataset_filename);
+
+  std::vector<double> all_fitnesses;
+  // find fittest
+  for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){
+    // un-comment to see full population
+    //std::cout<<"org"<<c<<"\tfit="<<(*curorg)->fitness<<"\tacc="<<(*curorg)->accuracy<<"\tNB nodes="<<(((*curorg)->gnome)->nodes).size()<<std::endl;
+    if((*curorg)->fitness>best_fit){
+      best_fit=(*curorg)->training_fitness;
+      best_org=(*curorg);
+    }
+    // memorize organism's fitness
+    all_fitnesses.push_back((*curorg)->training_fitness);
+    c++;
+  }
+
+  mat line;
+  double pop_score_mean=pop->mean(all_fitnesses);
+  double pop_score_variance=pop->var(all_fitnesses);
+  double pop_score_stddev=pop->stddev(all_fitnesses);
+  double prediction_accuracy=(*best_org).training_accuracy;
+  double score=(*best_org).fitness;
+  double validation_accuracy=(*best_org).validation_accuracy;
+  double validation_score=(*best_org).validation_fitness;
+  double MSE=(*best_org).error;
+  unsigned int hidden_units=(((*best_org).gnome)->nodes).size();
+
+  std::cout<<"gen"<<generation
+	   <<"\tbest.indiv.fitness="<<score
+	   <<"\tacc="<<prediction_accuracy
+	   <<"\terr="<<MSE
+	   <<"\tNB nodes="<<hidden_units
+	   <<"\tpop.mean="<<pop_score_mean
+	   <<"\tpop.var="<<pop_score_variance
+	   <<"\tpop.stddev="<<pop_score_stddev<<endl;
+
+  // format result line (-1 = irrelevant attributes)
+  line << generation  // i + nb_epochs * index_cross_validation_section
+       << MSE
+       << prediction_accuracy
+       << score
+       << pop_score_variance
+
+       << pop_score_stddev
+       << pop_score_mean
+       << -1//pop_score_median
+       << pop->organisms.size()
+       << (*best_org).net->inputs.size() // inputs
+
+       << hidden_units
+       << (*best_org).net->outputs.size()//outputs
+       << -1//nb_hidden_layers
+       << true
+       << -1//selected_mutation_scheme
+
+       << -1//ensemble_accuracy
+       << -1//ensemble_score
+       << validation_accuracy
+       << validation_score
+       << bcm_nb_err_func_calls
+
+       << endr;
+
+  // Write results on file
+  res_mat=join_vert(res_mat,line);
+  pop->epoch(generation);
+
+  if (win) return 1;
+  else return 0;
+}
+
+bool multiclass_evaluate(Organism *org, unsigned int &nb_calls, string dataset_filename) {
   static unsigned int bcm_nb_err_func_calls=0;
   bcm_nb_err_func_calls++;
   nb_calls=bcm_nb_err_func_calls;
   Network *net;
 
-  int numnodes;  /* Used to figure out how many nodes
-		    should be visited during activation */
   unsigned int nb_examples=-1,nb_attributes=-1;
 
-  double** data=load_data_array("data/breast-cancer-malignantOrBenign-data-transformed.csv",nb_examples, nb_attributes);
+  double** data=load_data_array(dataset_filename,nb_examples, nb_attributes);
 
   unsigned int training_height=nb_examples*(double(60)/100);
   unsigned int validation_height=nb_examples*(double(20)/100);
   unsigned int test_height=nb_examples*(double(20)/100);
-
-  double** training_data=0;//[training_height][nb_attributes];
-  double** validation_data=0;//[validation_height][nb_attributes];
-  double** test_data=0;//[test_height][nb_attributes];
   
-  unsigned int training_index=training_height;
-  unsigned int validation_index=training_height+validation_height;
-  unsigned int test_index=nb_examples;
-
-  net=org->net; 
-  numnodes=((org->gnome)->nodes).size();
-  /*  
-  cout<<"training height="<<training_height<<endl;
-  cout<<"training index="<<training_index<<endl;
-  cout<<"validation height="<<validation_height<<endl;
-  cout<<"validation index="<<validation_index<<endl;
-  cout<<"test height="<<test_height<<endl;
-  cout<<"test index="<<test_index<<endl;
-  */
+  double** training_data=0;
+  double** validation_data=0;
+  double** test_data=0;
+  
+  net=org->net;
 
   training_data=new double*[training_height];
   // populate <training_data>
@@ -120,90 +185,6 @@ bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
   org->winner=false;
   return false;
 }
-
-int bcm_epoch(Population *pop,int generation,char *filename,int &winnernum,int &winnergenes,int &winnernodes, mat &res_mat) {
-  vector<Organism*>::iterator curorg;
-  vector<Species*>::iterator curspecies;
-  
-  Organism* best_org;
-  double best_fit=0;
-  bool win=false;
-  unsigned int c=0;
-
-  unsigned int bcm_nb_err_func_calls;
-
-  //Evaluate each organism on a test
-  for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg)
-    bcm_evaluate(*curorg,bcm_nb_err_func_calls);
-
-  std::vector<double> all_fitnesses;
-  // find fittest
-  for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){
-    //std::cout<<"org"<<c<<"\tfit="<<(*curorg)->fitness<<"\tacc="<<(*curorg)->accuracy<<"\tNB nodes="<<(((*curorg)->gnome)->nodes).size()<<std::endl;
-    if((*curorg)->fitness>best_fit){
-      best_fit=(*curorg)->training_fitness;
-      best_org=(*curorg);
-    }
-    // memorize organism's fitness
-    all_fitnesses.push_back((*curorg)->training_fitness);
-    c++;
-  }
-
-  mat line;
-  double pop_score_mean=pop->mean(all_fitnesses);
-  double pop_score_variance=pop->var(all_fitnesses);
-  double pop_score_stddev=pop->stddev(all_fitnesses);
-  double prediction_accuracy=(*best_org).training_accuracy;
-  double score=(*best_org).fitness;
-  double validation_accuracy=(*best_org).validation_accuracy;
-  double validation_score=(*best_org).validation_fitness;
-  double MSE=(*best_org).error;
-  unsigned int hidden_units=(((*best_org).gnome)->nodes).size();
-
-  std::cout<<"gen"<<generation
-	   <<"\tbest.indiv.fitness="<<score
-	   <<"\tacc="<<prediction_accuracy
-	   <<"\terr="<<MSE
-	   <<"\tNB nodes="<<hidden_units
-	   <<"\tpop.mean="<<pop_score_mean
-	   <<"\tpop.var="<<pop_score_variance
-	   <<"\tpop.stddev="<<pop_score_stddev<<endl;
-
-  // format result line
-  line << generation  // i + nb_epochs * index_cross_validation_section
-       << MSE
-       << prediction_accuracy
-       << score
-       << pop_score_variance
-
-       << pop_score_stddev
-       << pop_score_mean
-       << -1//pop_score_median
-       << pop->organisms.size()
-       << (*best_org).net->inputs.size() // inputs
-
-       << hidden_units
-       << (*best_org).net->outputs.size()//outputs
-       << -1//nb_hidden_layers
-       << true
-       << -1//selected_mutation_scheme
-
-       << -1//ensemble_accuracy
-       << -1//ensemble_score
-       << validation_accuracy
-       << validation_score
-       << bcm_nb_err_func_calls
-
-       << endr;
-
-  // Write results on file
-  res_mat=join_vert(res_mat,line);
-  pop->epoch(generation);
-
-  if (win) return 1;
-  else return 0;
-}
-
 
 void evaluate_perfs(double** data,
 		    unsigned int nb_examples,
@@ -347,7 +328,7 @@ void compute_score_acc(mat conf_mat,double& accuracy,double& fitness){
   fitness=computed_score;
 }
 
-mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs){
+mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_files ef){
     // return variable
     mat averaged_performances;
 
@@ -359,7 +340,7 @@ mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector
         {
             for(unsigned int i=0; i<nb_reps; ++i) {
 #pragma omp task
-	      bcm_training_task(i, nb_reps,gens,result_matrices_training_perfs);
+	      multiclass_training_task(i, nb_reps,gens,result_matrices_training_perfs,ef);
             }
         }
     }
@@ -369,7 +350,7 @@ mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector
     return averaged_performances;
 }
 
-void bcm_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs){
+void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef){
   // result matrices (to be interpreted by Octave script <Plotter.m>)
   mat results_score_evolution;
 
@@ -408,25 +389,20 @@ void bcm_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,ve
 
   mat res_mat;
 
-  ifstream iFile("bcstartgenes",ios::in);
+  ifstream iFile(ef.startgene.c_str(),ios::in);
 
-  cout<<"START BREAST CANCER TEST"<<endl;
+  cout<<"DATA: "<<ef.dataset_filename<<endl;
 
   cout<<"Reading in the start genome"<<endl;
   //Read in the start Genome
   iFile>>curword;
   iFile>>id;
-  cout<<"Reading in Genome id "<<id<<endl;
   start_genome=new Genome(id,iFile);
   iFile.close();
 
   for(expcount=0;expcount<NEAT::num_runs;expcount++) {
     //Spawn the Population
-    cout<<"Spawning Population off Genome2"<<endl;
-
     pop=new Population(start_genome,NEAT::pop_size);
-      
-    cout<<"Verifying Spawned Pop"<<endl;
     pop->verify();
       
     for (gen=1;gen<=gens;gen++) {
@@ -438,7 +414,7 @@ void bcm_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,ve
       sprintf (temp, "gen_%d", gen);
 
       //Check for success
-      if (bcm_epoch(pop,gen,temp,winnernum,winnergenes,winnernodes, res_mat)) {
+      if(multiclass_epoch(pop,gen,temp,winnernum,winnergenes,winnernodes, res_mat,ef)){
 	//Collect Stats on end of experiment
 	evals[expcount]=NEAT::pop_size*(gen-1)+winnernum;
 	genes[expcount]=winnergenes;
