@@ -42,7 +42,7 @@ using namespace NEAT;
 
 // The Breast Cancer Malignancy (BCM) routines *****************************
 void multiclass_test(int gens, unsigned int nb_reps,exp_files ef);
-int multiclass_epoch(Population *pop,int generation,char *filename, int &winnernum, int &winnergenes,int &winnernodes, mat &res_mat, exp_files ef);
+int multiclass_epoch(Population *pop,int generation,char *filename, int &winnernum, int &winnergenes,int &winnernodes, mat &res_mat,unsigned int& nb_calls_err_func,exp_files ef);
 // generic multiclass fitness function
 bool multiclass_evaluate(Organism* org,unsigned int& nb_calls,string dataset_filename);
 

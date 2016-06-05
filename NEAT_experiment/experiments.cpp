@@ -31,7 +31,7 @@ void multiclass_test(int gens, unsigned int nb_reps, exp_files ef){
   print_results_octave_format(oFile,res_mat_err,"err_results");
 }
 
-int multiclass_epoch(Population *pop,int generation,char *filename,int &winnernum,int &winnergenes,int &winnernodes, mat &res_mat,exp_files ef) {
+int multiclass_epoch(Population *pop,int generation,char *filename,int &winnernum,int &winnergenes,int &winnernodes, mat &res_mat,unsigned int& nb_calls_err_func,exp_files ef) {
   vector<Organism*>::iterator curorg;
   vector<Species*>::iterator curspecies;
   
@@ -39,12 +39,11 @@ int multiclass_epoch(Population *pop,int generation,char *filename,int &winnernu
   double best_fit=0;
   bool win=false;
   unsigned int c=0;
-  unsigned int nb_calls_err_func;
 
   //Evaluate each organism on a test
   for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg)
     multiclass_evaluate(*curorg,nb_calls_err_func,ef.dataset_filename);
-
+  
   std::vector<double> all_fitnesses;
   // find fittest
   for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){
@@ -115,9 +114,7 @@ int multiclass_epoch(Population *pop,int generation,char *filename,int &winnernu
 }
 
 bool multiclass_evaluate(Organism *org, unsigned int &nb_calls, string dataset_filename) {
-  static unsigned int nb_calls_err_func=0;
-  nb_calls_err_func++;
-  nb_calls=nb_calls_err_func;
+  nb_calls++;
   Network *net;
 
   unsigned int nb_examples=-1,nb_attributes=-1;
@@ -436,7 +433,8 @@ void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int 
     //Spawn the Population
     pop=new Population(start_genome,NEAT::pop_size);
     pop->verify();
-      
+    unsigned int nb_calls_err=0;
+    
     for (gen=1;gen<=gens;gen++) {
       //This is how to make a custom filename
       fnamebuf=new ostringstream();
@@ -446,7 +444,7 @@ void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int 
       sprintf (temp, "gen_%d", gen);
 
       //Check for success
-      if(multiclass_epoch(pop,gen,temp,winnernum,winnergenes,winnernodes, res_mat,ef)){
+      if(multiclass_epoch(pop,gen,temp,winnernum,winnergenes,winnernodes, res_mat,nb_calls_err,ef)){
 	//Collect Stats on end of experiment
 	evals[expcount]=NEAT::pop_size*(gen-1)+winnernum;
 	genes[expcount]=winnergenes;
