@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
   srand( (unsigned)time( NULL ) );
 
   if (argc != 5) {
-    cerr << "Invalid arguments:\n\tArg1=NEAT parameters file (.ne file)\n\tArg2=CHOSEN EXPERIMENT INDEX\n\tArg3=NB REPLICATES\n\tNB GENERATIONS" << endl;
+    cerr << "Invalid arguments:\n\tArg1=NEAT parameters file (.ne file)\n\tArg2=CHOSEN EXPERIMENT INDEX\n\tArg3=NB REPLICATES\n\tArg4=NB GENERATIONS" << endl;
     return -1;
   }
 

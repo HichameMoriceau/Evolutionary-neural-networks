@@ -37,74 +37,38 @@ bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
   double this_out; //The current output
   int count;
   double errorsum;
-
   bool success;  //Check for successful activation
   int numnodes;  /* Used to figure out how many nodes
 		    should be visited during activation */
-
   int net_depth; //The max depth of the network to be activated
   int relax; //Activates until relaxation
 
-  //
-  // Reading data-set into 2D array double ar
-  //
-
-  ifstream iFile("data/breast-cancer-malignantOrBenign-data-transformed.csv",ios::in);
-  //ifstream iFile("iris-data-transformed.csv",ios::in);
-  string line, field;
-
-  vector< vector<double> > array;  // the 2D array
-  vector<double> v;                // array of values for one line only
-
   unsigned int nb_classes=(*org).net->outputs.size();
+  unsigned int nb_examples=-1,nb_attributes_pls_bias=-1;
 
-  while(getline(iFile,line)){ // get next line in file
-    v.clear();
-    stringstream ss(line);
-    while (getline(ss,field,',')){  // break line into comma delimitted fields
-      double d = strtod(field.c_str(), NULL);
-      v.push_back(d);  // add each field to the 1D array
-    }
-    array.push_back(v);  // add the 1D array to the 2D array
-  }
+  double** data=load_data_array("data/breast-cancer-malignantOrBenign-data-transformed.csv",nb_examples, nb_attributes_pls_bias);
 
-  unsigned int height = array.size();
-  unsigned int width  = array[0].size()+1; // +1 for biasing
-
-  double in[height][width];
-  double out[height][nb_classes]; 
-
-  for(unsigned int i=0; i<height; i++){
-    for(unsigned int j=0; j<width; j++){
-      if(j==0)
-	in[i][j] = 1; // biases
-      else
-	in[i][j] = array[i][j];
-    }
-  }
-  iFile.close();
+  double out[nb_examples][nb_classes];
+  double training_data[nb_examples*(60/100)][nb_attributes_pls_bias];
+  double validation_data[nb_examples*(20/100)][nb_attributes_pls_bias];
+  double test_data[nb_examples*(20/100)][nb_attributes_pls_bias];
 
   net=org->net; 
   numnodes=((org->gnome)->nodes).size();
   net_depth=net->max_depth();
 
   //Load and activate the network on each input
-  for(count=0;count<height;count++){
-    //cout<<count<<" ";
-    net->load_sensors(in[count]);
+  for(count=0;count<nb_examples;count++){
+    net->load_sensors(data[count]);
     //Relax net and get output
     success=net->activate();
     //use depth to ensure relaxation
-    for (relax=0;relax<=net_depth;relax++) {
+    for (relax=0;relax<=net_depth;relax++){
       success=net->activate();
       this_out=(*(net->outputs.begin()))->activation;
-    }
-    
-    for(unsigned int i=0;i<net->outputs.size(); i++){
+    }    
+    for(unsigned int i=0;i<net->outputs.size(); i++)
       out[count][i]=(*(net->outputs[i])).activation;
-    }
-    
-    //out[count]=(*(net->outputs.begin()))->activation;
     net->flush();
   }
   
@@ -113,60 +77,30 @@ bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
     double p=-1;
     double r=-1;
     double score=-1;
-    double computed_score=0;
-    double computed_acc=0;
-    unsigned int tp=0; // true  positives
-    unsigned int tn=0; // true  negatives
-    unsigned int fp=0; // false positives
-    unsigned int fn=0; // false negatives
+    double computed_score=0,computed_acc=0;
+    // true/false  positives/negatives,
+    unsigned int tp=0,tn=0,fp=0,fn=0;
     
-    mat preds =zeros(height,nb_classes);
-    mat labels=zeros(height,1);
+    mat preds =zeros(nb_examples,nb_classes);
+    mat labels=zeros(nb_examples,1);
 
-    for(unsigned int i=0; i<height; i++){
-      double expe=labels(i)=in[i][width-2];
-      for(unsigned int j=0;j<nb_classes;j++){
+    for(unsigned int i=0; i<nb_examples; i++){
+      double expe=labels(i)=data[i][nb_attributes_pls_bias-2];
+      for(unsigned int j=0;j<nb_classes;j++)
 	preds(i,j)=out[i][j];
-      }
       if(!(preds[i,expe]==1))
 	errsum++;
     }
-    // generate confusion matrix
-    mat conf_mat=zeros(nb_classes, nb_classes);
-    for(unsigned int i=0; i<nb_classes; i++){
-        for(unsigned int j=0; j<nb_classes; j++){
-	  conf_mat(i,j)=count_nb_identicals(i,j,to_multiclass_format(preds),labels);
-        }
-    }
-    vec scores(nb_classes);
-    // computing f1 score for each label
-    for(unsigned int i=0; i<nb_classes; i++){
-      double TP = conf_mat(i,i);
-      double TPplusFN = sum(conf_mat.col(i));
-      double TPplusFP = sum(conf_mat.row(i));
-      double tmp_precision=TP/TPplusFP;
-      double tmp_recall=TP/TPplusFN;
-      scores[i] = 2*((tmp_precision*tmp_recall)/(tmp_precision+tmp_recall));
-      // check for -NaN
-      if(scores[i] != scores[i])
-	scores[i] = 0;
-      computed_score += scores[i];
-    }
-    // general f1 score = average of all classes score
-    computed_score = (computed_score/nb_classes)*100;
-    // make sure score doesn't hit 0 (NEAT doesn't seem to like that)
-    if(computed_score==0)
-      computed_score=0.1;
-    // compute accuracy
-    double TP =0;
-    for(unsigned int i=0; i<nb_classes; i++){
-      TP += conf_mat(i,i);
-    }
-    computed_acc = (TP/height)*100;
-
     org->error=errsum;
-    org->accuracy=computed_acc;
-    org->fitness=computed_score;
+
+    // generate confusion matrix
+    mat conf_mat=generate_conf_mat(nb_classes, preds, labels);
+    compute_score_acc(conf_mat,org->accuracy,org->fitness);
+    
+    // clean-up memory
+    for (unsigned int i=0; i<nb_examples; i++)
+	delete [] data[i];
+    delete [] data;
   }
   else {
     //The network is flawed (shouldnt happen)
@@ -187,7 +121,7 @@ int bcm_epoch(Population *pop,int generation,char *filename,int &winnernum,int &
   bool win=false;
   unsigned int c=0;
 
-  unsigned int bcm_nb_err_func_calls=-2;
+  unsigned int bcm_nb_err_func_calls;
 
   //Evaluate each organism on a test
   for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg)
@@ -251,13 +185,95 @@ int bcm_epoch(Population *pop,int generation,char *filename,int &winnernum,int &
 
        << endr;
 
-
   // Write results on file
   res_mat=join_vert(res_mat,line);
   pop->epoch(generation);
 
   if (win) return 1;
   else return 0;
+}
+ 
+double** load_data_array(string dataset_filename,unsigned int &height,unsigned int &width){
+  double** data=0;
+  string line, field;
+  vector< vector<double> > array;  // the 2D array
+  vector<double> v;                // array of values for one line only
+
+  ifstream iFile(dataset_filename.c_str(),ios::in);
+  //ifstream iFile("iris-data-transformed.csv",ios::in);
+  while(getline(iFile,line)){ // get next line in file
+    v.clear();
+    stringstream ss(line);
+    while (getline(ss,field,',')){  // break line into comma delimitted fields
+      double d = strtod(field.c_str(), NULL);
+      v.push_back(d);  // add each field to the 1D array
+    }
+    array.push_back(v);  // add the 1D array to the 2D array
+  }
+  iFile.close();
+
+  height = array.size();
+  width  = array[0].size()+1; // +1 for biasing
+
+    //  double data[height][width];
+  data=new double*[height];
+  for(unsigned int i=0; i<height; i++){
+    data[i]=new double[width];
+    for(unsigned int j=0; j<width; j++){
+      if(j==0)
+	data[i][j] = 1; // biases
+      else
+	data[i][j] = array[i][j];
+    }
+  }
+  // return 2D array
+  return data;
+}
+
+mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels){
+  mat conf_mat=zeros(nb_classes, nb_classes);
+  for(unsigned int i=0; i<nb_classes; i++){
+    for(unsigned int j=0; j<nb_classes; j++){
+      conf_mat(i,j)=count_nb_identicals(i,j,to_multiclass_format(preds),labels);
+    }
+  }
+  return conf_mat;
+}
+
+void compute_score_acc(mat conf_mat,double& accuracy,double& fitness){
+  unsigned int nb_classes=conf_mat.n_cols;
+  unsigned int nb_examples=0;
+  for(unsigned int i=0;i<nb_classes;i++)
+    nb_examples+=sum(conf_mat.row(i));
+  double computed_score=0, computed_acc=0, errsum=0;
+  vec scores(nb_classes);
+  // computing f1 score for each label
+  for(unsigned int i=0; i<nb_classes; i++){
+    double TP = conf_mat(i,i);
+    double TPplusFN = sum(conf_mat.col(i));
+    double TPplusFP = sum(conf_mat.row(i));
+    double tmp_precision=TP/TPplusFP;
+    double tmp_recall=TP/TPplusFN;
+    scores[i] = 2*((tmp_precision*tmp_recall)/(tmp_precision+tmp_recall));
+    // check for -NaN
+    if(scores[i] != scores[i])
+      scores[i] = 0;
+    computed_score += scores[i];
+  }
+  // general f1 score = average of all classes score
+  computed_score = (computed_score/nb_classes)*100;
+  // make sure score doesn't hit 0 (NEAT doesn't seem to like that)
+  if(computed_score==0)
+    computed_score=0.1;
+  // compute accuracy
+  double TP =0;
+  for(unsigned int i=0; i<nb_classes; i++){
+    TP += conf_mat(i,i);
+  }
+  computed_acc = (TP/nb_examples)*100;
+
+  accuracy=computed_acc;
+  fitness=computed_score;
 }
 
 mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs){
@@ -333,8 +349,6 @@ void bcm_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,ve
   start_genome=new Genome(id,iFile);
   iFile.close();
 
-  cout<<fixed<<setprecision(3);
-
   for(expcount=0;expcount<NEAT::num_runs;expcount++) {
     //Spawn the Population
     cout<<"Spawning Population off Genome2"<<endl;
@@ -359,10 +373,6 @@ void bcm_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,ve
 	genes[expcount]=winnergenes;
 	nodes[expcount]=winnernodes;
 	gen=gens;
-	
-	
-	//cout<<"res sc evol"<<endl;
-	//results_score_evolution.print();
       }
 
       //Clear output filename
