@@ -24,69 +24,14 @@ void bcm_test(int gens, unsigned int nb_reps){
   vector<mat> res_mats_training_perfs;
   mat avrg_mat=compute_learning_curves_perfs(gens,nb_reps,res_mats_training_perfs);
   mat res_mat_err = compute_replicate_error(nb_reps,res_mats_training_perfs);
+
+  // save results
+  avrg_mat = join_horiz(avrg_mat, ones(avrg_mat.n_rows,1) * nb_reps);
+
+
   // plot results
   print_results_octave_format(oFile,avrg_mat,"results");
   print_results_octave_format(oFile,res_mat_err,"err_results");
-}
-
-void evaluate_perfs(double** data,
-		    unsigned int nb_examples,
-		    unsigned int nb_attributes_pls_bias,
-		    Network* net, 
-		    double& error, 
-		    double& fitness, 
-		    double& accuracy){
-  bool success;  //Check for successful activation
-  //Load and activate the network on each input
-  int net_depth=net->max_depth(); //The max depth of the network to be activated
-  int relax; //Activates until relaxation
-  double this_out; //The current output
-  unsigned int nb_classes=net->outputs.size();
-  double out[nb_examples][nb_classes];
-
-  for(int count=0;count<nb_examples;count++){
-    net->load_sensors(data[count]);
-    //Relax net and get output
-    success=net->activate();
-    //use depth to ensure relaxation
-    for (relax=0;relax<=net_depth;relax++){
-      success=net->activate();
-      this_out=(*(net->outputs.begin()))->activation;
-    }    
-    for(unsigned int i=0;i<net->outputs.size(); i++)
-      out[count][i]=(*(net->outputs[i])).activation;
-    net->flush();
-  }
-  
-  if (success) {
-    double errsum=0,computed_score=0,computed_acc=0;
-    // true/false  positives/negatives,
-    unsigned int tp=0,tn=0,fp=0,fn=0;
-    double p=-1, r=-1, score=-1;
-
-    mat preds =zeros(nb_examples,nb_classes);
-    mat labels=zeros(nb_examples,1);
-
-    for(unsigned int i=0; i<nb_examples; i++){
-      double expe=labels(i)=data[i][nb_attributes_pls_bias-2];
-      for(unsigned int j=0;j<nb_classes;j++)
-	preds(i,j)=out[i][j];
-      if(!(preds[i,expe]==1))
-	errsum++;
-    }
-    error=errsum;
-
-    // generate confusion matrix
-    mat conf_mat=generate_conf_mat(nb_classes, preds, labels);
-    compute_score_acc(conf_mat,accuracy,fitness);
-  }
-  else {
-    //The network is flawed (shouldnt happen)
-    error   =999.0;
-    fitness =0.0000001;
-    accuracy=0.0000001;
-  }
-
 }
 
 bool bcm_evaluate(Organism *org, unsigned int &nb_calls) {
@@ -257,6 +202,67 @@ int bcm_epoch(Population *pop,int generation,char *filename,int &winnernum,int &
 
   if (win) return 1;
   else return 0;
+}
+
+
+void evaluate_perfs(double** data,
+		    unsigned int nb_examples,
+		    unsigned int nb_attributes_pls_bias,
+		    Network* net, 
+		    double& error, 
+		    double& fitness, 
+		    double& accuracy){
+  bool success;  //Check for successful activation
+  //Load and activate the network on each input
+  int net_depth=net->max_depth(); //The max depth of the network to be activated
+  int relax; //Activates until relaxation
+  double this_out; //The current output
+  unsigned int nb_classes=net->outputs.size();
+  double out[nb_examples][nb_classes];
+
+  for(int count=0;count<nb_examples;count++){
+    net->load_sensors(data[count]);
+    //Relax net and get output
+    success=net->activate();
+    //use depth to ensure relaxation
+    for (relax=0;relax<=net_depth;relax++){
+      success=net->activate();
+      this_out=(*(net->outputs.begin()))->activation;
+    }    
+    for(unsigned int i=0;i<net->outputs.size(); i++)
+      out[count][i]=(*(net->outputs[i])).activation;
+    net->flush();
+  }
+  
+  if (success) {
+    double errsum=0,computed_score=0,computed_acc=0;
+    // true/false  positives/negatives,
+    unsigned int tp=0,tn=0,fp=0,fn=0;
+    double p=-1, r=-1, score=-1;
+
+    mat preds =zeros(nb_examples,nb_classes);
+    mat labels=zeros(nb_examples,1);
+
+    for(unsigned int i=0; i<nb_examples; i++){
+      double expe=labels(i)=data[i][nb_attributes_pls_bias-2];
+      for(unsigned int j=0;j<nb_classes;j++)
+	preds(i,j)=out[i][j];
+      if(!(preds[i,expe]==1))
+	errsum++;
+    }
+    error=errsum;
+
+    // generate confusion matrix
+    mat conf_mat=generate_conf_mat(nb_classes, preds, labels);
+    compute_score_acc(conf_mat,accuracy,fitness);
+  }
+  else {
+    //The network is flawed (shouldnt happen)
+    error   =999.0;
+    fitness =0.0000001;
+    accuracy=0.0000001;
+  }
+
 }
  
 double** load_data_array(string dataset_filename,unsigned int &height,unsigned int &width){
@@ -449,7 +455,7 @@ void bcm_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,ve
       delete pop;
   }
 
-  ofstream experiment_file("experiment.txt",ios::out);
+  ofstream experiment_file("experiment.txt",ios::app);
   // print-out best perfs
   double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
   res_mats_training_perfs.push_back(results_score_evolution);
