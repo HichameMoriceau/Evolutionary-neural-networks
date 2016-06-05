@@ -187,7 +187,6 @@ string Data_set::get_data_set_info(mat D) {
 unsigned int Data_set::find_nb_prediction_classes(mat D){
     vector<unsigned int> prediction_classes(0);
     bool is_known_class = false;
-
     // compute nb output units required
     for(unsigned int i=0; i<D.n_rows; i++) {
         unsigned int current_pred_class = D(i,D.n_cols-1);

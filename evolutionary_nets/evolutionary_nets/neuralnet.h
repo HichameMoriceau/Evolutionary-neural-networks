@@ -119,6 +119,8 @@ public:
      */
     double          get_f1_score(data_subset d);
 
+    unsigned int    count_nb_classes(mat labels);
+
     unsigned int    count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
 
     mat             to_multiclass_format(mat predictions);

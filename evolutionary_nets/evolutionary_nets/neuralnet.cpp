@@ -226,6 +226,8 @@ double NeuralNet::get_f1_score(data_subset data_set) {
         }
     }
 
+    unsigned int nb_local_classes=count_nb_classes(data_set.Y);
+
     vec scores(nb_classes);
     // computing f1 score for each label
     for(unsigned int i=0; i<nb_classes; i++){
@@ -241,11 +243,32 @@ double NeuralNet::get_f1_score(data_subset data_set) {
         computed_score += scores[i];
     }
     // general f1 score = average of all classes score
-    computed_score = (computed_score/nb_classes)*100;
+    computed_score = (computed_score/nb_local_classes)*100;
     // update net score
     score = computed_score;
     // return net score
     return score;
+}
+
+unsigned int NeuralNet::count_nb_classes(mat labels){
+  vector<unsigned int> array;
+  bool is_known_class = false;
+  // compute nb output units required
+  for(unsigned int i=0; i<labels.n_rows; i++) {
+    unsigned int current_pred_class = labels(i);
+    is_known_class=false;
+    // for each known prediction classes
+    for(unsigned int j=0;j<array.size(); j++) {
+      // if current output is different from prediction class
+      if(current_pred_class==array[j]){
+    is_known_class = true;
+      }
+    }
+    if(array.empty() || (!is_known_class)){
+      array.push_back(current_pred_class);
+    }
+  }
+  return array.size();
 }
 
 unsigned int NeuralNet::count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations){

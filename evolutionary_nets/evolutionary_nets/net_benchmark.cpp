@@ -22,7 +22,7 @@ Net_benchmark::Net_benchmark() {
 
     // instantiate optimization algorithms
     evo_trainer       = Trainer_DE();
-    experiment_file.open("experiment.txt", ios::app);
+    experiment_file.open("random-seeds.txt", ios::app);
 }
 
 Net_benchmark::~Net_benchmark(){

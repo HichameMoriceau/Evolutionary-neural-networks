@@ -538,7 +538,6 @@ double Trainer::clip(double x, double min, double max) {
         return x;
 }
 
-
 unsigned int Trainer::generate_random_integer_between_range(unsigned int min, unsigned int max) {
     return min + ( std::rand() % ( max - min + 1 ) );
 }
