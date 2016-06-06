@@ -267,6 +267,9 @@ double** load_data_array(string dataset_filename,unsigned int &height,unsigned i
   }
   iFile.close();
 
+  // randomize the order of the examples
+  random_shuffle(array.begin(),array.end());
+
   height = array.size();
   width  = array[0].size()+1; // +1 for biasing
 
@@ -466,8 +469,8 @@ void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int 
   double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
   res_mats_training_perfs.push_back(results_score_evolution);
 
-  cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<"Breast Cancer Malignancy data set"<<endl;
-  experiment_file<<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<"Breast Cancer Malignancy data set"<<endl;
+  cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
+  experiment_file<<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
   experiment_file.close();
 }
 
@@ -502,6 +505,7 @@ mat to_multiclass_format(mat predictions){
 }
 
 mat average_matrices(vector<mat> results){
+    cout<<"AVERAGING RESULTS"<<endl;
     unsigned int smallest_nb_rows = INT_MAX;
     // find lowest and highest nb rows
     for(unsigned int i=0; i<results.size() ;i++){
