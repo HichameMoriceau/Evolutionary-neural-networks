@@ -128,11 +128,35 @@ mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector
   return averaged_performances;
 }
 
-/*
-double fann_get_accuracy(struct fann* best_ann, ){
-  
+double fann_get_accuracy(struct fann* ann, struct fann_train_data *data){
+  double acc=0;
+  unsigned int count=0;
+  unsigned int nb_examples=fann_length_train_data(data);
+  unsigned int nb_attributes=fann_num_input_train_data(data);
+  unsigned int nb_classes=fann_num_output_train_data(data);
+
+  // model predictions
+  float preds[nb_examples];
+  // expected predictions
+  float labels[nb_examples];
+
+  // obtain model predictions and expected predictions
+  for(unsigned int i=0;i<nb_examples;i++){
+    fann_type* input=data->input[i];
+    labels[i]=data->output[i][0];
+    preds[i]=fann_run(ann, input)[0];
+    if(preds[i]>=0.5)
+      preds[i]=1;
+    else
+      preds[i]=0;
+  }
+
+  for(unsigned int i=0;i<nb_examples;i++)
+    if(preds[i]==labels[i])
+      count++;
+  acc=(count/double(nb_examples))*100;
+  return acc;
 }
-*/
 
 void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef){
   // result matrices (to be interpreted by Octave script <Plotter.m>)
@@ -206,7 +230,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
       double pop_score_mean=-1;
       double pop_score_variance=-1;
       double pop_score_stddev=-1;
-      double prediction_accuracy=-1;//fann_get_accuracy(best_ann, data);
+      double prediction_accuracy=fann_get_accuracy(best_ann, data);
       double score=-1;//fann_get_f1_score(best_ann);
       double validation_accuracy=-1;
       double validation_score=-1;
@@ -222,7 +246,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
 	       <<"\tpop.var="<<pop_score_variance
 	       <<"\tpop.stddev="<<pop_score_stddev<<endl;
 
-      // format result line (-1 = irrelevant attributes)
+      // format result line (-1 corresponds to irrelevant attributes)
       line << i
 	   << MSE
 	   << prediction_accuracy
@@ -251,6 +275,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
       // Write results on file
       res_mat=join_vert(res_mat,line);
     }
+    // memorize best network
     if(fann_get_MSE(ann)<fann_get_MSE(best_ann))
       *best_ann=*ann;
   }
