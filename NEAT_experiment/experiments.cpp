@@ -318,7 +318,7 @@ mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels){
   return conf_mat;
 }
 
-void compute_error_score_acc(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness){
+void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness){
   unsigned int nb_classes=conf_mat.n_cols;
   // number of class present in the current subset of the data set
   unsigned int nb_local_classes=count_nb_classes(labels);
@@ -382,7 +382,6 @@ mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector
     return averaged_performances;
 }
 
-void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef){
   // result matrices (to be interpreted by Octave script <Plotter.m>)
   mat results_score_evolution;
 
