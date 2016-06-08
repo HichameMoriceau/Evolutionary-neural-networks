@@ -229,7 +229,7 @@ void evaluate_perfs(double** data,
 
     // generate confusion matrix
     mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
-    compute_error_score_acc(conf_mat, labels,error,accuracy,fitness);
+    compute_error_acc_score(conf_mat, labels,error,accuracy,fitness);
     /*
     cout<<"preds:"<<endl;
     preds.print();
@@ -310,11 +310,9 @@ unsigned int count_nb_classes(mat labels){
 
 mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels){
   mat conf_mat=zeros(nb_classes, nb_classes);
-  for(unsigned int i=0; i<nb_classes; i++){
-    for(unsigned int j=0; j<nb_classes; j++){
+  for(unsigned int i=0; i<nb_classes; i++)
+    for(unsigned int j=0; j<nb_classes; j++)
       conf_mat(i,j)=count_nb_identicals(i,j,to_multiclass_format(preds),labels);
-    }
-  }
   return conf_mat;
 }
 
@@ -350,12 +348,12 @@ void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accu
   for(unsigned int i=0; i<nb_classes; i++){
     TP += conf_mat(i,i);
   }
-  computed_acc = (TP/nb_examples)*100;
+  computed_acc = (TP/double(nb_examples))*100;
   // prevent -nan values
   if(computed_acc!=computed_acc)
     computed_acc=0;
   // compute error
-  error=(nb_examples-TP)/nb_examples;
+  error=(nb_examples-TP)/double(nb_examples);
   accuracy=computed_acc;
   fitness=computed_score;
 }
@@ -382,6 +380,7 @@ mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector
     return averaged_performances;
 }
 
+void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat>& res_mats_training_perfs,exp_files ef){
   // result matrices (to be interpreted by Octave script <Plotter.m>)
   mat results_score_evolution;
 
@@ -431,55 +430,77 @@ mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector
   start_genome=new Genome(id,iFile);
   iFile.close();
 
-  for(expcount=0;expcount<NEAT::num_runs;expcount++) {
-    //Spawn the Population
-    pop=new Population(start_genome,NEAT::pop_size);
-    pop->verify();
-    unsigned int nb_calls_err=0;
+  //Spawn the Population
+  pop=new Population(start_genome,NEAT::pop_size);
+  pop->verify();
+  unsigned int nb_calls_err=0;
     
-    for (gen=1;gen<=gens;gen++) {
-      //This is how to make a custom filename
-      fnamebuf=new ostringstream();
-      (*fnamebuf)<<"gen_"<<gen<<ends;  //needs end marker
+  for (gen=1;gen<=gens;gen++) {
+    //This is how to make a custom filename
+    fnamebuf=new ostringstream();
+    (*fnamebuf)<<"gen_"<<gen<<ends;  //needs end marker
 
-      char temp[50];
-      sprintf (temp, "gen_%d", gen);
+    char temp[50];
+    sprintf (temp, "gen_%d", gen);
 
-      //Check for success
-      if(multiclass_epoch(pop,gen,temp,winnernum,winnergenes,winnernodes, res_mat,nb_calls_err,ef)){
-	//Collect Stats on end of experiment
-	evals[expcount]=NEAT::pop_size*(gen-1)+winnernum;
-	genes[expcount]=winnergenes;
-	nodes[expcount]=winnernodes;
-	gen=gens;
-      }
-
-      //Clear output filename
-      fnamebuf->clear();
-      delete fnamebuf;
+    //Check for success
+    if(multiclass_epoch(pop,gen,temp,winnernum,winnergenes,winnernodes, res_mat,nb_calls_err,ef)){
+      //Collect Stats on end of experiment
+      evals[expcount]=NEAT::pop_size*(gen-1)+winnernum;
+      genes[expcount]=winnergenes;
+      nodes[expcount]=winnernodes;
+      gen=gens;
     }
-    results_score_evolution=join_vert(results_score_evolution, res_mat);
-    if (expcount<NEAT::num_runs-1)
-      delete pop;
-  }
 
-  ofstream experiment_file("random-seeds.txt",ios::app);
+    //Clear output filename
+    fnamebuf->clear();
+    delete fnamebuf;
+  }
+  results_score_evolution=join_vert(results_score_evolution, res_mat);
+
+  vector<Organism*>::iterator curorg;
+  Organism* best_org;
+  double best_fit=-1;
+  unsigned int dummy=0;
+
+  //Evaluate each organism on a test
+  for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg)
+    multiclass_evaluate(*curorg,dummy,ef.dataset_filename);
+
+  // find fittest
+  for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){
+    if((*curorg)->fitness>best_fit){
+      best_fit=(*curorg)->fitness;
+      best_org=(*curorg);
+    }
+  }
+  
+  double test_score=best_org->test_fitness;
+  double test_acc=best_org->test_accuracy;
+  delete pop;
+
+  // append Cross Validation error to result matrix
+  mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
+  mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
+  results_score_evolution=join_horiz(results_score_evolution, test_score_m);
+  results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
+
   // print-out best perfs
   double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
   res_mats_training_perfs.push_back(results_score_evolution);
 
-  cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
-  experiment_file<<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
+  ofstream experiment_file("random-seeds.txt",ios::app);
+  cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<best_score<<" on "<<ef.dataset_filename<<endl;
+  experiment_file<<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<best_score<<" on "<<ef.dataset_filename<<endl;
   experiment_file.close();
 }
 
 unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations){
   unsigned int count=0;
-  // for each example
-  for(unsigned int i=0; i<predictions.n_rows; i++){
+  // for each example 
+  for(unsigned int i=0; i<predictions.n_rows; i++)
     if(predictions(i)==predicted_class && expectations(i)==expected_class)
       count++;
-  }
   return count;
 }
 

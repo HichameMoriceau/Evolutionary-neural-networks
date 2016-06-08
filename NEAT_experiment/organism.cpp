@@ -48,6 +48,16 @@ Organism::Organism(double fit, Genome *g,int gen, const char* md) {
 	mate_baby=0;
 
 	modified = true;
+
+	// *ADDED by Hichame Moriceau*
+	training_accuracy=0; 
+	validation_accuracy=0;
+	test_accuracy=0;
+	training_fitness=0;
+	validation_fitness=0;
+	test_fitness=0;
+	// **
+
 }
 
 Organism::Organism(const Organism& org)

@@ -23,7 +23,7 @@ using namespace std;
 /**
  * Compile & Run with:
  * $ make
- * $ ./neat test.ne 5 4 100 # experiment 5, 4 replicates, 100 generations
+ * $ ./neat test.ne 5 4 300 # experiment 5, 4 replicates, 100 generations
  */
 int main(int argc, char *argv[]) {
 
