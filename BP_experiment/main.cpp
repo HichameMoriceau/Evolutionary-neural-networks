@@ -370,15 +370,30 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
     }
     cout<<endl;
   }
+  results_score_evolution=join_vert(results_score_evolution, res_mat);
+
+  double test_score=0;
+  double test_acc=0;
+  
+  // compute ACC and SCORE on TEST SET
+  // ...
+
+  // clean-up memory
   fann_destroy(ann);
   fann_destroy(best_ann);
+
+
+  // append Cross Validation error to result matrix
+  mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
+  mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
+  results_score_evolution=join_horiz(results_score_evolution, test_score_m);
+  results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
   
-  ofstream experiment_file("random-seeds.txt",ios::app);
   // print-out best perfs
-  results_score_evolution=join_vert(results_score_evolution, res_mat);
   double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
   res_mats_training_perfs.push_back(results_score_evolution);
 
+  ofstream experiment_file("random-seeds.txt",ios::app);
   cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
   experiment_file<<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
   experiment_file.close();
