@@ -6,6 +6,7 @@
 #include<armadillo>
 #include<string>
 #include<omp.h>
+#include <iomanip> // setprecision
 using namespace std;
 using namespace arma;
 
@@ -33,6 +34,10 @@ int rand_int(int min, int max);
 void fixed_topo_exp(int gens, unsigned int nb_reps, exp_files ef);
 mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_files ef);
 void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef);
+unsigned int count_nb_classes(mat labels);
+mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels);
+void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness);
+
 
 unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
 mat to_multiclass_format(mat predictions);
@@ -128,34 +133,106 @@ mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector
   return averaged_performances;
 }
 
-double fann_get_accuracy(struct fann* ann, struct fann_train_data *data){
-  double acc=0;
-  unsigned int count=0;
+void fann_get_preds_labels(struct fann* ann, struct fann_train_data *data, mat& preds, mat& labels){
   unsigned int nb_examples=fann_length_train_data(data);
-  unsigned int nb_attributes=fann_num_input_train_data(data);
-  unsigned int nb_classes=fann_num_output_train_data(data);
-
   // model predictions
-  float preds[nb_examples];
+  float _preds[nb_examples];
   // expected predictions
-  float labels[nb_examples];
-
+  float _labels[nb_examples];
   // obtain model predictions and expected predictions
   for(unsigned int i=0;i<nb_examples;i++){
     fann_type* input=data->input[i];
-    labels[i]=data->output[i][0];
-    preds[i]=fann_run(ann, input)[0];
-    if(preds[i]>=0.5)
-      preds[i]=1;
+    _labels[i]=data->output[i][0];
+    _preds[i]=fann_run(ann, input)[0];
+    if(_preds[i]>=0.5)
+      _preds[i]=1;
     else
-      preds[i]=0;
+      _preds[i]=0;
   }
 
-  for(unsigned int i=0;i<nb_examples;i++)
-    if(preds[i]==labels[i])
-      count++;
-  acc=(count/double(nb_examples))*100;
-  return acc;
+  // init with values != 0 or 1
+  mat p=randu(nb_examples);
+  mat l=randu(nb_examples);
+  // cast <float[]> to <mat>
+  for(unsigned int i=0; i<nb_examples; i++){
+    p(i) =_preds[i];
+    l(i)=_labels[i];
+  }
+  preds=p;
+  labels=l;
+}
+
+unsigned int count_nb_classes(mat labels){
+  vector<unsigned int> array;
+  bool is_known_class = false;
+  // compute nb output units required
+  for(unsigned int i=0; i<labels.n_rows; i++) {
+    unsigned int current_pred_class = labels(i);
+    is_known_class=false;
+    // for each known prediction classes
+    for(unsigned int j=0;j<array.size(); j++) {
+      // if current output is different from prediction class
+      if(current_pred_class==array[j]){
+	is_known_class = true;
+      }
+    }
+    if(array.empty() || (!is_known_class)){
+      array.push_back(current_pred_class);
+    }
+  }
+  return array.size();
+}
+
+mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels){
+  mat conf_mat=zeros(nb_classes, nb_classes);
+  for(unsigned int i=0; i<nb_classes; i++){
+    for(unsigned int j=0; j<nb_classes; j++){
+      conf_mat(i,j)=count_nb_identicals(i,j,/*to_multiclass_format*/(preds),labels);
+    }
+  }
+  return conf_mat;
+}
+
+void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness){
+  unsigned int nb_classes=conf_mat.n_cols;
+  // number of class present in the current subset of the data set
+  unsigned int nb_local_classes=count_nb_classes(labels);
+  unsigned int nb_examples=0;
+  for(unsigned int i=0;i<nb_classes;i++)
+    nb_examples+=sum(conf_mat.row(i));
+  double computed_score=0, computed_acc=0, errsum=0;
+  vec scores(nb_classes);
+  // computing f1 score for each label
+  for(unsigned int i=0; i<nb_classes; i++){
+    double TP = conf_mat(i,i);
+    double TPplusFN = sum(conf_mat.col(i));
+    double TPplusFP = sum(conf_mat.row(i));
+    double tmp_precision=TP/TPplusFP;
+    double tmp_recall=TP/TPplusFN;
+    scores[i] = 2*((tmp_precision*tmp_recall)/(tmp_precision+tmp_recall));
+    // prevent -nan
+    if(scores[i] != scores[i])
+      scores[i] = 0;
+    computed_score += scores[i];
+  }
+  // general f1 score = average of all classes score
+  computed_score = (computed_score/nb_local_classes)*100;
+  // make sure score doesn't hit 0 (NEAT doesn't seem to like that)
+  if(computed_score==0)
+    computed_score=0.1;
+  // compute accuracy
+  double TP =0;
+  for(unsigned int i=0; i<nb_classes; i++){
+    TP += conf_mat(i,i);
+  }
+  computed_acc = (TP/double(nb_examples))*100;
+  // prevent -nan values
+  if(computed_acc!=computed_acc)
+    computed_acc=0;
+  // compute error
+  error=(nb_examples-TP)/nb_examples;
+  accuracy=computed_acc;
+  fitness=computed_score;
 }
 
 void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef){
@@ -169,10 +246,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
   // set seed
   unsigned int seed=i*10;
   std::srand(seed);
-
-  double res=-1;
   unsigned int nb_bp_searches=5;
-
   mat res_mat;
 
   // selected data set
@@ -184,6 +258,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
     cout<<"\nIncorrect data set name."<<endl;
     exit(0);
   }
+
   string line="";
   getline(in,line);
   vector<string> headers=split(line);
@@ -193,11 +268,19 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
   // hyper-params
   const unsigned int nb_inputs=stoi(headers[1]);
   const unsigned int nb_outputs=stoi(headers[2]);
-  const unsigned int nb_layers=2;
-  const unsigned int nb_hid_units=20;
+  const unsigned int nb_layers=1;
+  const unsigned int nb_hid_units=10;
   const float desired_error=(const float) 0.00f;
-  const unsigned int max_epochs=20;
   const unsigned int epochs_between_reports=1;
+
+  // encode topology description in array
+  vector<unsigned int> desc_vec;
+  desc_vec.push_back(nb_inputs);
+  for(unsigned int i=0;i<nb_layers;i++)
+    desc_vec.push_back(nb_hid_units);
+  desc_vec.push_back(nb_outputs);
+  // cast to array
+  unsigned int *desc_array=&desc_vec[0];
 
   fann_type min_weight=-1;
   fann_type max_weight=+1;
@@ -206,9 +289,11 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
   struct fann_train_data *data = fann_read_train_from_file(ds_filename.c_str());
   // randomize examples order
   fann_shuffle_train_data(data);
-  // instantiate net
-  struct fann*ann=fann_create_standard(nb_layers,nb_inputs, nb_outputs,nb_hid_units);
-  struct fann*best_ann=fann_create_standard(nb_layers,nb_inputs, nb_outputs,nb_hid_units);
+  unsigned int nb_classes=data->num_output;
+  // instantiate net (total NB layers = nb hid layers + input & output layer)
+  struct fann* ann=fann_create_standard_array(nb_layers+2,desc_array);
+  struct fann* best_ann=fann_create_standard_array(nb_layers+2,desc_array);
+
   fann_randomize_weights(ann,min_weight,max_weight);
   fann_randomize_weights(best_ann,min_weight,max_weight);
   fann_train_epoch(best_ann,data);
@@ -217,30 +302,36 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
   fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
   fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
 
-  cout<<"training model"<<endl;
-
   for(unsigned int b=0;b<nb_bp_searches;b++){
     //reset ann
     fann_randomize_weights(ann,min_weight,max_weight);
     double mse=-1;
-    for(unsigned int i=0;i<max_epochs;i++){
+    for(unsigned int i=0;i<gens;i++){
       mse=fann_train_epoch(ann,data);
 
+      double err=0;
       mat line;
       double pop_score_mean=-1;
       double pop_score_variance=-1;
       double pop_score_stddev=-1;
-      double prediction_accuracy=fann_get_accuracy(best_ann, data);
+      double prediction_accuracy=0;//fann_get_accuracy(best_ann, data);
       double score=-1;//fann_get_f1_score(best_ann);
       double validation_accuracy=-1;
       double validation_score=-1;
       double MSE=fann_get_MSE(best_ann);
       unsigned int hidden_units=nb_hid_units;
+      if(nb_classes==1) nb_classes=2;
 
+      mat preds,labels;
+      fann_get_preds_labels(best_ann, data,preds,labels);
+      mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
+      compute_error_acc_score(conf_mat, labels, err, prediction_accuracy, score);
+      
       std::cout<<"epoch"<<i
 	       <<"\tbest.indiv.fitness="<<score
 	       <<"\tacc="<<prediction_accuracy
-	       <<"\terr="<<MSE
+	       <<"\tmse="<<MSE
+	       <<"\terr="<<err
 	       <<"\tNB nodes="<<hidden_units
 	       <<"\tpop.mean="<<pop_score_mean
 	       <<"\tpop.var="<<pop_score_variance
@@ -270,16 +361,18 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
 	   << validation_accuracy
 	   << validation_score
 	   << -2//nb_calls_err_func
-	
+
 	   << endr;
       // Write results on file
       res_mat=join_vert(res_mat,line);
+
+      // memorize best network
+      if(fann_get_MSE(ann)<fann_get_MSE(best_ann))
+	best_ann=fann_copy(ann);
     }
-    // memorize best network
-    if(fann_get_MSE(ann)<fann_get_MSE(best_ann))
-      *best_ann=*ann;
   }
   fann_destroy(ann);
+  fann_destroy(best_ann);
   
   ofstream experiment_file("random-seeds.txt",ios::app);
   // print-out best perfs
