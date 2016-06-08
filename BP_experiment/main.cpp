@@ -185,11 +185,9 @@ unsigned int count_nb_classes(mat labels){
 
 mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels){
   mat conf_mat=zeros(nb_classes, nb_classes);
-  for(unsigned int i=0; i<nb_classes; i++){
-    for(unsigned int j=0; j<nb_classes; j++){
+  for(unsigned int i=0; i<nb_classes; i++)
+    for(unsigned int j=0; j<nb_classes; j++)
       conf_mat(i,j)=count_nb_identicals(i,j,/*to_multiclass_format*/(preds),labels);
-    }
-  }
   return conf_mat;
 }
 
@@ -241,7 +239,8 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
 
   cout << endl
        << "***"
-       << "\tRUNNING REPLICATE " << i+1 << "/" << nb_reps << "\t ";
+       << "\tRUNNING REPLICATE " << i+1 << "/" << nb_reps << "\t "
+       << "DATA: " << ef.dataset_filename << endl;
 
   // set seed
   unsigned int seed=i*10;
@@ -298,7 +297,6 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
   fann_randomize_weights(best_ann,min_weight,max_weight);
   fann_train_epoch(best_ann,data);
 
-  cout<<"setting activation functions"<<endl;
   fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
   fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
 
@@ -311,6 +309,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
 
       double err=0;
       mat line;
+      unsigned int epoch=i+b*gens+1;
       double pop_score_mean=-1;
       double pop_score_variance=-1;
       double pop_score_stddev=-1;
@@ -327,18 +326,17 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
       mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
       compute_error_acc_score(conf_mat, labels, err, prediction_accuracy, score);
       
-      std::cout<<"epoch"<<i
-	       <<"\tbest.indiv.fitness="<<score
+      std::cout<<"epoch="<<epoch
+	       <<"\tBP"<<b
+	       <<"\tfitness="<<score
 	       <<"\tacc="<<prediction_accuracy
 	       <<"\tmse="<<MSE
 	       <<"\terr="<<err
 	       <<"\tNB nodes="<<hidden_units
-	       <<"\tpop.mean="<<pop_score_mean
-	       <<"\tpop.var="<<pop_score_variance
-	       <<"\tpop.stddev="<<pop_score_stddev<<endl;
+	       <<endl;
 
       // format result line (-1 corresponds to irrelevant attributes)
-      line << i
+      line << epoch
 	   << MSE
 	   << prediction_accuracy
 	   << score
@@ -360,7 +358,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
 	   << -1//ensemble_score
 	   << validation_accuracy
 	   << validation_score
-	   << -2//nb_calls_err_func
+	   << epoch//nb_calls_err_func
 
 	   << endr;
       // Write results on file
@@ -370,6 +368,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
       if(fann_get_MSE(ann)<fann_get_MSE(best_ann))
 	best_ann=fann_copy(ann);
     }
+    cout<<endl;
   }
   fann_destroy(ann);
   fann_destroy(best_ann);
