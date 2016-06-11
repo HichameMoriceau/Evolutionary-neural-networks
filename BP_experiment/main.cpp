@@ -11,7 +11,6 @@ using namespace std;
 using namespace arma;
 
 struct exp_files{
-  string startgene;
   string dataset_filename;
   string result_file;
 };
@@ -34,7 +33,7 @@ int rand_int(int min, int max);
 void fixed_topo_exp(int gens, unsigned int nb_reps, exp_files ef);
 mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_files ef);
 struct fann_train_data* fann_instantiate_data(unsigned int nb_examples,unsigned int nb_inputs,unsigned int nb_outputs);
-void separate_data(fann_train_data data,fann_train_data* training_data,fann_train_data* validation_data, fann_train_data* test_data);
+void fann_separate_data(fann_train_data data,fann_train_data* training_data,fann_train_data* validation_data, fann_train_data* test_data);
 void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef);
 unsigned int count_nb_classes(mat labels);
 mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels);
@@ -72,7 +71,6 @@ int main(int argc, char * argv []){
   // recorded best error value
   unsigned int nb_gens=atoi(argv[3]);
   exp_files ef;
-  ef.startgene=""; // initial gene is irrelevant here
 
   vector<char*> ds_filenames;
   ds_filenames.push_back((char*)"data/breast-cancer-malignantOrBenign-data-transformed.data");
@@ -152,7 +150,6 @@ void fann_get_preds_labels(struct fann* ann, struct fann_train_data *data, mat& 
     else
       _preds[i]=0;
   }
-
   // init with values != 0 or 1
   mat p=randu(nb_examples);
   mat l=randu(nb_examples);
@@ -172,16 +169,12 @@ unsigned int count_nb_classes(mat labels){
   for(unsigned int i=0; i<labels.n_rows; i++) {
     unsigned int current_pred_class = labels(i);
     is_known_class=false;
-    // for each known prediction classes
-    for(unsigned int j=0;j<array.size(); j++) {
-      // if current output is different from prediction class
-      if(current_pred_class==array[j]){
+    // for each known prediction classes: if current output is != from prediction class
+    for(unsigned int j=0;j<array.size(); j++) 
+      if(current_pred_class==array[j])
 	is_known_class = true;
-      }
-    }
-    if(array.empty() || (!is_known_class)){
+    if(array.empty() || (!is_known_class))
       array.push_back(current_pred_class);
-    }
   }
   return array.size();
 }
@@ -255,7 +248,7 @@ struct fann_train_data* fann_instantiate_data(unsigned int nb_examples,unsigned 
   return data;
 }
 
-void separate_data(fann_train_data data,fann_train_data* training_data,fann_train_data* validation_data, fann_train_data* test_data){
+void fann_separate_data(fann_train_data data,fann_train_data* training_data,fann_train_data* validation_data, fann_train_data* test_data){
   unsigned int nb_inputs=training_data->num_input;
   unsigned int nb_outputs=training_data->num_output;
   unsigned int nb_train_ex=training_data->num_data;
@@ -296,31 +289,12 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
   // set seed
   unsigned int seed=i*10;
   std::srand(seed);
+
   unsigned int nb_bp_searches=5;
   mat res_mat;
 
-  // selected data set
-  string ds_filename=string(ef.dataset_filename);
-  
-  // read data set header
-  ifstream in(ds_filename);
-  if(!in.is_open()){
-    cout<<"\nIncorrect data set name."<<endl;
-    exit(0);
-  }
-  
-  string line="";
-  getline(in,line);
-  vector<string> headers=split(line);
-  //unsigned int nb_examples=stoi(headers[0]);
-  in.close();
-
-  // hyper-params
-  //const unsigned int nb_inputs=stoi(headers[1]);
-  //const unsigned int nb_outputs=stoi(headers[2]);
-
-  // load training data
-  struct fann_train_data *data = fann_read_train_from_file(ds_filename.c_str());
+  // load data set
+  struct fann_train_data *data=fann_read_train_from_file(ef.dataset_filename.c_str());
   // randomize examples order
   fann_shuffle_train_data(data);
 
@@ -337,7 +311,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
   fann_train_data*val_data=fann_instantiate_data(nb_val_ex,nb_inputs,nb_outputs);
   fann_train_data*test_data=fann_instantiate_data(nb_test_ex,nb_inputs,nb_outputs);
   // execute segmentation of TRAINING, VALIDATION and TEST sets
-  separate_data(*data,train_data,val_data,test_data);
+  fann_separate_data(*data,train_data,val_data,test_data);
 
   const unsigned int nb_layers=1;
   const unsigned int nb_hid_units=10;
@@ -397,7 +371,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
       
       std::cout<<"epoch="<<epoch
 	       <<"\tBP"<<b
-	       <<"\tfitness="<<score
+	       <<"\tscore="<<score
 	       <<"\tacc="<<prediction_accuracy
 	       <<"\tmse="<<MSE
 	       <<"\terr="<<err
@@ -443,14 +417,43 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
 
   double test_score=0;
   double test_acc=0;
-  
+  double test_err=0;
   // compute ACC and SCORE on TEST SET
-  // ...
+  mat test_preds,test_labels;
+  fann_get_preds_labels(best_ann, test_data,test_preds,test_labels);
+  mat test_conf_mat=generate_conf_mat(nb_classes,test_preds,test_labels);
+  compute_error_acc_score(test_conf_mat, test_labels, test_err, test_acc, test_score);
+  cout<<"Performances on test set: ACC="<<test_acc<<"\tSCORE="<<test_score<<"\tERR="<<test_err
+      <<endl
+      <<endl;
 
   // clean-up memory
   fann_destroy(ann);
   fann_destroy(best_ann);
 
+  for(unsigned int i=0; i<train_data->num_data;i++){
+    free(train_data->input[i]);
+    free(train_data->output[i]);
+  }
+  free(train_data->input);
+  free(train_data->output);
+  free(train_data);
+
+  for(unsigned int i=0; i<val_data->num_data;i++){
+    free(val_data->input[i]);
+    free(val_data->output[i]);
+  }
+  free(val_data->input);
+  free(val_data->output);
+  free(val_data);
+
+  for(unsigned int i=0; i<test_data->num_data;i++){
+    free(test_data->input[i]);
+    free(test_data->output[i]);
+  }
+  free(test_data->input);
+  free(test_data->output);
+  free(test_data);
 
   // append Cross Validation error to result matrix
   mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
@@ -472,10 +475,9 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
 unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations){
   unsigned int count=0;
   // for each example
-  for(unsigned int i=0; i<predictions.n_rows; i++){
+  for(unsigned int i=0; i<predictions.n_rows; i++)
     if(predictions(i)==predicted_class && expectations(i)==expected_class)
       count++;
-  }
   return count;
 }
 
@@ -510,16 +512,13 @@ mat average_matrices(vector<mat> results){
   }
   mat total_results;
   total_results.zeros(smallest_nb_rows, results[0].n_cols);
-
   // keep only up to the shortest learning curve
   vector<mat> processed_results;
-  for(unsigned int i=0; i<results.size(); i++){
+  for(unsigned int i=0; i<results.size(); i++)
     processed_results.push_back( (mat)results[i].rows(0, smallest_nb_rows-1));
-  }
-
-  for(unsigned int i=0; i<results.size(); i++){
+  // sum up results
+  for(unsigned int i=0; i<results.size(); i++)
     total_results += processed_results[i];
-  }
   mat averaged_results = total_results / results.size();
   return averaged_results;
 }
@@ -529,20 +528,16 @@ mat compute_replicate_error(unsigned int nb_reps,vector<mat> results){
   mat err_vec;
   unsigned int smallest_nb_rows = INT_MAX;
   // find lowest and highest nb rows
-  for(unsigned int i=0; i<results.size() ;i++){
-    if(results[i].n_rows < smallest_nb_rows){
+  for(unsigned int i=0; i<results.size() ;i++)
+    if(results[i].n_rows < smallest_nb_rows)
       smallest_nb_rows = results[i].n_rows;
-    }
-  }
   mat best_scores;
   // for each generation
   for(unsigned int i=0; i<smallest_nb_rows; i++) {
     best_scores.reset();
-    // for each replica
-    for(unsigned int r=0; r<nb_reps; r++) { // NEAT::num_runs=nb replicates
-      // get best score
+    // for each replica: get best score
+    for(unsigned int r=0; r<nb_reps; r++)
       best_scores = join_vert(best_scores, to_matrix(results[r](i,3)));
-    }
     // append std dev of all best scores for current generation to error vector
     err_vec = join_vert( err_vec, to_matrix(corrected_sample_std_dev(best_scores)));
   }
