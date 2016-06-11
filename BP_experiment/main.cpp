@@ -33,6 +33,8 @@ vector<string> split(const string& str, int delimiter(int) = ::isspace){
 int rand_int(int min, int max);
 void fixed_topo_exp(int gens, unsigned int nb_reps, exp_files ef);
 mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_files ef);
+struct fann_train_data* fann_instantiate_data(unsigned int nb_examples,unsigned int nb_inputs,unsigned int nb_outputs);
+void separate_data(fann_train_data data,fann_train_data* training_data,fann_train_data* validation_data, fann_train_data* test_data);
 void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef);
 unsigned int count_nb_classes(mat labels);
 mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels);
@@ -53,6 +55,7 @@ double diverse_topo_exp();
    Experiment: Running multiple instances of a neural network
    trained using Gradient Descent and the Back Propagation algorithm.
    Author: Hichame Moriceau
+   
    Compile & Run with: 
    # g++ -std=c++11 main.cpp -fopenmp -larmadillo -lfann -o runme
    # ./runme 0 30 100 # run 30 replicates of the first experiment
@@ -233,6 +236,54 @@ void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accu
   fitness=computed_score;
 }
 
+struct fann_train_data* fann_instantiate_data(unsigned int nb_examples,unsigned int nb_inputs,unsigned int nb_outputs){
+  struct fann_train_data* data;
+  // allocate struct memory
+  data=(fann_train_data*)malloc(sizeof(fann_train_data));
+  // set struct attributes
+  data->num_data=nb_examples;
+  data->num_input=nb_inputs;
+  data->num_output=nb_outputs;
+  cout<<"setting num_data to "<<data->num_data<<endl;
+  // allocate 2D arrays attributes of struct
+  data->input=(fann_type**) malloc(nb_examples*sizeof(fann_type *));
+  data->output=(fann_type **) malloc(nb_examples*sizeof(fann_type *));
+  for(unsigned int i=0;i<nb_examples;i++)
+    data->input[i]=(fann_type *) malloc(nb_inputs*sizeof(fann_type));
+  for(unsigned int i=0;i<nb_examples;i++)
+    data->output[i]=(fann_type *) malloc(nb_outputs*sizeof(fann_type));
+  return data;
+}
+
+void separate_data(fann_train_data data,fann_train_data* training_data,fann_train_data* validation_data, fann_train_data* test_data){
+  unsigned int nb_inputs=training_data->num_input;
+  unsigned int nb_outputs=training_data->num_output;
+  unsigned int nb_train_ex=training_data->num_data;
+  unsigned int nb_val_ex=validation_data->num_data;
+  unsigned int nb_test_ex=test_data->num_data;
+  // fill in TRAINING SET
+  for(unsigned int i=0;i<nb_train_ex;i++){
+    for(unsigned int j=0;j<nb_inputs;j++)
+      training_data->input[i][j]=data.input[i][j];
+    for(unsigned int j=0;j<nb_outputs;j++)
+      training_data->output[i][j]=data.output[i][j];
+  }
+  // fill in VALIDATION SET
+  for(unsigned int i=0;i<nb_val_ex;i++){
+    for(unsigned int j=0;j<nb_inputs;j++)
+      validation_data->input[i][j]=data.input[i+nb_train_ex][j];
+    for(unsigned int j=0;j<nb_outputs;j++)
+      validation_data->output[i][j]=data.output[i+nb_train_ex][j];
+  }
+  // fill in TEST SET
+  for(unsigned int i=0;i<nb_test_ex;i++){
+    for(unsigned int j=0;j<nb_inputs;j++)
+      test_data->input[i][j]=data.input[i+nb_train_ex+nb_val_ex][j];
+    for(unsigned int j=0;j<nb_outputs;j++)
+      test_data->output[i][j]=data.output[i+nb_train_ex+nb_val_ex][j];
+  }
+}
+
 void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef){
   // result matrices (to be interpreted by Octave script <Plotter.m>)
   mat results_score_evolution;
@@ -257,16 +308,37 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
     cout<<"\nIncorrect data set name."<<endl;
     exit(0);
   }
-
+  
   string line="";
   getline(in,line);
   vector<string> headers=split(line);
-  unsigned int nb_examples=stoi(headers[0]);
+  //unsigned int nb_examples=stoi(headers[0]);
   in.close();
 
   // hyper-params
-  const unsigned int nb_inputs=stoi(headers[1]);
-  const unsigned int nb_outputs=stoi(headers[2]);
+  //const unsigned int nb_inputs=stoi(headers[1]);
+  //const unsigned int nb_outputs=stoi(headers[2]);
+
+  // load training data
+  struct fann_train_data *data = fann_read_train_from_file(ds_filename.c_str());
+  // randomize examples order
+  fann_shuffle_train_data(data);
+
+  unsigned int nb_examples=data->num_data;
+  unsigned int nb_inputs=data->num_input;
+  unsigned int nb_outputs=data->num_output;
+  // define data subset proportions
+  unsigned int nb_train_ex=nb_examples*60/100;
+  unsigned int nb_val_ex=nb_examples*20/100;
+  unsigned int nb_test_ex=nb_examples*20/100;
+
+  // allocating memory for all subsets
+  fann_train_data*train_data=fann_instantiate_data(nb_train_ex,nb_inputs,nb_outputs);
+  fann_train_data*val_data=fann_instantiate_data(nb_val_ex,nb_inputs,nb_outputs);
+  fann_train_data*test_data=fann_instantiate_data(nb_test_ex,nb_inputs,nb_outputs);
+  // execute segmentation of TRAINING, VALIDATION and TEST sets
+  separate_data(*data,train_data,val_data,test_data);
+
   const unsigned int nb_layers=1;
   const unsigned int nb_hid_units=10;
   const float desired_error=(const float) 0.00f;
@@ -284,18 +356,15 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
   fann_type min_weight=-1;
   fann_type max_weight=+1;
 
-  // load training data
-  struct fann_train_data *data = fann_read_train_from_file(ds_filename.c_str());
-  // randomize examples order
-  fann_shuffle_train_data(data);
-  unsigned int nb_classes=data->num_output;
+  unsigned int nb_classes=train_data->num_output;
+
   // instantiate net (total NB layers = nb hid layers + input & output layer)
   struct fann* ann=fann_create_standard_array(nb_layers+2,desc_array);
   struct fann* best_ann=fann_create_standard_array(nb_layers+2,desc_array);
 
   fann_randomize_weights(ann,min_weight,max_weight);
   fann_randomize_weights(best_ann,min_weight,max_weight);
-  fann_train_epoch(best_ann,data);
+  fann_train_epoch(best_ann,train_data);
 
   fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
   fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
@@ -305,7 +374,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
     fann_randomize_weights(ann,min_weight,max_weight);
     double mse=-1;
     for(unsigned int i=0;i<gens;i++){
-      mse=fann_train_epoch(ann,data);
+      mse=fann_train_epoch(ann,train_data);
 
       double err=0;
       mat line;
@@ -322,7 +391,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
       if(nb_classes==1) nb_classes=2;
 
       mat preds,labels;
-      fann_get_preds_labels(best_ann, data,preds,labels);
+      fann_get_preds_labels(best_ann, train_data,preds,labels);
       mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
       compute_error_acc_score(conf_mat, labels, err, prediction_accuracy, score);
       
