@@ -393,7 +393,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
 
 	   << hidden_units
 	   << nb_outputs//outputs
-	   << -1//nb_hidden_layers
+	   << nb_layers
 	   << true
 	   << -1//selected_mutation_scheme
 
