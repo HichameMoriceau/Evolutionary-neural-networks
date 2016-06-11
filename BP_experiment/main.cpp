@@ -10,12 +10,12 @@
 using namespace std;
 using namespace arma;
 
-enum EXP_INDEX{FIXED, DIVERSE};
+enum EXP_TYPE{FIXED, DIVERSE};
 
 struct exp_details{
   string dataset_filename;
   string result_file;
-  EXP_INDEX exp_index;
+  EXP_TYPE exp_type;
 };
 
 vector<string> split(const string& str, int delimiter(int) = ::isspace){
@@ -69,8 +69,8 @@ int main(int argc, char * argv []){
   }
   
   exp_details ed;
-  // experiment choice
-  ed.exp_index=(EXP_INDEX)atoi(argv[1]);
+  // selected experiment
+  unsigned int exp_index=atoi(argv[1]);
   // number of replicates
   unsigned int nb_reps=atoi(argv[2]);
   // recorded best error value
@@ -82,22 +82,57 @@ int main(int argc, char * argv []){
   ds_filenames.push_back((char*)"data/breast-cancer-recurrence-data-transformed.data");
   ds_filenames.push_back((char*)"data/iris-data-transformed.data"); // multi-class
 
-  switch(ed.exp_index){
+  switch(exp_index){
   case 0:
+    ed.exp_type=EXP_TYPE::FIXED;
     ed.dataset_filename=ds_filenames[0];
     ed.result_file="data/results-bp-fixed-bcm.mat";
     experiment(nb_gens,nb_reps,ed);
     break;
   case 1:
+    ed.exp_type=EXP_TYPE::FIXED;
+    ed.dataset_filename=ds_filenames[1];
+    ed.result_file="data/results-bp-fixed-wine.mat";
+    experiment(nb_gens,nb_reps,ed);
+    break;
+  case 2:
+    ed.exp_type=EXP_TYPE::FIXED;
+    ed.dataset_filename=ds_filenames[2];
+    ed.result_file="data/results-bp-fixed-bcr.mat";
+    experiment(nb_gens,nb_reps,ed);
+    break;
+  case 3:
+    ed.exp_type=EXP_TYPE::FIXED;
+    ed.dataset_filename=ds_filenames[3];
+    ed.result_file="data/results-bp-fixed-iris.mat";
+    experiment(nb_gens,nb_reps,ed);
+    break;
+  case 4:
+    ed.exp_type=EXP_TYPE::DIVERSE;
     ed.dataset_filename=ds_filenames[0];
     ed.result_file="data/results-bp-diverse-bcm.mat";
     experiment(nb_gens,nb_reps,ed);
     break;
-  default:
-    ed.exp_index=EXP_INDEX::FIXED;
-    ed.dataset_filename=ds_filenames[0];
-    ed.result_file="data/results-bp-fixed-bcm.mat";
+  case 5:
+    ed.exp_type=EXP_TYPE::DIVERSE;
+    ed.dataset_filename=ds_filenames[1];
+    ed.result_file="data/results-bp-diverse-wine.mat";
     experiment(nb_gens,nb_reps,ed);
+    break;
+  case 6:
+    ed.exp_type=EXP_TYPE::DIVERSE;
+    ed.dataset_filename=ds_filenames[2];
+    ed.result_file="data/results-bp-diverse-bcr.mat";
+    experiment(nb_gens,nb_reps,ed);
+    break;
+  case 7:
+    ed.exp_type=EXP_TYPE::DIVERSE;
+    ed.dataset_filename=ds_filenames[3];
+    ed.result_file="data/results-bp-diverse-iris.mat";
+    experiment(nb_gens,nb_reps,ed);
+    break;
+  default:
+    cout<<"Please use an appropriate experiment index"<<endl;
   }
   return 0;
 }
@@ -129,10 +164,10 @@ mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector
 #pragma omp single
     {
       for(unsigned int i=0; i<nb_reps; ++i) {
-	if(ed.exp_index==EXP_INDEX::FIXED){
+	if(ed.exp_type==EXP_TYPE::FIXED){
 #pragma omp task
 	  multiclass_fixed_training_task(i, nb_reps,gens,result_matrices_training_perfs,ed);
-	}else if(ed.exp_index==EXP_INDEX::DIVERSE){
+	}else if(ed.exp_type==EXP_TYPE::DIVERSE){
 	  multiclass_diverse_training_task(i, nb_reps,gens,result_matrices_training_perfs,ed);
 	}
       }
