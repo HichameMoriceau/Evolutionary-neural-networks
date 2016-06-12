@@ -10,7 +10,7 @@
 using namespace std;
 using namespace arma;
 
-enum EXP_TYPE{FIXED, DIVERSE};
+enum EXP_TYPE{FIXED, CASCADE};
 
 struct exp_details{
   string dataset_filename;
@@ -37,12 +37,12 @@ void experiment(int gens, unsigned int nb_reps, exp_details ef);
 mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_details ef);
 struct fann_train_data* fann_instantiate_data(unsigned int nb_examples,unsigned int nb_inputs,unsigned int nb_outputs);
 void fann_separate_data(fann_train_data data,fann_train_data* training_data,fann_train_data* validation_data, fann_train_data* test_data);
+unsigned int fann_get_nb_hidden_units(fann* best_ann, unsigned int nb_hid_layers);
 void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_details ef);
-void multiclass_diverse_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_details ef);
+void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_details ef);
 unsigned int count_nb_classes(mat labels);
 mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels);
 void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness);
-
 
 unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
 mat to_multiclass_format(mat predictions);
@@ -108,27 +108,27 @@ int main(int argc, char * argv []){
     experiment(nb_gens,nb_reps,ed);
     break;
   case 4:
-    ed.exp_type=EXP_TYPE::DIVERSE;
+    ed.exp_type=EXP_TYPE::CASCADE;
     ed.dataset_filename=ds_filenames[0];
-    ed.result_file="data/results-bp-diverse-bcm.mat";
+    ed.result_file="data/results-bp-cascade-bcm.mat";
     experiment(nb_gens,nb_reps,ed);
     break;
   case 5:
-    ed.exp_type=EXP_TYPE::DIVERSE;
+    ed.exp_type=EXP_TYPE::CASCADE;
     ed.dataset_filename=ds_filenames[1];
-    ed.result_file="data/results-bp-diverse-wine.mat";
+    ed.result_file="data/results-bp-cascade-wine.mat";
     experiment(nb_gens,nb_reps,ed);
     break;
   case 6:
-    ed.exp_type=EXP_TYPE::DIVERSE;
+    ed.exp_type=EXP_TYPE::CASCADE;
     ed.dataset_filename=ds_filenames[2];
-    ed.result_file="data/results-bp-diverse-bcr.mat";
+    ed.result_file="data/results-bp-cascade-bcr.mat";
     experiment(nb_gens,nb_reps,ed);
     break;
   case 7:
-    ed.exp_type=EXP_TYPE::DIVERSE;
+    ed.exp_type=EXP_TYPE::CASCADE;
     ed.dataset_filename=ds_filenames[3];
-    ed.result_file="data/results-bp-diverse-iris.mat";
+    ed.result_file="data/results-bp-cascade-iris.mat";
     experiment(nb_gens,nb_reps,ed);
     break;
   default:
@@ -167,8 +167,8 @@ mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector
 	if(ed.exp_type==EXP_TYPE::FIXED){
 #pragma omp task
 	  multiclass_fixed_training_task(i, nb_reps,gens,result_matrices_training_perfs,ed);
-	}else if(ed.exp_type==EXP_TYPE::DIVERSE){
-	  multiclass_diverse_training_task(i, nb_reps,gens,result_matrices_training_perfs,ed);
+	}else if(ed.exp_type==EXP_TYPE::CASCADE){
+	  multiclass_cascade_training_task(i, nb_reps,gens,result_matrices_training_perfs,ed);
 	}
       }
     }
@@ -321,6 +321,15 @@ void fann_separate_data(fann_train_data data,fann_train_data* training_data,fann
   }
 }
 
+unsigned int fann_get_nb_hidden_units(fann* best_ann, unsigned int nb_hid_layers){
+  unsigned int count=0;
+  unsigned int* layer_array=(unsigned int*)malloc(sizeof(unsigned int)*nb_hid_layers);
+  fann_get_layer_array(best_ann,layer_array);
+  count=layer_array[1];
+  free(layer_array);
+  return count;
+}
+
 void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_details ef){
   // result matrices (to be interpreted by Octave script <Plotter.m>)
   mat results_score_evolution;
@@ -354,8 +363,10 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
   fann_train_data*train_data=fann_instantiate_data(nb_train_ex,nb_inputs,nb_outputs);
   fann_train_data*val_data=fann_instantiate_data(nb_val_ex,nb_inputs,nb_outputs);
   fann_train_data*test_data=fann_instantiate_data(nb_test_ex,nb_inputs,nb_outputs);
+
   // execute segmentation of TRAINING, VALIDATION and TEST sets
   fann_separate_data(*data,train_data,val_data,test_data);
+  cout<<endl;
 
   const unsigned int nb_layers=1;
   const unsigned int nb_hid_units=10;
@@ -404,8 +415,9 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
       double score=-1;//fann_get_f1_score(best_ann);
       double validation_accuracy=-1;
       double validation_score=-1;
+      unsigned int nb_hid_layers_best=fann_get_num_layers(best_ann); // NB LAYERS IS FIXED
+      unsigned int nb_hid_units_best=nb_hid_units; // NB UNITS IS FIXED
       double MSE=fann_get_MSE(best_ann);
-      unsigned int hidden_units=nb_hid_units;
       if(nb_classes==1) nb_classes=2;
 
       mat preds,labels;
@@ -418,8 +430,8 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
 	       <<"\tscore="<<score
 	       <<"\tacc="<<prediction_accuracy
 	       <<"\tmse="<<MSE
-	       <<"\terr="<<err
-	       <<"\tNB nodes="<<hidden_units
+	       <<"\tNB.hid.units="<<nb_hid_units_best
+	       <<"\tNB.hid.layers="<<nb_hid_layers_best
 	       <<endl;
 
       // format result line (-1 corresponds to irrelevant attributes)
@@ -435,9 +447,9 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
 	   << -1//pop->organisms.size()
 	   << nb_inputs // inputs
 
-	   << hidden_units
+	   << nb_hid_units_best
 	   << nb_outputs//outputs
-	   << nb_layers
+	   << nb_hid_layers_best
 	   << true
 	   << -1//selected_mutation_scheme
 
@@ -630,7 +642,7 @@ const string get_current_date_time(){
   return buffer;
 }
 
-void multiclass_diverse_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_details ef){
+void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_details ef){
   // result matrices (to be interpreted by Octave script <Plotter.m>)
   mat results_score_evolution;
   mat res_mat;
@@ -665,8 +677,8 @@ void multiclass_diverse_training_task(unsigned int i, unsigned int nb_reps,unsig
   // execute segmentation of TRAINING, VALIDATION and TEST sets
   fann_separate_data(*data,train_data,val_data,test_data);
 
-  unsigned int nb_hid_layers=2;
-  unsigned int nb_hid_units=20;
+  unsigned int nb_hid_layers=1;
+  unsigned int nb_hid_units=1;
 
   // encode topology description in array
   vector<unsigned int> desc_vec;
@@ -696,11 +708,19 @@ void multiclass_diverse_training_task(unsigned int i, unsigned int nb_reps,unsig
   fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
   fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
 
+  // Layer Growth Factor (<LGF> times the number of input attributes)
+  unsigned int LGF=2;
+
   // initiating training
   for(unsigned int b=0;b<nb_opt_algs;b++){
-    // randomize depth and size
-    nb_hid_layers=rand_int(1,3);
-    nb_hid_units=rand_int(1,20);
+    cout<<"nb hid layers="<<nb_hid_layers<<endl;
+    // increase depth and size
+    nb_hid_units++;
+    if(nb_hid_units==(nb_inputs*LGF) && b!=0){
+      nb_hid_layers++;
+      cout<<"INCREASING NB HID LAYERS TO "<<nb_hid_layers<<endl;
+    }
+
     // encode topology description in array
     vector<unsigned int> desc_vec;
     desc_vec.push_back(nb_inputs);
@@ -711,6 +731,7 @@ void multiclass_diverse_training_task(unsigned int i, unsigned int nb_reps,unsig
     unsigned int *desc_array=&desc_vec[0];
     // instantiate model
     ann=fann_create_standard_array(nb_hid_layers+2,desc_array); // total NB layers = nb hid layers + input & output layer
+
     // use sigmoid activation function for all neurons
     fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
     fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
@@ -734,23 +755,25 @@ void multiclass_diverse_training_task(unsigned int i, unsigned int nb_reps,unsig
       double score=-1;//fann_get_f1_score(best_ann);
       double validation_accuracy=-1;
       double validation_score=-1;
-      double MSE=fann_get_MSE(best_ann);
-      unsigned int hidden_units=nb_hid_units;
-      if(nb_classes==1) nb_classes=2;
+      unsigned int nb_hid_layers_best=fann_get_num_layers(best_ann)-2;
+      unsigned int nb_hid_units_best=fann_get_nb_hidden_units(best_ann,nb_hid_layers_best);
 
+      double MSE=fann_get_MSE(best_ann);
+
+      if(nb_classes==1) nb_classes=2;
       mat preds,labels;
       fann_get_preds_labels(best_ann, train_data,preds,labels);
       mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
       compute_error_acc_score(conf_mat, labels, err, prediction_accuracy, score);
-      
-      std::cout<<"epoch="<<epoch
-	       <<"\tBP"<<b
-	       <<"\tscore="<<score
-	       <<"\tacc="<<prediction_accuracy
-	       <<"\tmse="<<MSE
-	       <<"\terr="<<err
-	       <<"\tNB nodes="<<hidden_units
-	       <<endl;
+
+      cout<<"epoch="<<epoch
+	  <<"\tBP"<<b
+	  <<"\tscore="<<score
+	  <<"\tacc="<<prediction_accuracy
+	  <<"\tmse="<<MSE
+	  <<"\tNB.hid.units="<<nb_hid_units_best
+	  <<"\tNB.hid.layers="<<nb_hid_layers_best
+	  <<endl;
 
       // format result line (-1 corresponds to irrelevant attributes)
       line << epoch
@@ -763,11 +786,11 @@ void multiclass_diverse_training_task(unsigned int i, unsigned int nb_reps,unsig
 	   << pop_score_mean
 	   << -1//pop_score_median
 	   << -1//pop->organisms.size()
-	   << nb_inputs // inputs
+	   << nb_inputs
 
-	   << hidden_units
-	   << nb_outputs//outputs
-	   << nb_hid_layers
+	   << nb_hid_units_best
+	   << nb_outputs
+	   << nb_hid_layers_best
 	   << true
 	   << -1//selected_mutation_scheme
 
