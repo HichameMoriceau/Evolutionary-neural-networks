@@ -72,16 +72,21 @@ int main(int argc, char* argv[]){
     unsigned int nb_training_pairs= data.n_rows;
     unsigned int nb_inputs = data.n_cols-1;
     unsigned int nb_outputs= find_nb_prediction_classes(data);
-    if(nb_outputs=2)nb_outputs=1;
     data_file<<nb_training_pairs<<" "<<nb_inputs<<" "<<nb_outputs<<endl;
     // write body
     for(unsigned int i=0;i<data.n_rows;i++){
       string inputs="", label="";
       for(unsigned int j=0;j<data.n_cols-1;j++)
 	inputs+=to_string(data(i,j))+" ";
-      label=to_string(data(i,data.n_cols-1));
       data_file<<inputs<<endl;
-      data_file<<label <<endl;
+      label=to_string(data(i,data.n_cols-1));
+      for(unsigned int j=0;j<nb_outputs;j++){
+	if(j==data(i,data.n_cols-1))
+	  data_file<<to_string(1)<<" ";
+	else
+	  data_file<<to_string(0)<<" ";
+      }
+      data_file<<endl;
     }
     cout<<"finished."<<endl;
   }else
