@@ -49,7 +49,7 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
     double pop_accuracy=0;
 
     // using vectors as genotype
-    vector<vec> genome_population=convert_population_to_genomes(population, max_topo);
+    vector<genome> genome_population=convert_population_to_genomes(population, max_topo);
     vector<NeuralNet> ensemble=population;
 
     /**
@@ -85,8 +85,10 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
         }
 
         genome_population=convert_population_to_genomes(population, max_topo);
+
         // optimize model params and topology using training-set
         clonal_selection_topology_evolution(genome_population, data_set.training_set, min_topo, max_topo, selected_mutation_scheme);
+
         // record model performances on new data
         prediction_accuracy=trained_model.get_accuracy(data_set.training_set);
         score              =trained_model.get_f1_score(data_set.training_set);
@@ -103,7 +105,7 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
         unsigned int outputs           =trained_model.get_topology().nb_output_units;
         unsigned int nb_hidden_layers  =trained_model.get_topology().nb_hidden_layers;
         // format result line
-        new_line << nb_gens*current_gen+i  // i + nb_epochs * index_cross_validation_section
+        new_line << i+1  // i + nb_epochs * index_cross_validation_section
                  << MSE
                  << prediction_accuracy
                  << score
@@ -133,7 +135,7 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
         results_score_evolution=join_vert(results_score_evolution, new_line);
         cout << fixed
              << setprecision(2)
-             << "Gen="            << nb_gens*current_gen+i
+             << "Gen="            << i+1
              << "\tscore="          << score
              << "  MSE="            << MSE
              << "  acc="            << prediction_accuracy
@@ -163,15 +165,17 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
     return trained_model;
 }
 
-void Trainer_AIS::clonal_selection_topology_evolution(vector<vec> &pop, data_subset training_set, net_topology min_topo, net_topology max_topo, unsigned int selected_mutation_scheme){
+void Trainer_AIS::clonal_selection_topology_evolution(vector<genome> &pop, data_subset training_set, net_topology min_topo, net_topology max_topo, unsigned int selected_mutation_scheme){
     NeuralNet dummyNet(max_topo);
     unsigned int nb_element_vectorized_Theta=dummyNet.get_total_nb_weights() + 4;
+    unsigned int genome_length=get_genome_length(max_topo);
     // Number of individuals retained
     unsigned int selection_size=pop.size()*100/100;
     // Number of random cells incorporated in the population for every generation
-    unsigned int nb_rand_cells=(unsigned int)pop.size()*2/100;
-    // Scaling factor
-    double clone_rate=0.0005;
+    unsigned int nb_rand_cells=(unsigned int)pop.size()*15/100;
+    // Clones scaling factors
+    double clone_rate=0.01;
+    double clone_scale=0.01;
 
     // -- Differential Evolution settings (for mutation operation only) --
     // total nb of variables
@@ -182,19 +186,17 @@ void Trainer_AIS::clonal_selection_topology_evolution(vector<vec> &pop, data_sub
     double F=1;
     // -- --
 
-    unsigned int genome_length=get_genome_length(max_topo);
-
-    for(unsigned int j=0; j<pop.size()-1; ++j) {
+    for(unsigned int g=0; g<pop.size(); ++g) {
         // instantiate subpopulations
-        vector<vec>selected_indivs=select(selection_size, pop, training_set, max_topo);
-        vector<vector<vec>>pop_clones;
+        vector<genome>selected_indivs=select(selection_size, pop, training_set, max_topo);
+        vector<vector<genome>>pop_clones;
         unsigned int nb_clones_array[selection_size];
 
         // generate clones
-        for(unsigned int i=0; i<selection_size; i++) {
-            unsigned int nb_clones=compute_nb_clones(clone_rate, selection_size, i+1);
-            nb_clones_array[i]=nb_clones;
-            pop_clones.push_back(generate_clones(nb_clones, selected_indivs[i]));
+        for(unsigned int j=0; j<selection_size*clone_scale; j++) {
+            unsigned int nb_clones=compute_nb_clones(clone_rate, selection_size,j+1);
+            nb_clones_array[j]=nb_clones;
+            pop_clones.push_back(generate_clones(nb_clones, selected_indivs[j]));
         }
 
         // hyper-mutate (using a DE/RAND/1 mutative-crossover operation)
@@ -221,64 +223,62 @@ void Trainer_AIS::clonal_selection_topology_evolution(vector<vec> &pop, data_sub
                 }while(index_c==index_b || index_c==index_a || index_c==index_x);
 
                 // store corresponding individual in pop
-                vec indiv_a=pop[index_a];
-                vec indiv_b=pop[index_b];
-                vec indiv_c=pop[index_c];
+                vec indiv_a=pop[index_a].genotype;
+                vec indiv_b=pop[index_b].genotype;
+                vec indiv_c=pop[index_c].genotype;
 
-                vec original_model =pop[index_x];
-                vec candidate_model=pop[index_x];
-                mutative_crossover(problem_dimensionality, CR, F, genome_length, min_topo, max_topo, original_model, candidate_model,indiv_a, indiv_b, indiv_c);
+                genome original_model =pop[index_x];
+                genome candidate_model=pop[index_x];
+                mutative_crossover(problem_dimensionality, CR, F, genome_length, min_topo, max_topo, original_model.genotype, candidate_model.genotype,indiv_a, indiv_b, indiv_c);
+                candidate_model.fitness=generate_net(candidate_model).get_f1_score(training_set);
+                nb_err_func_calls++;
             }
         }
 
         // put all solutions in same group
-        vector<vec> all_clones=add_all(pop_clones, nb_clones_array);
-        // add some random individuals to maintain diversity
-        vector<vec> rand_indivs=generate_random_topology_genome_population(nb_rand_cells, min_topo, max_topo);
-        all_clones.insert(all_clones.end(), rand_indivs.begin(), rand_indivs.end());
-
+        vector<genome> all_clones=add_all(pop_clones, nb_clones_array);
+        all_clones.insert(all_clones.end(), pop.begin(), pop.end());
         // select n best solutions
-        pop=select(selection_size, all_clones, training_set, max_topo);
+        pop=select(population.size(), all_clones, training_set, max_topo);
+        // maintain diversity by forcing random indivs into population
+        vector<genome> rand_indivs=generate_random_topology_genome_population(nb_rand_cells, min_topo, max_topo);
+        for(unsigned int k=0;k<nb_rand_cells;k++)
+            pop[pop.size()-nb_rand_cells+k]=rand_indivs[k];
     }
     // update population
     population=convert_population_to_nets(pop);
 }
 
-vector<vec> Trainer_AIS::select(unsigned int quantity, vector<vec> pop, data_subset training_set, net_topology max_topo){
-    if(quantity>pop.size())
-        return pop;
-    vector<NeuralNet> s_pop;
-    vector<NeuralNet> casted_pop=convert_population_to_nets(pop);
-    // sort from fittest
-    evaluate_population(casted_pop, training_set);
+vector<genome> Trainer_AIS::select(unsigned int quantity, vector<genome> pop, data_subset training_set, net_topology max_topo){
+    if(quantity>pop.size()) return pop;
+    sort(pop.begin(),pop.end());
+    vector<genome> s_pop;
     // select only best indivs
-    for(unsigned int i=0; i<quantity; i++){
-        s_pop.push_back(casted_pop[i]);
-    }
-    return convert_population_to_genomes(s_pop, max_topo);
+    for(unsigned int i=0; i<quantity; i++)
+        s_pop.push_back(pop[i]);
+    return s_pop;
 }
 
-vector<vec> Trainer_AIS::generate_clones(unsigned int nb_clones, vec indiv){
-    vector<vec> cloned_pop;
-    for(unsigned int i=0; i<nb_clones; i++){
+vector<genome> Trainer_AIS::generate_clones(unsigned int nb_clones, genome indiv){
+    vector<genome> cloned_pop;
+    for(unsigned int i=0; i<nb_clones; i++)
         cloned_pop.push_back(indiv);
-    }
     return cloned_pop;
 }
 
-unsigned int Trainer_AIS::compute_nb_clones(double beta, int pop_size, int index){
-    if (round((beta*pop_size)/index)>0)
-        return round((beta*pop_size)/index);
-    else
-        return 1;
+float simple_clip(float x, float lower, float upper) {
+  return std::max(lower, std::min(x, upper));
 }
 
-vector<vec> Trainer_AIS::add_all(vector<vector<vec>> all_populations, unsigned int* nb_clones_array){
-    vector<vec> pop;
-    for(unsigned int i=0; i<all_populations.size(); i++){
+unsigned int Trainer_AIS::compute_nb_clones(double beta, int pop_size, int index){
+    return ceil(simple_clip(beta*double(pop_size)/double(index), 1, pop_size/10));
+}
+
+vector<genome> Trainer_AIS::add_all(vector<vector<genome>> all_populations, unsigned int* nb_clones_array){
+    vector<genome> pop;
+    for(unsigned int i=0; i<all_populations.size(); i++)
         for(unsigned int j=0; j<nb_clones_array[i]; j++)
-        pop.push_back(all_populations[i][j]);
-    }
+            pop.push_back(all_populations[i][j]);
     return pop;
 }
 
