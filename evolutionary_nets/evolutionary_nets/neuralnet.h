@@ -48,7 +48,8 @@ private:
     net_topology    topology;
     double          accuracy;
     double          score;
-    double          matthews_coeficient;
+    double          validation_score;
+    double          mse;
 
 public:
                     // ctor
@@ -102,6 +103,10 @@ public:
 
     void            set_topology(net_topology t);
 
+    mat             generate_conf_mat(unsigned int nb_classes, mat preds, mat labels);
+
+    double          compute_score(mat confusion_matrix, unsigned int nb_classes, unsigned int nb_local_classes);
+
     /**
      * \brief get_accuracy
      * \param d data portion used for accuracy calculation
@@ -109,6 +114,7 @@ public:
      *          correctly predicts <Y> on the data-set <X>
      */
     double          get_accuracy(data_subset d);
+    double          get_accuracy(){return accuracy;}
 
     /**
      * \brief get_f1_score
@@ -118,19 +124,19 @@ public:
      *         This function is used as fitness function by the Differential Evolution algorithm.
      */
     double          get_f1_score(data_subset d);
+    double          get_f1_score(){return score;}
+
+    void            set_f1_score(double s){ score=s;}
+    void            set_accuracy(double a){ accuracy=a;}
+    void            set_mse(double e)     { mse=e;}
+
+    void            get_fitness_metrics(Data_set D, double& acc, double& err, double& t_score, double& cv_score);
 
     unsigned int    count_nb_classes(mat labels);
 
     unsigned int    count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
 
     mat             to_multiclass_format(mat predictions);
-
-    /**
-     * \brief get_matthews_correlation_coefficient
-     * \param d
-     * \return (score function) returns an indication of the quality of the model [-1, +1]
-     */
-    double          get_matthews_correlation_coefficient(data_subset d);
 
     void            print_topology(net_topology t);
 
@@ -143,6 +149,7 @@ public:
 
     // returns the Mean Squared Error of a net on <data_set>
     double          get_MSE(data_subset d);
+    double          get_MSE(){return mse;}
 
     // helper methods
 private:
