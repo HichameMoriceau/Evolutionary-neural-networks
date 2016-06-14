@@ -266,7 +266,7 @@ double NeuralNet::get_f1_score(data_subset data_set) {
     return score;
 }
 
-void NeuralNet::get_fitness_metrics(Data_set D, double& acc, double& err, double& t_score, double& cv_score){
+void NeuralNet::get_fitness_metrics(Data_set D){
     /*SCORE CALCULATION*/
     // perform predictions on provided data-set
     mat H_train = forward_propagate(D.training_set.X);
@@ -278,19 +278,21 @@ void NeuralNet::get_fitness_metrics(Data_set D, double& acc, double& err, double
     unsigned int nb_local_classes_t=count_nb_classes(D.training_set.Y);
     unsigned int nb_local_classes_val=count_nb_classes(D.validation_set.Y);
     // update score values
-    score=t_score=compute_score(confusion_matrix_train,nb_classes, nb_local_classes_t);
-    validation_score=cv_score=compute_score(confusion_matrix_val,nb_classes, nb_local_classes_val);
+    score=compute_score(confusion_matrix_train,nb_classes, nb_local_classes_t);
+    validation_score=compute_score(confusion_matrix_val,nb_classes, nb_local_classes_val);
 
     /*ACC CALCULATION*/
     double TP =0;
-    for(unsigned int i=0; i<nb_classes; i++){
+    for(unsigned int i=0; i<nb_classes; i++)
         TP += confusion_matrix_train(i,i);
-    }
-    // update acc values
-    accuracy=acc=(TP/H_train.n_rows)*100;
+    accuracy=(TP/H_train.n_rows)*100;
+    TP=0;
+    for(unsigned int i=0; i<nb_classes; i++)
+        TP += confusion_matrix_val(i,i);
+    validation_acc=(TP/H_val.n_rows)*100;
 
     /*MSE CALCULATION*/
-    mse=err=as_scalar(sum(H_train==D.training_set.Y))/D.training_set.X.n_rows;
+    mse=get_MSE(D.training_set);
 }
 
 unsigned int NeuralNet::count_nb_classes(mat labels){

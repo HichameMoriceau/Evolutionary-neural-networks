@@ -29,7 +29,6 @@ void Trainer_AIS::train(Data_set data_set, NeuralNet &net, mat &results_score_ev
 }
 
 NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_gens, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme, unsigned int current_gen) {
-    NeuralNet trained_model=population[0];
     mat new_line;
     // flag alerting that optimization algorithm has had ~ same results for the past 100 generations
     bool plateau=false;
@@ -52,6 +51,9 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
     vector<genome> genome_population=convert_population_to_genomes(population, max_topo);
     vector<NeuralNet> ensemble=population;
 
+    evaluate_population(population, data_set);
+    NeuralNet trained_model=population[0];
+
     /**
      *  ALGORITHM:    Clonal Selection
      *
@@ -59,20 +61,13 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
      *  TERMINATION CRITERIA:
      *      If all generations were achieved OR if the GA has already converged
     */
-    for(unsigned int i=0; ((i<nb_gens) && (!has_converged)); ++i) {
+    for(unsigned int i=0;(i<nb_gens)&&(!has_converged);++i) {
         // update individuals
         population=convert_population_to_nets(genome_population);
-        // evaluate population
-        for(unsigned int s=0; s<population.size() ; ++s) {
-            population[s].get_f1_score(data_set.validation_set);
-            nb_err_func_calls++;
-        }
         // sort from fittest
         sort(population.begin(), population.end());
-        nb_err_func_calls++;
-        nb_err_func_calls++;
         // get best model
-        if(population[0].get_f1_score(data_set.validation_set) >= trained_model.get_f1_score(data_set.validation_set))
+        if(population[0].get_validation_score() >= trained_model.get_validation_score())
             trained_model=population[0];
         // compute accuracy
         elective_accuracy(population, data_set, pop_accuracy, pop_score);
@@ -87,18 +82,19 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
         genome_population=convert_population_to_genomes(population, max_topo);
 
         // optimize model params and topology using training-set
-        clonal_selection_topology_evolution(genome_population, data_set.training_set, min_topo, max_topo, selected_mutation_scheme);
+        clonal_selection_topology_evolution(genome_population, data_set, min_topo, max_topo, selected_mutation_scheme);
 
         // record model performances on new data
-        prediction_accuracy=trained_model.get_accuracy(data_set.training_set);
-        score              =trained_model.get_f1_score(data_set.training_set);
-        MSE                =trained_model.get_MSE(data_set.training_set);
+        prediction_accuracy=trained_model.get_accuracy();
+        score              =trained_model.get_f1_score();
+        MSE                =trained_model.get_MSE();
+        double validation_accuracy=trained_model.get_validation_acc();
+        double validation_score=trained_model.get_validation_score();
+        // compute stats
         pop_score_variance =compute_score_variance(genome_population, data_set.training_set);
         pop_score_stddev   =compute_score_stddev(genome_population, data_set.training_set);
         pop_score_mean     =compute_score_mean(genome_population, data_set.training_set);
         pop_score_median   =compute_score_median(genome_population, data_set.training_set);
-        double validation_accuracy=trained_model.get_accuracy(data_set.validation_set);
-        double validation_score=trained_model.get_f1_score(data_set.validation_set);
         // record results (performances and topology description)
         unsigned int inputs            =trained_model.get_topology().nb_input_units;
         unsigned int hidden_units      =trained_model.get_topology().nb_units_per_hidden_layer;
@@ -133,18 +129,21 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
 
         // append result line to result matrix
         results_score_evolution=join_vert(results_score_evolution, new_line);
+
         cout << fixed
              << setprecision(2)
-             << "Gen="            << i+1
-             << "\tscore="          << score
-             << "  MSE="            << MSE
-             << "  acc="            << prediction_accuracy
+             << "Gen="            << i+1 // i + nb_epochs * index_cross_validation_section
+             << "\ttrain.score="          << score
+             << "  train.MSE="            << MSE
+             << "  train.acc="            << prediction_accuracy
              << "  score.mean=" << pop_score_mean
              << "  score.var=" << pop_score_variance
              << "\tNB.hid.lay="     << nb_hidden_layers
              << "  NB.hid.units="   << hidden_units
-             << "\tens.acc=" << ensemble_accuracy
-             << "  ens.score=" << ensemble_score
+             << "\tval.score=" << validation_score
+             << " val.acc=" << validation_accuracy
+             //<< "\tens.acc=" << ensemble_accuracy
+             //<< "  ens.score=" << ensemble_score
              << "  NB err.func.calls="<<nb_err_func_calls
              << endl;
 
@@ -165,7 +164,7 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
     return trained_model;
 }
 
-void Trainer_AIS::clonal_selection_topology_evolution(vector<genome> &pop, data_subset training_set, net_topology min_topo, net_topology max_topo, unsigned int selected_mutation_scheme){
+void Trainer_AIS::clonal_selection_topology_evolution(vector<genome> &pop, Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int selected_mutation_scheme){
     NeuralNet dummyNet(max_topo);
     unsigned int nb_element_vectorized_Theta=dummyNet.get_total_nb_weights() + 4;
     unsigned int genome_length=get_genome_length(max_topo);
@@ -188,7 +187,7 @@ void Trainer_AIS::clonal_selection_topology_evolution(vector<genome> &pop, data_
 
     for(unsigned int g=0; g<pop.size(); ++g) {
         // instantiate subpopulations
-        vector<genome>selected_indivs=select(selection_size, pop, training_set, max_topo);
+        vector<genome>selected_indivs=select(selection_size, pop, data_set.training_set, max_topo);
         vector<vector<genome>>pop_clones;
         unsigned int nb_clones_array[selection_size];
 
@@ -230,8 +229,14 @@ void Trainer_AIS::clonal_selection_topology_evolution(vector<genome> &pop, data_
                 genome original_model =pop[index_x];
                 genome candidate_model=pop[index_x];
                 mutative_crossover(problem_dimensionality, CR, F, genome_length, min_topo, max_topo, original_model.genotype, candidate_model.genotype,indiv_a, indiv_b, indiv_c);
-                candidate_model.fitness=generate_net(candidate_model).get_f1_score(training_set);
+                NeuralNet candidate_net=generate_net(candidate_model);
+                // compute offspring's performances
+                candidate_net.get_fitness_metrics(data_set);
+                candidate_model=get_genome(candidate_net,max_topo);
                 nb_err_func_calls++;
+                // update clone if interesting
+                if(candidate_model.fitness>pop_clones[i][j].fitness)
+                    pop_clones[i][j]=candidate_model;
             }
         }
 
@@ -239,7 +244,7 @@ void Trainer_AIS::clonal_selection_topology_evolution(vector<genome> &pop, data_
         vector<genome> all_clones=add_all(pop_clones, nb_clones_array);
         all_clones.insert(all_clones.end(), pop.begin(), pop.end());
         // select n best solutions
-        pop=select(population.size(), all_clones, training_set, max_topo);
+        pop=select(population.size(), all_clones, data_set.training_set, max_topo);
         // maintain diversity by forcing random indivs into population
         vector<genome> rand_indivs=generate_random_topology_genome_population(nb_rand_cells, min_topo, max_topo);
         for(unsigned int k=0;k<nb_rand_cells;k++)

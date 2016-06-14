@@ -11,7 +11,7 @@ public:
     void                train(Data_set data_set, NeuralNet &net, mat &results_score_evolution);
     NeuralNet           evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_gens, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme, unsigned int current_gen);
 
-    void                clonal_selection_topology_evolution(vector<genome> &population, data_subset training_set, net_topology min_topo, net_topology max_topology, unsigned int selected_mutation_scheme);
+    void                clonal_selection_topology_evolution(vector<genome> &population, Data_set data_set, net_topology min_topo, net_topology max_topology, unsigned int selected_mutation_scheme);
     vector<genome>      select(unsigned int quantity, vector<genome> pop, data_subset training_set, net_topology max_topo);
     // cloning is inversely proportional to affinity (fitness)
     vector<genome>      generate_clones(unsigned int nb_clones, genome indiv);

@@ -31,8 +31,6 @@ void Trainer_DE::train(Data_set data_set, NeuralNet &net, mat &results_score_evo
 }
 
 NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_gens, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme, unsigned int current_gen){
-    // return variable
-    NeuralNet trained_model = population[0];
     mat new_line;
     // flag alerting that optimization algorithm has had ~ same results for the past 100 generations
     bool plateau = false;
@@ -52,8 +50,11 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
     double pop_accuracy=0;
 
     // using vectors as genotype
-    vector<vec> genome_population = convert_population_to_genomes(population, max_topo);
+    vector<genome> genome_population = convert_population_to_genomes(population, max_topo);
     vector<NeuralNet> ensemble = population;
+
+    evaluate_population(population, data_set);
+    NeuralNet trained_model=population[0];
 
     /**
      *  ALGORITHM:    Differential Evolution
@@ -67,44 +68,43 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
     for(unsigned int i=0; ((i<nb_gens) && (!has_converged)); i++) {
         // update individuals
         population = convert_population_to_nets(genome_population);
-        genome_population = convert_population_to_genomes(population, max_topo);
-        // optimize model params and topology using training-set
-        differential_evolution_topology_evolution(genome_population, data_set.training_set, min_topo, max_topo, selected_mutation_scheme);
-        // evaluate population
-        for(unsigned int s=0; s<population.size() ; ++s) {
-            population[s].get_f1_score(data_set.training_set);
-        }
         // sort from fittest
         sort(population.begin(), population.end());
+
         // get best model
-        if(population[0].get_f1_score(data_set.training_set) >= trained_model.get_f1_score(data_set.training_set))
+        if(population[0].get_validation_score() >= trained_model.get_validation_score())
             trained_model = population[0];
         // compute accuracy
         elective_accuracy(population, data_set, pop_accuracy, pop_score);
-
         // get best ensemble
         if(pop_score >= ensemble_score){
             ensemble = population;
             ensemble_score = pop_score;
             ensemble_accuracy = pop_accuracy;
         }
+
+        genome_population = convert_population_to_genomes(population, max_topo);
+        // optimize model params and topology using training-set
+        differential_evolution_topology_evolution(genome_population, data_set, min_topo, max_topo, selected_mutation_scheme);
+
         // record model performances on new data
-        prediction_accuracy =   trained_model.get_accuracy(data_set.training_set);
-        score               =   trained_model.get_f1_score(data_set.training_set);
-        MSE                 =   trained_model.get_MSE(data_set.training_set);
+        prediction_accuracy =   trained_model.get_accuracy();
+        score               =   trained_model.get_f1_score();
+        MSE                 =   trained_model.get_MSE();
+        double validation_accuracy=trained_model.get_validation_acc();
+        double validation_score=trained_model.get_validation_score();
+        // compute stats
         pop_score_variance  =   compute_score_variance(genome_population, data_set.training_set);
         pop_score_stddev    =   compute_score_stddev(genome_population, data_set.training_set);
         pop_score_mean      =   compute_score_mean(genome_population, data_set.training_set);
         pop_score_median    =   compute_score_median(genome_population, data_set.training_set);
-        double validation_accuracy=trained_model.get_accuracy(data_set.validation_set);
-        double validation_score=trained_model.get_f1_score(data_set.validation_set);
         // record results (performances and topology description)
         unsigned int inputs             =   trained_model.get_topology().nb_input_units;
         unsigned int hidden_units       =   trained_model.get_topology().nb_units_per_hidden_layer;
         unsigned int outputs            =   trained_model.get_topology().nb_output_units;
         unsigned int nb_hidden_layers   =   trained_model.get_topology().nb_hidden_layers;
         // format result line
-        new_line << nb_gens*current_gen+i // i + nb_epochs * index_cross_validation_section
+        new_line << i+1 // i + nb_epochs * index_cross_validation_section
                  << MSE
                  << prediction_accuracy
                  << score
@@ -132,18 +132,21 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
 
         // append result line to result matrix
         results_score_evolution = join_vert(results_score_evolution, new_line);
+
         cout << fixed
              << setprecision(2)
-             << "Gen="            << nb_gens*current_gen+i // i + nb_epochs * index_cross_validation_section
-             << "\tscore="          << score
-             << "  MSE="            << MSE
-             << "  acc="            << prediction_accuracy
+             << "Gen="            << i+1 // i + nb_epochs * index_cross_validation_section
+             << "\ttrain.score="          << score
+             << "  train.MSE="            << MSE
+             << "  train.acc="            << prediction_accuracy
              << "  score.mean=" << pop_score_mean
              << "  score.var=" << pop_score_variance
              << "\tNB.hid.lay="     << nb_hidden_layers
              << "  NB.hid.units="   << hidden_units
-             << "\tens.acc=" << ensemble_accuracy
-             << "  ens.score=" << ensemble_score
+             << "\tval.score=" << validation_score
+             << " val.acc=" << validation_accuracy
+             //<< "\tens.acc=" << ensemble_accuracy
+             //<< "  ens.score=" << ensemble_score
              << "  NB err.func.calls="<<nb_err_func_calls
              << endl;
 
@@ -165,17 +168,16 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
     return trained_model;
 }
 
-void Trainer_DE::differential_evolution_topology_evolution(vector<vec> &pop, data_subset training_set, net_topology min_topo, net_topology max_topo, unsigned int selected_mutation_scheme){
+void Trainer_DE::differential_evolution_topology_evolution(vector<genome> &pop, Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int selected_mutation_scheme){
     NeuralNet dummyNet(max_topo);
     unsigned int nb_element_vectorized_Theta = dummyNet.get_total_nb_weights() + 4;
+    unsigned int genome_length = get_genome_length(max_topo);
     // total nb of variables
     unsigned int problem_dimensionality = nb_element_vectorized_Theta;
     // Crossover Rate [0,1]
     double CR = 0.5;
     // differential_weight [0,2]
     double F = 1;
-
-    unsigned int genome_length = get_genome_length(max_topo);
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
@@ -201,54 +203,43 @@ void Trainer_DE::differential_evolution_topology_evolution(vector<vec> &pop, dat
         }while(index_c == index_b || index_c == index_a || index_c == index_x);
 
         // store corresponding individual in pop
-        vec original_model  = pop[index_x];
-        vec candidate_model = pop[index_x];
-        vec indiv_a = pop[index_a];
-        vec indiv_b = pop[index_b];
-        vec indiv_c = pop[index_c];
+        genome original_model  = pop[index_x];
+        genome candidate_model = pop[index_x];
+        vec indiv_a = pop[index_a].genotype;
+        vec indiv_b = pop[index_b].genotype;
+        vec indiv_c = pop[index_c].genotype;
 
-        // if user selected a DE/BEST/1 mutation scheme
-        if(selected_mutation_scheme == MUTATION_SCHEME_BEST){
-            // use the best individual as first individual
-            indiv_a = pop[0];
-        }
+        // if user selected a DE/BEST/1 mutation scheme: use best indiv as first indiv
+        if(selected_mutation_scheme == MUTATION_SCHEME_BEST)
+            indiv_a = pop[0].genotype;
 
         net_topology candidate_topology;
-        candidate_topology.nb_input_units = (unsigned int) candidate_model[0];
-        candidate_topology.nb_units_per_hidden_layer = (unsigned int) candidate_model[1];
-        candidate_topology.nb_output_units = (unsigned int) candidate_model[2];
-        candidate_topology.nb_hidden_layers = (unsigned int) candidate_model[3];
+        candidate_topology.nb_input_units = (unsigned int) candidate_model.genotype[0];
+        candidate_topology.nb_units_per_hidden_layer = (unsigned int) candidate_model.genotype[1];
+        candidate_topology.nb_output_units = (unsigned int) candidate_model.genotype[2];
+        candidate_topology.nb_hidden_layers = (unsigned int) candidate_model.genotype[3];
         genome_length = get_genome_length(candidate_topology);
 
-        double score_best_model         = generate_net(pop[0]).get_f1_score(training_set);
-        nb_err_func_calls++;
-        double score_second_best_model  = generate_net(pop[1]).get_f1_score(training_set);
-        nb_err_func_calls++;
+        double score_best_model         = pop[0].fitness;
+        double score_second_best_model  = pop[1].fitness;
 
         // if the first and second best have identical fitness
         if((score_best_model==score_second_best_model) && score_best_model!=0){
             // force a crossover between the two
-            indiv_a = pop[0];
-            indiv_b = pop[1];
-            mutative_crossover(problem_dimensionality, 1, 1, genome_length, min_topo, max_topo, original_model, candidate_model, indiv_a, indiv_b, indiv_c);
+            indiv_a = pop[0].genotype;
+            indiv_b = pop[1].genotype;
+            mutative_crossover(problem_dimensionality, 1, 1, genome_length, min_topo, max_topo, original_model.genotype, candidate_model.genotype, indiv_a, indiv_b, indiv_c);
         }
 
         // traditional random crossover
-        mutative_crossover(problem_dimensionality, CR, F, genome_length, min_topo, max_topo, original_model, candidate_model, indiv_a, indiv_b, indiv_c);
-
-        NeuralNet original_net  = generate_net(original_model);
-        NeuralNet candidate_net = generate_net(candidate_model);
-        // compute performances
-        double original_score  = original_net.get_f1_score(training_set);
+        mutative_crossover(problem_dimensionality, CR, F, genome_length, min_topo, max_topo, original_model.genotype, candidate_model.genotype, indiv_a, indiv_b, indiv_c);
+        NeuralNet candidate_net=generate_net(candidate_model);
+        candidate_net.get_fitness_metrics(data_set);
+        candidate_model=get_genome(candidate_net,max_topo);
         nb_err_func_calls++;
-        double candidate_score = candidate_net.get_f1_score(training_set);
-        nb_err_func_calls++;
-        // selection
-        bool candidate_is_better_than_original = candidate_score > original_score;
-        if(candidate_is_better_than_original) {
-            // replace original by candidate
+        // if candidate outperforms original: replace original by candidate
+        if(candidate_model.fitness > original_model.fitness)
             pop[index_x] = candidate_model;
-        }
     }
     // update population
     population = convert_population_to_nets(pop);
@@ -322,12 +313,11 @@ void Trainer_DE::differential_evolution(vector<NeuralNet> &pop, data_subset trai
     }
 }
 
-void Trainer_DE::train_weights(data_subset training_set, data_subset validation_set, NeuralNet &net, unsigned int nb_epochs, mat &results_score_evolution){
+void Trainer_DE::train_weights(Data_set data_set, NeuralNet &net, unsigned int nb_epochs, mat &results_score_evolution){
     double cost = 0.0f;
     double prediction_accuracy = 0.0f;
     double score = 0.0f;
     double MSE   = 0.0f;
-    double MCC   = 0.0f;
     double pop_score_variance = 0.0f;
     double pop_score_stddev = 0.0f;
     mat new_line;
@@ -335,20 +325,19 @@ void Trainer_DE::train_weights(data_subset training_set, data_subset validation_
     // instantiate a random net with identical topology
     NeuralNet trained_model(net.get_topology());
 
-    population = generate_population(population.size(), net.get_topology(), training_set);
+    population = generate_population(population.size(), net.get_topology(), data_set);
 
     for(unsigned int i=0; i<nb_epochs; ++i) {
         // optimize model params and topology using training-set
-        differential_evolution(population, training_set);
+        differential_evolution(population, data_set.training_set);
         trained_model = get_best_model(population);
 
         // record model performances on new data
-        prediction_accuracy = trained_model.get_accuracy(training_set);
-        score               = trained_model.get_f1_score(training_set);
-        MSE                 = trained_model.get_MSE(training_set);
-        MCC                 = trained_model.get_matthews_correlation_coefficient(training_set);
-        pop_score_variance  = compute_score_variance(population, training_set);
-        pop_score_stddev    = compute_score_mean(population, training_set);
+        prediction_accuracy = trained_model.get_accuracy(data_set.training_set);
+        score               = trained_model.get_f1_score(data_set.training_set);
+        MSE                 = trained_model.get_MSE(data_set.training_set);
+        pop_score_variance  = compute_score_variance(population, data_set.training_set);
+        pop_score_stddev    = compute_score_mean(population, data_set.training_set);
 
         // record results (performances and topology description)
         unsigned int inputs = net.get_topology().nb_input_units;
@@ -372,7 +361,7 @@ void Trainer_DE::train_weights(data_subset training_set, data_subset validation_
                  << endr;
 
         results_score_evolution = join_vert(results_score_evolution, new_line);
-        cout << "epoch=" << i << "\tscore=" << score << "\tMCC=" << MCC << "\taccuracy=" << prediction_accuracy << endl;
+        cout << "epoch=" << i << "\tscore=" << score << "\taccuracy=" << prediction_accuracy << endl;
     }
 
     // return trained model

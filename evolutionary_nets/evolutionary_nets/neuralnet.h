@@ -49,6 +49,7 @@ private:
     double          accuracy;
     double          score;
     double          validation_score;
+    double          validation_acc;
     double          mse;
 
 public:
@@ -115,7 +116,8 @@ public:
      */
     double          get_accuracy(data_subset d);
     double          get_accuracy(){return accuracy;}
-
+    double          get_validation_acc(){return validation_acc;}
+    double          set_validation_acc(double v_a){ validation_acc=v_a;}
     /**
      * \brief get_f1_score
      * \param d
@@ -125,12 +127,14 @@ public:
      */
     double          get_f1_score(data_subset d);
     double          get_f1_score(){return score;}
+    double          get_validation_score(){ return validation_score; }
+    double          set_validation_score(double v_s){ validation_score=v_s;}
 
     void            set_f1_score(double s){ score=s;}
     void            set_accuracy(double a){ accuracy=a;}
-    void            set_mse(double e)     { mse=e;}
 
-    void            get_fitness_metrics(Data_set D, double& acc, double& err, double& t_score, double& cv_score);
+
+    void            get_fitness_metrics(Data_set D);
 
     unsigned int    count_nb_classes(mat labels);
 
@@ -150,6 +154,7 @@ public:
     // returns the Mean Squared Error of a net on <data_set>
     double          get_MSE(data_subset d);
     double          get_MSE(){return mse;}
+    void            set_mse(double e)     { mse=e;}
 
     // helper methods
 private:

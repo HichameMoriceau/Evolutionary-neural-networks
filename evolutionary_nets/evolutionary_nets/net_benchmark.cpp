@@ -32,20 +32,20 @@ Net_benchmark::~Net_benchmark(){
 void Net_benchmark::run_benchmark(unsigned int nb_rep) {
 
     vector<string> data_set_filenames;
-    data_set_filenames.push_back("data/wine-data-transformed.csv"); // multi-class problem
-    data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
-    data_set_filenames.push_back("data/iris-data-transformed.csv"); // multi-class problem
     data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
+    data_set_filenames.push_back("data/wine-data-transformed.csv"); // multi-class problem
+    data_set_filenames.push_back("data/iris-data-transformed.csv"); // multi-class problem
+    data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
 
     nb_replicates  = nb_rep;
     // set end of search space
     max_topo.nb_input_units             = data_set.training_set.X.n_cols;
     max_topo.nb_output_units            = 1;
-    max_topo.nb_hidden_layers           = 2;
+    max_topo.nb_hidden_layers           = 1;
     max_topo.nb_units_per_hidden_layer  = 10;
 
-    unsigned int pop_size_GA = 120;
-    unsigned int nb_generations_GA = 200;
+    unsigned int pop_size_GA = 100;
+    unsigned int nb_generations_GA = 300;
     unsigned int total_nb_data_sets = 4;
 
     unsigned int selected_opt_alg = OPTIMIZATION_ALG::PSO;
@@ -65,10 +65,9 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
         data_set.select_data_set(data_set_filenames[i]);
         // set largest topology
         max_topo.nb_input_units = data_set.training_set.X.n_cols;
-        max_topo.nb_units_per_hidden_layer = 10;
+        max_topo.nb_units_per_hidden_layer = 20;
         max_topo.nb_output_units = data_set.find_nb_prediction_classes(data_set.data);
-        max_topo.nb_hidden_layers = 1;
-        cout << "NB outputs = " << max_topo.nb_output_units << endl;
+        max_topo.nb_hidden_layers = 2;
 
         // 500 epochs in total is often more than enough
         double epsilon = -1;//find_termination_criteria_epsilon(200);
@@ -374,7 +373,6 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
         trainer_pso.set_nb_epochs(evo_trainer.get_nb_epochs());
         trainer_pso.set_epsilon(epsilon);
         trainer_pso.set_population(evo_trainer.get_population());
-        cout<<"nb outputs in topology="<<max_t.nb_output_units<<endl;
         trained_net = trainer_pso.train_topology_plus_weights(d, max_t, results_score_evolution, -1);
         break;
     case OPTIMIZATION_ALG::AIS:
