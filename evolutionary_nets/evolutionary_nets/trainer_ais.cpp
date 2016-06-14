@@ -91,10 +91,10 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
         double validation_accuracy=trained_model.get_validation_acc();
         double validation_score=trained_model.get_validation_score();
         // compute stats
-        pop_score_variance =compute_score_variance(genome_population, data_set.training_set);
-        pop_score_stddev   =compute_score_stddev(genome_population, data_set.training_set);
-        pop_score_mean     =compute_score_mean(genome_population, data_set.training_set);
-        pop_score_median   =compute_score_median(genome_population, data_set.training_set);
+        pop_score_variance =compute_score_variance(genome_population);
+        pop_score_stddev   =compute_score_stddev(genome_population);
+        pop_score_mean     =compute_score_mean(genome_population);
+        pop_score_median   =compute_score_median(genome_population);
         // record results (performances and topology description)
         unsigned int inputs            =trained_model.get_topology().nb_input_units;
         unsigned int hidden_units      =trained_model.get_topology().nb_units_per_hidden_layer;

@@ -11,7 +11,7 @@ void user_interrupt_handler(int a)
     printf("\nUser interruption caught: (^C)\n");
 }
 
-double Trainer::compute_score_variance(vector<NeuralNet> pop, data_subset data_set){
+double Trainer::compute_score_variance(vector<NeuralNet> pop){
     double variance=0.0f;
     vec score_values(pop.size());
     for(unsigned int i=0; i< pop.size(); ++i) {
@@ -23,7 +23,7 @@ double Trainer::compute_score_variance(vector<NeuralNet> pop, data_subset data_s
     return variance;
 }
 
-double Trainer::compute_score_stddev(vector<NeuralNet> pop, data_subset data_set){
+double Trainer::compute_score_stddev(vector<NeuralNet> pop){
     double std_dev=0.0f;
     vec score_values(pop.size());
     for(unsigned int i=0; i< pop.size(); ++i) {
@@ -35,7 +35,7 @@ double Trainer::compute_score_stddev(vector<NeuralNet> pop, data_subset data_set
     return std_dev;
 }
 
-double Trainer::compute_score_mean(vector<NeuralNet> pop, data_subset data_set){
+double Trainer::compute_score_mean(vector<NeuralNet> pop){
     double mean_pop=0.0f;
     vec score_values(pop.size());
     for(unsigned int i=0; i< pop.size(); ++i) {
@@ -47,7 +47,7 @@ double Trainer::compute_score_mean(vector<NeuralNet> pop, data_subset data_set){
     return mean_pop;
 }
 
-double Trainer::compute_score_median(vector<NeuralNet> pop, data_subset data_set){
+double Trainer::compute_score_median(vector<NeuralNet> pop){
     double median_pop=0.0f;
     vec score_values(pop.size());
     for(unsigned int i=0; i< pop.size(); ++i) {
@@ -59,7 +59,7 @@ double Trainer::compute_score_median(vector<NeuralNet> pop, data_subset data_set
     return median_pop;
 }
 
-double Trainer::compute_score_variance(vector<genome> pop, data_subset data_set){
+double Trainer::compute_score_variance(vector<genome> pop){
     double variance=0.0f;
     vec score_values(pop.size());
     for(unsigned int i=0; i< pop.size(); ++i) {
@@ -71,7 +71,7 @@ double Trainer::compute_score_variance(vector<genome> pop, data_subset data_set)
     return variance;
 }
 
-double Trainer::compute_score_stddev(vector<genome> pop, data_subset data_set){
+double Trainer::compute_score_stddev(vector<genome> pop){
     double std_dev=0.0f;
     vec score_values(pop.size());
     for(unsigned int i=0; i< pop.size(); ++i) {
@@ -83,7 +83,7 @@ double Trainer::compute_score_stddev(vector<genome> pop, data_subset data_set){
     return std_dev;
 }
 
-double Trainer::compute_score_mean(vector<genome> pop, data_subset data_set){
+double Trainer::compute_score_mean(vector<genome> pop){
     double mean_pop=0.0f;
     vec score_values(pop.size());
     for(unsigned int i=0; i< pop.size(); ++i) {
@@ -107,7 +107,7 @@ double Trainer::compute_score_mean(vector<genome> pop, data_subset data_set){
     return mean_pop;
 }
 
-double Trainer::compute_score_median(vector<genome> pop, data_subset data_set){
+double Trainer::compute_score_median(vector<genome> pop){
     double median_pop=0.0f;
     vec score_values(pop.size());
     for(unsigned int i=0; i< pop.size(); ++i) {

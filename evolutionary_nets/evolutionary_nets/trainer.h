@@ -54,14 +54,14 @@ public:
     //virtual void    single_epoch(vector<vec> &population, data_subset training_set, net_topology min_topo, net_topology max_topology, unsigned int selected_mutation_scheme) =0;
 
     // stats routines
-    double              compute_score_variance(vector<NeuralNet> population, data_subset data_set);
-    double              compute_score_stddev  (vector<NeuralNet> population, data_subset data_set);
-    double              compute_score_mean    (vector<NeuralNet> population, data_subset data_set);
-    double              compute_score_median  (vector<NeuralNet> population, data_subset data_set);
-    double              compute_score_variance(vector<genome> population, data_subset data_set);
-    double              compute_score_stddev  (vector<genome> population, data_subset data_set);
-    double              compute_score_median  (vector<genome> population, data_subset data_set);
-    double              compute_score_mean    (vector<genome> population, data_subset data_set);
+    double              compute_score_variance(vector<NeuralNet> population);
+    double              compute_score_stddev  (vector<NeuralNet> population);
+    double              compute_score_mean    (vector<NeuralNet> population);
+    double              compute_score_median  (vector<NeuralNet> population);
+    double              compute_score_variance(vector<genome> population);
+    double              compute_score_stddev  (vector<genome> population);
+    double              compute_score_median  (vector<genome> population);
+    double              compute_score_mean    (vector<genome> population);
 
     // cross-validation routines
     NeuralNet           train_topology_plus_weights(Data_set data_set, net_topology max_topo, mat &results_score_evolution, unsigned int selected_mutation_scheme);
@@ -115,7 +115,7 @@ public:
     void                set_nb_epochs(unsigned int e){ nb_epochs  = e;}
 
     // other routines
-    void                insert_individual( NeuralNet indiv){    population[population.size()/2] = indiv;}
+    void                insert_individual( NeuralNet indiv){population[population.size()/2] = indiv;}
     double              f_rand(double fMin, double fMax);
     double              clip(double n, double min, double max);
     unsigned int        generate_random_integer_between_range(unsigned int min, unsigned int max);

@@ -41,7 +41,7 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
     double pop_score=0;
     double pop_accuracy=0;
     mat new_line;
-    // flag alerting that optimization algorithm has had ~ same results for the past 100 generations
+    // flag alerting learning stagnation
     bool plateau = false;
     // flag alerting that the GA has converged
     bool has_converged = false;
@@ -82,7 +82,7 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
         // sort from fittest
         sort(population.begin(), population.end());
         // get best model
-        if(population[0].get_f1_score(data_set.training_set) >= trained_model.get_f1_score(data_set.training_set))
+        if(population[0].get_f1_score() >= trained_model.get_f1_score())
             trained_model = population[0];
         // compute accuracy
         elective_accuracy(population, data_set, pop_accuracy, pop_score);
@@ -103,10 +103,10 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
         double validation_accuracy=trained_model.get_validation_acc();
         double validation_score=trained_model.get_validation_score();
         // compute stats
-        pop_score_variance  =   compute_score_variance(genome_population, data_set.training_set);
-        pop_score_stddev    =   compute_score_stddev(genome_population, data_set.training_set);
-        pop_score_mean      =   compute_score_mean(genome_population, data_set.training_set);
-        pop_score_median    =   compute_score_median(genome_population, data_set.training_set);
+        pop_score_variance  =   compute_score_variance(genome_population);
+        pop_score_stddev    =   compute_score_stddev(genome_population);
+        pop_score_mean      =   compute_score_mean(genome_population);
+        pop_score_median    =   compute_score_median(genome_population);
         // record results (performances and topology description)
         unsigned int inputs             =   trained_model.get_topology().nb_input_units;
         unsigned int hidden_units       =   trained_model.get_topology().nb_units_per_hidden_layer;
@@ -169,11 +169,8 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
             else
                 plateau = false;
             has_converged = (pop_score_variance<epsilon) && (plateau);
-        }else{
-            // otherwise always force training on first 10% of total generations
+        }else// otherwise always force training on first 10% of total generations
             has_converged = false;
-        }
-        //}
     }
     return trained_model;
 }
