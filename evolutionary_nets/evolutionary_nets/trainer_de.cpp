@@ -13,10 +13,9 @@ Trainer_DE::Trainer_DE(){
     t.nb_output_units = 2;
     t.nb_hidden_layers = 1;
     NeuralNet ann(t);
-    initialize_random_population(50, t);
 
     // default population size: 100
-    population = convert_population_to_nets(generate_random_genome_population(100,ann));
+    population = generate_random_population(100,ann);
 }
 
 void Trainer_DE::train(Data_set data_set, NeuralNet &net){
@@ -50,7 +49,6 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
     double pop_accuracy=0;
 
     // using vectors as genotype
-    vector<genome> genome_population = convert_population_to_genomes(population, max_topo);
     vector<NeuralNet> ensemble = population;
 
     evaluate_population(population, data_set);
@@ -66,14 +64,14 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
      *      If all generations were achieved OR if the GA has already converged
     */
     for(unsigned int i=0; ((i<nb_gens) && (!has_converged)); i++) {
-        // update individuals
-        population = convert_population_to_nets(genome_population);
         // sort from fittest
         sort(population.begin(), population.end());
 
         // get best model
         if(population[0].get_validation_score() >= trained_model.get_validation_score())
             trained_model = population[0];
+
+        /*
         // compute accuracy
         elective_accuracy(population, data_set, pop_accuracy, pop_score);
         // get best ensemble
@@ -82,10 +80,10 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
             ensemble_score = pop_score;
             ensemble_accuracy = pop_accuracy;
         }
+        */
 
-        genome_population = convert_population_to_genomes(population, max_topo);
         // optimize model params and topology using training-set
-        differential_evolution_topology_evolution(genome_population, data_set, min_topo, max_topo, selected_mutation_scheme);
+        differential_evolution_topology_evolution(population, data_set, min_topo, max_topo, selected_mutation_scheme);
 
         // record model performances on new data
         prediction_accuracy =   trained_model.get_accuracy();
@@ -94,10 +92,10 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
         double validation_accuracy=trained_model.get_validation_acc();
         double validation_score=trained_model.get_validation_score();
         // compute stats
-        pop_score_variance  =   compute_score_variance(genome_population);
-        pop_score_stddev    =   compute_score_stddev(genome_population);
-        pop_score_mean      =   compute_score_mean(genome_population);
-        pop_score_median    =   compute_score_median(genome_population);
+        pop_score_variance  =   compute_score_variance(population);
+        pop_score_stddev    =   compute_score_stddev(population);
+        pop_score_mean      =   compute_score_mean(population);
+        pop_score_median    =   compute_score_median(population);
         // record results (performances and topology description)
         unsigned int inputs             =   trained_model.get_topology().nb_input_units;
         unsigned int hidden_units       =   trained_model.get_topology().nb_units_per_hidden_layer;
@@ -168,12 +166,7 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
     return trained_model;
 }
 
-void Trainer_DE::differential_evolution_topology_evolution(vector<genome> &pop, Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int selected_mutation_scheme){
-    NeuralNet dummyNet(max_topo);
-    unsigned int nb_element_vectorized_Theta = dummyNet.get_total_nb_weights() + 4;
-    unsigned int genome_length = get_genome_length(max_topo);
-    // total nb of variables
-    unsigned int problem_dimensionality = nb_element_vectorized_Theta;
+void Trainer_DE::differential_evolution_topology_evolution(vector<NeuralNet> &pop, Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int selected_mutation_scheme){
     // Crossover Rate [0,1]
     double CR = 0.5;
     // differential_weight [0,2]
@@ -203,51 +196,45 @@ void Trainer_DE::differential_evolution_topology_evolution(vector<genome> &pop, 
         }while(index_c == index_b || index_c == index_a || index_c == index_x);
 
         // store corresponding individual in pop
-        genome original_model  = pop[index_x];
-        genome candidate_model = pop[index_x];
-        vec indiv_a = pop[index_a].genotype;
-        vec indiv_b = pop[index_b].genotype;
-        vec indiv_c = pop[index_c].genotype;
+        vec original_model  = pop[index_x].get_params();
+        vec candidate_model = pop[index_x].get_params();
+        vec indiv_a = pop[index_a].get_params();
+        vec indiv_b = pop[index_b].get_params();
+        vec indiv_c = pop[index_c].get_params();
 
         // if user selected a DE/BEST/1 mutation scheme: use best indiv as first indiv
         if(selected_mutation_scheme == MUTATION_SCHEME_BEST)
-            indiv_a = pop[0].genotype;
+            indiv_a = pop[0].get_params();
 
-        net_topology candidate_topology;
-        candidate_topology.nb_input_units = (unsigned int) candidate_model.genotype[0];
-        candidate_topology.nb_units_per_hidden_layer = (unsigned int) candidate_model.genotype[1];
-        candidate_topology.nb_output_units = (unsigned int) candidate_model.genotype[2];
-        candidate_topology.nb_hidden_layers = (unsigned int) candidate_model.genotype[3];
-        genome_length = get_genome_length(candidate_topology);
+        double score_best_model         = pop[0].get_f1_score();
+        double score_second_best_model  = pop[1].get_f1_score();
 
-        double score_best_model         = pop[0].fitness;
-        double score_second_best_model  = pop[1].fitness;
+        unsigned int genome_length=pop[index_x].get_topology().get_genome_length();
 
         // if the first and second best have identical fitness
         if((score_best_model==score_second_best_model) && score_best_model!=0){
             // force a crossover between the two
-            indiv_a = pop[0].genotype;
-            indiv_b = pop[1].genotype;
-            mutative_crossover(problem_dimensionality, 1, 1, genome_length, min_topo, max_topo, original_model.genotype, candidate_model.genotype, indiv_a, indiv_b, indiv_c);
+            indiv_a = pop[0].get_params();
+            indiv_b = pop[1].get_params();
+            candidate_model=mutative_crossover(1, 1, genome_length, min_topo, max_topo, original_model, indiv_a, indiv_b, indiv_c);
         }
 
         // traditional random crossover
-        mutative_crossover(problem_dimensionality, CR, F, genome_length, min_topo, max_topo, original_model.genotype, candidate_model.genotype, indiv_a, indiv_b, indiv_c);
-        NeuralNet candidate_net=generate_net(candidate_model);
+        candidate_model=mutative_crossover(CR, F, genome_length, min_topo, max_topo, original_model, indiv_a, indiv_b, indiv_c);
+        NeuralNet candidate_net=to_NeuralNet(candidate_model);
         candidate_net.get_fitness_metrics(data_set);
-        candidate_model=get_genome(candidate_net,max_topo);
         nb_err_func_calls++;
         // if candidate outperforms original: replace original by candidate
-        if(candidate_model.fitness > original_model.fitness)
-            pop[index_x] = candidate_model;
+        if(candidate_net.get_f1_score()>pop[index_x].get_f1_score())
+            pop[index_x] = candidate_net;
     }
     // update population
-    population = convert_population_to_nets(pop);
+    population=pop;
 }
 
 void Trainer_DE::differential_evolution(vector<NeuralNet> &pop, data_subset training_set){
     // total nb weights
-    unsigned int nb_element_vectorized_Theta = pop[0].get_total_nb_weights();
+    unsigned int nb_element_vectorized_Theta = pop[0].get_topology().get_total_nb_weights();
     unsigned int problem_dimensionality = nb_element_vectorized_Theta;
     // Crossover Rate [0,1]
     double CR = 0.5;
@@ -330,7 +317,9 @@ void Trainer_DE::train_weights(Data_set data_set, NeuralNet &net, unsigned int n
     for(unsigned int i=0; i<nb_epochs; ++i) {
         // optimize model params and topology using training-set
         differential_evolution(population, data_set.training_set);
-        trained_model = get_best_model(population);
+        // sort from fittest
+        sort(population.begin(), population.end());
+        trained_model = population[0];
 
         // record model performances on new data
         prediction_accuracy = trained_model.get_accuracy(data_set.training_set);
@@ -367,8 +356,12 @@ void Trainer_DE::train_weights(Data_set data_set, NeuralNet &net, unsigned int n
     // return trained model
     net = trained_model;
 }
-void Trainer_DE::mutative_crossover(unsigned int problem_dimensionality, double CR, double F, unsigned int genome_length, net_topology min_topo, net_topology max_topo, vec original_model, vec &candidate_model, vec indiv_a, vec indiv_b, vec indiv_c){
-    vec tmp_genome = original_model;
+
+vec Trainer_DE::mutative_crossover(double CR, double F, unsigned int genome_length, net_topology min_topo, net_topology max_topo, vec original_model, vec indiv_a, vec indiv_b, vec indiv_c){
+    unsigned int problem_dimensionality=max_topo.get_genome_length();
+    vec tmp_genome(problem_dimensionality);
+    for(unsigned int i=0;i<original_model.n_elem;i++)
+        tmp_genome(i)=original_model(i);
     // pick random index
     unsigned int R    = generate_random_integer_between_range(1, problem_dimensionality);
     // used to generate random 0 or 1
@@ -397,16 +390,16 @@ void Trainer_DE::mutative_crossover(unsigned int problem_dimensionality, double 
             // once topology is chosen
             if(k==4){
                 net_topology candidate_topology;
-                candidate_topology.nb_input_units = (unsigned int) tmp_genome[0];
-                candidate_topology.nb_units_per_hidden_layer = (unsigned int) tmp_genome[1];
-                candidate_topology.nb_output_units = (unsigned int) tmp_genome[2];
-                candidate_topology.nb_hidden_layers = (unsigned int) tmp_genome[3];
-                genome_length = get_genome_length(candidate_topology);
+                candidate_topology.nb_input_units=(unsigned int) tmp_genome[0];
+                candidate_topology.nb_units_per_hidden_layer=(unsigned int) tmp_genome[1];
+                candidate_topology.nb_output_units=(unsigned int) tmp_genome[2];
+                candidate_topology.nb_hidden_layers=(unsigned int) tmp_genome[3];
+                genome_length=candidate_topology.get_genome_length();
             }
         }
     }
     // return offspring
-    candidate_model = tmp_genome;
+    return tmp_genome;
 }
 
 double Trainer_DE::mutation_scheme_DE_rand_1(double F, double x_rand_1, double x_rand_2, double x_rand_3){

@@ -13,10 +13,9 @@ Trainer_PSO::Trainer_PSO(){
     t.nb_output_units = 2;
     t.nb_hidden_layers = 1;
     NeuralNet ann(t);
-    initialize_random_population(120, t);
 
     // default population size: 100
-    population = convert_population_to_nets(generate_random_genome_population(120,ann));
+    population = generate_random_population(100,ann);
 }
 
 void Trainer_PSO::train(Data_set data_set, NeuralNet &net){
@@ -46,7 +45,6 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
     // flag alerting that the GA has converged
     bool has_converged = false;
     // initialize particles
-    vector<genome> genome_population = convert_population_to_genomes(population, max_topo);
     vector<NeuralNet> ensemble = population;
     // initialize velocity of each particle to random [-1, 1]
     unsigned int nb_params = max_topo.get_total_nb_weights()+4;
@@ -57,7 +55,7 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
     NeuralNet trained_model=population[0];
 
     vector<vec> velocities;
-    // particle index
+    // init velocities with small random values
     for(unsigned int i=0; i<population.size(); i++){
         vec new_vector(nb_params);
         new_vector = ones(nb_params, 1);
@@ -77,13 +75,13 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
      *      If all generations were achieved OR if the algorithm has converged (variance test)
     */
     for(unsigned int i=0; ((i<nb_gens) && (!has_converged)); ++i) {
-        // update individuals
-        population = convert_population_to_nets(genome_population);
         // sort from fittest
         sort(population.begin(), population.end());
         // get best model
-        if(population[0].get_f1_score() >= trained_model.get_f1_score())
+        if(population[0].get_f1_score()>=trained_model.get_f1_score())
             trained_model = population[0];
+
+        /*
         // compute accuracy
         elective_accuracy(population, data_set, pop_accuracy, pop_score);
         // get best ensemble
@@ -92,9 +90,10 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
             ensemble_score = pop_score;
             ensemble_accuracy = pop_accuracy;
         }
-        genome_population = convert_population_to_genomes(population, max_topo);
+        */
+
         // optimize model params and topology using training-set
-        PSO_topology_evolution(genome_population, velocities, data_set, max_topo, pBests, trained_model, pop_score_variance);
+        PSO_topology_evolution(population, velocities, data_set, max_topo, pBests, trained_model, pop_score_variance);
 
         // record model performances on new data
         prediction_accuracy =   trained_model.get_accuracy();
@@ -103,10 +102,10 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
         double validation_accuracy=trained_model.get_validation_acc();
         double validation_score=trained_model.get_validation_score();
         // compute stats
-        pop_score_variance  =   compute_score_variance(genome_population);
-        pop_score_stddev    =   compute_score_stddev(genome_population);
-        pop_score_mean      =   compute_score_mean(genome_population);
-        pop_score_median    =   compute_score_median(genome_population);
+        pop_score_variance  =   compute_score_variance(population);
+        pop_score_stddev    =   compute_score_stddev(population);
+        pop_score_mean      =   compute_score_mean(population);
+        pop_score_median    =   compute_score_median(population);
         // record results (performances and topology description)
         unsigned int inputs             =   trained_model.get_topology().nb_input_units;
         unsigned int hidden_units       =   trained_model.get_topology().nb_units_per_hidden_layer;
@@ -175,10 +174,8 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
     return trained_model;
 }
 
-void Trainer_PSO::PSO_topology_evolution(vector<genome> &pop, vector<vec> &velocities, Data_set data_set, net_topology max_topo, vector<NeuralNet> &pBest, NeuralNet gBest, double pop_score_variance){
-    NeuralNet dummy_net(max_topo);
-    unsigned int genome_size = dummy_net.get_total_nb_weights() + 4;
-
+void Trainer_PSO::PSO_topology_evolution(vector<NeuralNet> &pop, vector<vec> &velocities, Data_set data_set, net_topology max_topo, vector<NeuralNet> &pBest, NeuralNet gBest, double pop_score_variance){
+    unsigned int genome_size = max_topo.get_genome_length();
     // ** PSO settings **
     // velocity weight
     double w = 0.729;
@@ -190,19 +187,16 @@ void Trainer_PSO::PSO_topology_evolution(vector<genome> &pop, vector<vec> &veloc
 
     // update pBest of each particle
     for(unsigned int p=0; p<pop.size(); p++){
-        // calculate fitness
-        double candidate_fitness = pop[p].fitness;
         // if particle is closer to target than pBest : set particle as <pBest>
-        if(candidate_fitness > pBest[p].get_f1_score())
-            pBest[p] = generate_net(pop[p]);
+        if(pop[p].get_f1_score() > pBest[p].get_f1_score())
+            pBest[p] = pop[p];
     }
 
     // update gBest
-    vector<NeuralNet>tmp_pop = convert_population_to_nets(pop);
     for(unsigned int p=0; p<pop.size(); p++){
         // if particle is closer to target than gBest : set particle as <gBest>
         if(pBest[p].get_f1_score() > gBest.get_f1_score())
-            gBest = tmp_pop[p];
+            gBest = pop[p];
     }
 
     // for each particle
@@ -212,13 +206,14 @@ void Trainer_PSO::PSO_topology_evolution(vector<genome> &pop, vector<vec> &veloc
             double r2 = f_rand(0,1);
             // calculate velocity
             velocities[p][i] = w*velocities[p][i]
-                    + c1*r1 * (pBest[p].get_params()[i] - pop[p].genotype[i])
-                    + c2*r2 * (gBest.get_params()[i]    - pop[p].genotype[i]);
+                    + c1*r1 * (pBest[p].get_params()[i] - pop[p].get_params()[i])
+                    + c2*r2 * (gBest.get_params()[i]    - pop[p].get_params()[i]);
             velocities[p][i] = clip(velocities[p][i], -5, 5);
         }
-        vec particle = pop[p].genotype;
+
+        vec particle=pop[p].get_params();
         // update particle data
-        for(unsigned int i=0; i<genome_size; i++){
+        for(unsigned int i=0; i<particle.n_elem; i++){
             switch(i){
             case 0:
                 // protect NB INPUTS from being altered
@@ -241,17 +236,14 @@ void Trainer_PSO::PSO_topology_evolution(vector<genome> &pop, vector<vec> &veloc
                 break;
             }
         }
-        genome candidate;
-        candidate.genotype=particle;
-        NeuralNet candidate_net= generate_net(candidate);
-        candidate_net.get_fitness_metrics(data_set);
-        candidate=get_genome(candidate_net,max_topo);
+        NeuralNet candidate=to_NeuralNet(particle);
+        candidate.get_fitness_metrics(data_set);
         nb_err_func_calls++;
-        if(candidate.fitness>=pop[p].fitness)
+        if(candidate.get_f1_score()>=pop[p].get_f1_score())
             pop[p] = candidate;
     }
     // update population
-    population = convert_population_to_nets(pop);
+    population=pop;
 }
 
 double Trainer_PSO::clip(double x, double min, double max) {

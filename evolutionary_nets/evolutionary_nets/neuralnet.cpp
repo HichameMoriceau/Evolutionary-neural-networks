@@ -12,7 +12,7 @@ NeuralNet::NeuralNet(){
     score        = 0.0f;
     mse = 0.0f;
     topology     = t;
-    params       = generate_random_model();
+    randomize_weights();
 }
 
 NeuralNet::NeuralNet(net_topology t){
@@ -20,7 +20,7 @@ NeuralNet::NeuralNet(net_topology t){
     score        = 0.0f;
     mse = 0.0f;
     topology     = t;
-    params       = generate_random_model();
+    randomize_weights();
 }
 
 mat NeuralNet::forward_propagate(mat X) {
@@ -142,31 +142,16 @@ void NeuralNet::save_net(ofstream &model_file) {
                << "--------------------------" << endl;
     // print weights
     vector<mat> Thetas = reshape_weights();
-    for(unsigned int i = 0 ; i < Thetas.size() ; ++i){
-        model_file << "Theta"    << i << ":" << endl
-                   << Thetas[i]  << endl;
-    }
+    for(unsigned int i = 0 ; i < Thetas.size() ; ++i)
+        model_file<<"Theta"<<i<<":"<< endl<<Thetas[i]<<endl;
 }
 
-unsigned int NeuralNet::get_total_nb_weights(){
-    // return variable
-    unsigned int nb_weights = 0;
-    unsigned int nb_input_weights  = (topology.nb_input_units+1) * topology.nb_units_per_hidden_layer;
-    unsigned int nb_hidden_weights = (topology.nb_units_per_hidden_layer+1) * (topology.nb_units_per_hidden_layer) * (topology.nb_hidden_layers-1);
-    unsigned int nb_output_weights = (topology.nb_units_per_hidden_layer+1) * topology.nb_output_units;
-    nb_weights = nb_input_weights + nb_output_weights;
-    if(topology.nb_hidden_layers > 1)
-        nb_weights += nb_hidden_weights;
-    return nb_weights;
-}
-
-vec NeuralNet::generate_random_model(){
-    vec random_model = randu<vec>(get_total_nb_weights());
-    random_model[0]=topology.nb_input_units;
-    random_model[1]=topology.nb_units_per_hidden_layer;
-    random_model[2]=topology.nb_output_units;
-    random_model[3]=topology.nb_hidden_layers;
-    return random_model;
+void NeuralNet::randomize_weights(){
+    params=randu<vec>(topology.get_total_nb_weights());
+    params[0]=topology.nb_input_units;
+    params[1]=topology.nb_units_per_hidden_layer;
+    params[2]=topology.nb_output_units;
+    params[3]=topology.nb_hidden_layers;
 }
 
 void NeuralNet::print_topology(){
@@ -179,13 +164,24 @@ void NeuralNet::print_topology(){
        << "--------------------------" << endl;
 }
 
-// getters and setters
-vec NeuralNet::get_params(){                    return params;    }
+vec NeuralNet::get_genome(net_topology max_topo) {
+    // instantiate genome with largest possible size
+    vec genotype(max_topo.get_genome_length());
+    // first four elements contain topology
+    genotype[0]=get_topology().nb_input_units;
+    genotype[1]=get_topology().nb_units_per_hidden_layer;
+    genotype[2]=get_topology().nb_output_units;
+    genotype[3]=get_topology().nb_hidden_layers;
+    // the rest contains weights
+    for(unsigned int i=0;i<get_params().size();++i)
+        genotype[4+i]=get_params()[i];
+    return genotype;
+}
 
+vec NeuralNet::get_params(){                    return params;    }
 void NeuralNet::set_params(vec v){              params = v;       }
 
 net_topology NeuralNet::get_topology(){         return topology;  }
-
 void NeuralNet::set_topology(net_topology t) {  topology = t;     }
 
 mat NeuralNet::generate_conf_mat(unsigned int nb_classes, mat preds, mat labels){

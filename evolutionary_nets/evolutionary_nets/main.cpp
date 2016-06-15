@@ -4,7 +4,7 @@
 
 using namespace std;
 
-// returns number of replicates selected by user
+// returns number of replicates selected by user (default=1)
 unsigned int read_args(int argc, char** argv){
     unsigned int nb_replicates=1;
     if(argc > 2){
@@ -23,7 +23,6 @@ unsigned int read_args(int argc, char** argv){
 */
 int main(int argc, char** argv) {
     Net_benchmark bench;
-    cout<<"arg="<<read_args(argc,argv)<<endl;
     bench.run_benchmark(read_args(argc,argv));
     cout << "finished" << endl;
     return 0;

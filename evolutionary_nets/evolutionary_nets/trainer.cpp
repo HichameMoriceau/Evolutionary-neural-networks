@@ -59,66 +59,6 @@ double Trainer::compute_score_median(vector<NeuralNet> pop){
     return median_pop;
 }
 
-double Trainer::compute_score_variance(vector<genome> pop){
-    double variance=0.0f;
-    vec score_values(pop.size());
-    for(unsigned int i=0; i< pop.size(); ++i) {
-        score_values(i)=pop[i].fitness;//(generate_net(pop[i])).get_f1_score(data_set);
-        // round after two decimal places
-        score_values(i)=(round(score_values(i)) * 100) / 100.0f;
-    }
-    variance=var(score_values);
-    return variance;
-}
-
-double Trainer::compute_score_stddev(vector<genome> pop){
-    double std_dev=0.0f;
-    vec score_values(pop.size());
-    for(unsigned int i=0; i< pop.size(); ++i) {
-        score_values(i)=pop[i].fitness;//(generate_net(pop[i])).get_f1_score(data_set);
-        // round after two decimal places
-        score_values(i)=(round(score_values(i)) * 100) / 100.0f;
-    }
-    std_dev=stddev(score_values);
-    return std_dev;
-}
-
-double Trainer::compute_score_mean(vector<genome> pop){
-    double mean_pop=0.0f;
-    vec score_values(pop.size());
-    for(unsigned int i=0; i< pop.size(); ++i) {
-        score_values(i)=pop[i].fitness;//(generate_net(pop[i])).get_f1_score(data_set);
-        // round after two decimal places
-        score_values(i)=(round(score_values(i)) * 100) / 100.0f;
-    }
-
-    // if mean= NaN
-    if(mean(score_values) != mean(score_values)){
-        // display details error
-        cout << "mean=" << mean(score_values) << endl;
-        cout << endl;
-        cout << "scores=" ;
-        for(unsigned int i=0; i<pop.size(); ++i){
-            cout << score_values(i) << " ";
-        }
-        exit(0);
-    }
-    mean_pop=mean(score_values);
-    return mean_pop;
-}
-
-double Trainer::compute_score_median(vector<genome> pop){
-    double median_pop=0.0f;
-    vec score_values(pop.size());
-    for(unsigned int i=0; i< pop.size(); ++i) {
-        score_values(i)=pop[i].fitness;//(generate_net(pop[i])).get_f1_score(data_set);
-        // round after two decimal places
-        score_values(i)=(round(score_values(i)) * 100) / 100.0f;
-    }
-    median_pop=median(score_values);
-    return median_pop;
-}
-
 NeuralNet Trainer::train_topology_plus_weights(Data_set data_set, net_topology max_topo, mat &results_score_evolution, unsigned int selected_mutation_scheme) {
     // return variable
     NeuralNet cross_validated_net;
@@ -131,12 +71,11 @@ NeuralNet Trainer::train_topology_plus_weights(Data_set data_set, net_topology m
     double test_score=0;
     double test_acc  =0;
     //cross_validated_net=cross_validation_training(data_set, min_topo, max_topo, results_score_evolution, test_score, test_acc, selected_mutation_scheme);
-    population=convert_population_to_nets(generate_random_topology_genome_population(population.size(),min_topo, max_topo));
+    population=generate_random_topology_population(population.size(),min_topo, max_topo);
 
     cross_validated_net=evolve_through_iterations(data_set, min_topo, max_topo, nb_epochs, results_score_evolution, 1, selected_mutation_scheme, 1);
-    // return test score as reference
+    // return test score&accuracy as reference
     test_score=cross_validated_net.get_f1_score(data_set.test_set);
-    // return test accuracy as reference
     test_acc  =cross_validated_net.get_accuracy(data_set.test_set);
     // append Cross Validation error to result matrix
     mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
@@ -158,7 +97,7 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
     mat tmp_results_perfs,perfs_cross_validation;
 
     unsigned int pop_size=population.size();
-    population=convert_population_to_nets(generate_random_topology_genome_population(pop_size,min_topo, max_topo));
+    population=generate_random_topology_population(pop_size,min_topo, max_topo);
 
     unsigned int nb_cv_gens=(nb_epochs)-(nb_epochs/nb_folds);
     double freq_change_CV_percent = 1;
@@ -316,13 +255,11 @@ unsigned int Trainer::return_highest(map<unsigned int, unsigned int> votes){
     return vote;
 }
 
-unsigned int Trainer::count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations){
+unsigned int Trainer::count_nb_identicals(unsigned int pred_class, unsigned int actual_class, mat preds, mat actuals){
     unsigned int count=0;
-    // for each example
-    for(unsigned int i=0; i<predictions.n_rows; i++){
-        if(predictions(i)==predicted_class && expectations(i)==expected_class)
+    for(unsigned int i=0; i<preds.n_rows; i++)
+        if(preds(i)==pred_class&&actuals(i)==actual_class)
             count++;
-    }
     return count;
 }
 
@@ -346,20 +283,9 @@ mat Trainer::to_multiclass_format(mat predictions){
     return formatted_predictions;
 }
 
-void Trainer::initialize_random_population(unsigned int pop_size, net_topology max_topo){
-    if(pop_size < 10) pop_size=10;
-    net_topology min_topo;
-    min_topo.nb_input_units=max_topo.nb_input_units;
-    min_topo.nb_units_per_hidden_layer=1;
-    min_topo.nb_output_units=max_topo.nb_output_units;
-    min_topo.nb_hidden_layers=1;
-
-    population=convert_population_to_nets(generate_random_topology_genome_population(pop_size,min_topo, max_topo));
-}
-
 vector<NeuralNet> Trainer::generate_population(unsigned int pop_size, net_topology t, Data_set d) {
     vector<NeuralNet> pop(pop_size);
-    for(unsigned int i=0 ; i < pop_size; ++i) {
+    for(unsigned int i=0;i<pop_size;++i){
         NeuralNet tmp_net(t);
         pop[i]=tmp_net;
     }
@@ -368,33 +294,28 @@ vector<NeuralNet> Trainer::generate_population(unsigned int pop_size, net_topolo
     return pop;
 }
 
-vector<genome> Trainer::generate_random_genome_population(unsigned int quantity, NeuralNet largest_net) {
-    vector<genome> pop(quantity);
+vector<NeuralNet> Trainer::generate_random_population(unsigned int quantity, NeuralNet largest_net) {
+    vector<NeuralNet> pop(quantity);
     for(unsigned int i=0 ; i < quantity ; ++i) {
-        // instantiate new random neural net with set topology
-        vec tmp_vec(largest_net.get_total_nb_weights() + 4);
-        // assign random params values [0, 1]
-        tmp_vec.randu();
+        net_topology t;
         // make sure genome represents net of same nature (identical nb layers)
-        tmp_vec[0]=largest_net.get_topology().nb_input_units;
-        tmp_vec[1]=generate_random_integer_between_range(1, largest_net.get_topology().nb_units_per_hidden_layer);
-        tmp_vec[2]=largest_net.get_topology().nb_output_units;
-        tmp_vec[3]=largest_net.get_topology().nb_hidden_layers;
+        t.nb_input_units=largest_net.get_topology().nb_input_units;
+        t.nb_units_per_hidden_layer=generate_random_integer_between_range(1, largest_net.get_topology().nb_units_per_hidden_layer);
+        t.nb_output_units=largest_net.get_topology().nb_output_units;
+        t.nb_hidden_layers=generate_random_integer_between_range(1, largest_net.get_topology().nb_hidden_layers);
         // add it to pop
-        pop[i].genotype=tmp_vec;
-        pop[i].fitness=-1;
-        pop[i].accuracy=-1;
-        pop[i].mse=-1;
+        NeuralNet n(t);
+        pop[i]=n;
     }
     return pop;
 }
 
-vector<genome> Trainer::generate_random_topology_genome_population(unsigned int quantity, NeuralNet largest_net) {
+vector<vec> Trainer::generate_random_topology_genome_population(unsigned int quantity, NeuralNet largest_net) {
     // return variable
-    vector<genome> pop(quantity);
-    for(unsigned int i=0 ; i < quantity ; ++i) {
+    vector<vec> pop(quantity);
+    for(unsigned int i=0;i<quantity;++i) {
         // instantiate new random neural net with set topology
-        vec tmp_vec(largest_net.get_total_nb_weights() + 4);
+        vec tmp_vec(largest_net.get_topology().get_total_nb_weights() + 4);
         // assign random values [0, 1]
         tmp_vec.randu();
         // make sure topology is valid
@@ -403,11 +324,7 @@ vector<genome> Trainer::generate_random_topology_genome_population(unsigned int 
         tmp_vec[2]=largest_net.get_topology().nb_output_units;
         tmp_vec[3]=generate_random_integer_between_range(1, largest_net.get_topology().nb_hidden_layers);
         // add it to pop
-        // add it to pop
-        pop[i].genotype=tmp_vec;
-        pop[i].fitness=-1;
-        pop[i].accuracy=-1;
-        pop[i].mse=-1;
+        pop[i]=tmp_vec;
     }
     return pop;
 }
@@ -421,9 +338,9 @@ vector<genome> Trainer::generate_random_topology_genome_population(unsigned int 
  *         vector : topology desc. followed by params) where
  *         each neural net belong to the same species (between min_topo and max_topo).
  */
-vector<genome> Trainer::generate_random_topology_genome_population(unsigned int quantity, net_topology min_topo, net_topology max_topo) {
+vector<NeuralNet> Trainer::generate_random_topology_population(unsigned int quantity, net_topology min_topo, net_topology max_topo) {
     // return variable
-    vector<genome> pop(quantity);
+    vector<NeuralNet> pop(quantity);
     for(unsigned int i=0 ; i < quantity ; ++i) {
         // instantiate new random neural net with set topology
         vec tmp_vec(max_topo.get_total_nb_weights() + 4);
@@ -435,10 +352,7 @@ vector<genome> Trainer::generate_random_topology_genome_population(unsigned int 
         tmp_vec[2]=max_topo.nb_output_units;
         tmp_vec[3]=generate_random_integer_between_range(min_topo.nb_hidden_layers, max_topo.nb_hidden_layers);
         // add it to pop
-        pop[i].genotype=tmp_vec;
-        pop[i].fitness=-1;
-        pop[i].accuracy=-1;
-        pop[i].mse=-1;
+        pop[i]=to_NeuralNet(tmp_vec);
     }
     return pop;
 }
@@ -452,87 +366,25 @@ void Trainer::evaluate_population(vector<NeuralNet> &pop, Data_set d) {
     sort(pop.begin(), pop.end());
 }
 
-vector<genome> Trainer::convert_population_to_genomes(vector<NeuralNet> net_pop, net_topology largest_topology){
-    vector<genome> genome_pop;
-    for(unsigned int i=0; i<net_pop.size(); ++i)
-        genome_pop.push_back(get_genome(net_pop[i], largest_topology));
-    return genome_pop;
-}
-
-vector<NeuralNet> Trainer::convert_population_to_nets(vector<genome> genome_pop) {
-    vector<NeuralNet> pop;
-    for(unsigned int i=0; i<genome_pop.size(); ++i)
-        pop.push_back(generate_net(genome_pop[i]));
-    return pop;
-}
-
-NeuralNet Trainer::get_best_model(vector<NeuralNet> pop){
-    // sort pop according to score
-    sort(pop.begin(), pop.end());
-    return pop[0];
-}
-
-NeuralNet Trainer::get_best_model(vector<genome> genome_pop) {
-    vector<NeuralNet> pop;
-    // convert genome pop into neural network pop
-    pop=convert_population_to_nets(genome_pop);
-    // sort pop according to score
-    sort(pop.begin(), pop.end());
-    return pop[0];
-}
-
-genome Trainer::get_genome(NeuralNet net, net_topology max_topo) {
-    // instantiate genome with largest possible size
-    genome g;
-    vec genotype(get_genome_length(max_topo));
-    // first four elements contain topology
-    genotype[0]=net.get_topology().nb_input_units;
-    genotype[1]=net.get_topology().nb_units_per_hidden_layer;
-    genotype[2]=net.get_topology().nb_output_units;
-    genotype[3]=net.get_topology().nb_hidden_layers;
-    // the rest contains weights
-    for(unsigned int i=0;i<net.get_params().size();++i)
-        genotype[4+i]=net.get_params()[i];
-    // transfer performance metrics
-    g.genotype=genotype;
-    g.fitness=net.get_f1_score();
-    g.accuracy=net.get_accuracy();
-    g.validation_fitness=net.get_validation_score();
-    g.validation_acc=net.get_validation_acc();
-    g.mse=net.get_MSE();
-    return g;
-}
-
-NeuralNet Trainer::generate_net(genome genome){
-    NeuralNet net;
-    net_topology topology;
+NeuralNet Trainer::to_NeuralNet(vec p){
+    net_topology t;
     // retrieve topology
-    topology.nb_input_units=(unsigned int) genome.genotype[0];
-    topology.nb_units_per_hidden_layer=(unsigned int) genome.genotype[1];
-    topology.nb_output_units=(unsigned int) genome.genotype[2];
-    topology.nb_hidden_layers=(unsigned int) genome.genotype[3];
-    net.set_topology(topology);
+    t.nb_input_units=(unsigned int) p[0];
+    t.nb_units_per_hidden_layer=(unsigned int) p[1];
+    t.nb_output_units=(unsigned int) p[2];
+    t.nb_hidden_layers=(unsigned int) p[3];
     // retrieve params
-    unsigned int size_params=net.get_total_nb_weights();
+    unsigned int size_params=t.get_total_nb_weights();
     vec tmp_params(size_params);
+    tmp_params[0]=(unsigned int)p[0];
+    tmp_params[1]=(unsigned int)p[1];
+    tmp_params[2]=(unsigned int)p[2];
+    tmp_params[3]=(unsigned int)p[3];
     for(unsigned int i=0; i<size_params; ++i)
-        tmp_params[i]=genome.genotype[4+i];
-    // transfer performance metrics
+        tmp_params[i]=p[i];
+    NeuralNet net(t);
     net.set_params(tmp_params);
-    net.set_f1_score(genome.fitness);
-    net.set_accuracy(genome.accuracy);
-    net.set_validation_acc(genome.validation_acc);
-    net.set_validation_score(genome.validation_fitness);
-    net.set_mse(genome.mse);
     return net;
-}
-
-unsigned int Trainer::get_genome_length(net_topology t){
-    unsigned int length=0;
-    NeuralNet dummyNet;
-    dummyNet.set_topology(t);
-    length=4 + dummyNet.get_total_nb_weights();
-    return length;
 }
 
 mat Trainer::get_population_scores(data_subset d){

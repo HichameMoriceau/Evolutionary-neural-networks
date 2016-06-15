@@ -4,7 +4,6 @@
 Net_benchmark::Net_benchmark() {
     // set default data-set
     data_set = Data_set();
-    //data_set.select_data_set(0);
     // set default max topology
     max_topo.nb_input_units = data_set.training_set.X.n_cols;
     max_topo.nb_units_per_hidden_layer = data_set.training_set.X.n_cols * 4;
@@ -30,31 +29,23 @@ Net_benchmark::~Net_benchmark(){
 }
 
 void Net_benchmark::run_benchmark(unsigned int nb_rep) {
-
     vector<string> data_set_filenames;
     data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
     data_set_filenames.push_back("data/wine-data-transformed.csv"); // multi-class problem
     data_set_filenames.push_back("data/iris-data-transformed.csv"); // multi-class problem
     data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
 
-    nb_replicates  = nb_rep;
-    // set end of search space
-    max_topo.nb_input_units             = data_set.training_set.X.n_cols;
-    max_topo.nb_output_units            = 1;
-    max_topo.nb_hidden_layers           = 1;
-    max_topo.nb_units_per_hidden_layer  = 10;
 
-    unsigned int pop_size_GA = 100;
-    unsigned int nb_generations_GA = 300;
-    unsigned int total_nb_data_sets = 4;
+    nb_replicates=nb_rep;
+    unsigned int pop_size_GA = 65;
+    unsigned int nb_generations_GA = 10;
+    unsigned int total_nb_data_sets = 3;
 
-    unsigned int selected_opt_alg = OPTIMIZATION_ALG::PSO;
+    unsigned int selected_opt_alg = OPTIMIZATION_ALG::DE;
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
     unsigned int mutation_scheme = MUTATION_SCHEME_BEST;
-
-    evo_trainer.initialize_random_population(pop_size_GA, max_topo);
 
     string start_time_str = get_current_date_time();
     auto start_time = system_clock::now();
@@ -100,11 +91,9 @@ double Net_benchmark::find_termination_criteria_epsilon(unsigned int many_genera
     mat results_perfs;
     cout<<"search termination criteria epsilon with "<<many_generations<<" generations"<<endl;
 
-    // initial *generous* run of many generations
     Trainer_DE t;
     // force trainer to perform all epochs
     t.set_epsilon(-1);
-    t.initialize_random_population(100, max_topo);
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
@@ -192,7 +181,6 @@ unsigned int Net_benchmark::count_nb_positive_examples(vec A){
 // returns a matrix of results such as :
 mat Net_benchmark::evaluate_backprop_general_performances() {
     data_subset training_set   = data_set.training_set;
-
     // result matrix
     mat results_cost_relative_to_training_set_size;
     // declare tmp variable for used training-set segment
@@ -238,9 +226,8 @@ void Net_benchmark::print_results_octave_format(ofstream &result_file, mat recor
                 << "# columns: " << recorded_performances.n_cols << endl;
     // append content of recorded performances into same file
     for(unsigned int i=0; i<recorded_performances.n_rows; ++i){
-        for(unsigned int j=0; j<recorded_performances.n_cols; ++j){
+        for(unsigned int j=0; j<recorded_performances.n_cols; ++j)
             result_file << recorded_performances(i,j) << " ";
-        }
         result_file << endl;
     }
     result_file << endl;
@@ -308,12 +295,14 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
     ofstream result_file;
     string result_filename = data_set.result_filename.substr(0,data_set.result_filename.size()-4) + "/results.mat";
     cout << "results file located at " << result_filename << endl;
-    result_file.open(result_filename, ios::out); // data_set.result_filename.c_str()
+    result_file.open(result_filename.c_str(), ios::out); // data_set.result_filename.c_str()
     // check file successfully open
     if(!result_file.is_open()) {
         cout << "Couldn't open results file, experiment aborted. Is it located in: \"" << data_set.result_filename.c_str() << "\" ?" << endl;
         exit(0);
     }
+
+    cout<<"computing learning curves"<<endl;
 
     //
     // PERFORMANCES DURING TRAINING
@@ -325,25 +314,24 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
     // save results
     averaged_performances = join_horiz(averaged_performances, ones(averaged_performances.n_rows,1) * nb_replicates);
 
-    cout << "results written on " << data_set.result_filename.c_str() << endl;
+    cout<<"results written on "<<data_set.result_filename.c_str()<<endl;
 
     // save error amonst replicates
-    print_results_octave_format(result_file, averaged_performances, "results"); // data_set.OCTAVE_perfs_VS_nb_epochs
-    print_results_octave_format(result_file, err_perfs, "err_results"); // data_set.OCTAVE_perfs_VS_nb_epochs
+    print_results_octave_format(result_file, averaged_performances, "results");
+    print_results_octave_format(result_file, err_perfs, "err_results");
 }
 
 void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, string data_set_filename, vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_algorithm,double epsilon, unsigned int selected_mutation_scheme){
     // return variable
     NeuralNet trained_net;
-    // --- create copy of attributes ---
     Data_set d = data_set;
     net_topology max_t = max_topo;
     // result matrices (to be interpreted by Octave script <Plotter.m>)
     mat results_score_evolution;
 
-    cout << endl
-         << "***"
-         << "\tRUNNING REPLICATE " << i+1 << "/" << nb_replicates << "\t ";
+    cout<<endl
+       <<"***"
+      <<"\tRUNNING REPLICATE "<<i+1<<"/"<<nb_replicates<<"\t ";
 
     // set seed
     unsigned int seed=i*10;
@@ -390,8 +378,8 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
         trainer_de.set_epsilon(epsilon);
         trainer_de.set_population(evo_trainer.get_population());
 
-        cout<< "***"
-            << endl;
+        cout<<"***"
+            <<endl;
         trained_net = trainer_de.train_topology_plus_weights(d, max_t, results_score_evolution, selected_mutation_scheme);
     }
 
@@ -454,9 +442,6 @@ void Net_benchmark::compute_scores_task(unsigned int i, net_topology max_topo, v
         // set seed
         unsigned int seed=i*10;
         std::srand(seed);
-
-        // reset pop and set pop size
-        t.initialize_random_population(tmp_pop_size, max_topo);
 
         // reset net
         net = NeuralNet();

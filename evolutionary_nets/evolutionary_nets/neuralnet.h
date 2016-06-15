@@ -34,6 +34,10 @@ struct net_topology{
       return nb_weights;
   }
 
+  unsigned int get_genome_length(){
+      return get_total_nb_weights()+4;
+  }
+
   string to_string(){
       stringstream ss;
       ss << nb_input_units << "_" << nb_units_per_hidden_layer << "_" << nb_output_units << "_" << nb_hidden_layers;
@@ -44,6 +48,7 @@ struct net_topology{
 class NeuralNet
 {
 private:
+    // contains topology + weights (params is genotype)
     vec             params;
     net_topology    topology;
     double          accuracy;
@@ -88,24 +93,20 @@ public:
 
     void            save_net(ofstream &model_file);
 
-    unsigned int    get_total_nb_weights();
-
-    vec             generate_random_model();
+    void            randomize_weights();
 
     void            print_topology();
 
     // getters and setters
+    vec             get_genome(net_topology max_topo);
 
     vec             get_params();
-
     void            set_params(vec p);
 
     net_topology    get_topology();
-
     void            set_topology(net_topology t);
 
     mat             generate_conf_mat(unsigned int nb_classes, mat preds, mat labels);
-
     double          compute_score(mat confusion_matrix, unsigned int nb_classes, unsigned int nb_local_classes);
 
     /**
@@ -132,7 +133,6 @@ public:
 
     void            set_f1_score(double s){ score=s;}
     void            set_accuracy(double a){ accuracy=a;}
-
 
     void            get_fitness_metrics(Data_set D);
 
