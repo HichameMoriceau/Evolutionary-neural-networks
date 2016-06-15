@@ -30,18 +30,18 @@ Net_benchmark::~Net_benchmark(){
 
 void Net_benchmark::run_benchmark(unsigned int nb_rep) {
     vector<string> data_set_filenames;
+    data_set_filenames.push_back("data/iris-data-transformed.csv"); // multi-class problem
     data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
     data_set_filenames.push_back("data/wine-data-transformed.csv"); // multi-class problem
-    data_set_filenames.push_back("data/iris-data-transformed.csv"); // multi-class problem
     data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
 
 
     nb_replicates=nb_rep;
-    unsigned int pop_size_GA = 65;
-    unsigned int nb_generations_GA = 10;
-    unsigned int total_nb_data_sets = 3;
+    unsigned int pop_size_GA = 70;
+    unsigned int nb_generations_GA = 200;
+    unsigned int total_nb_data_sets = 1;
 
-    unsigned int selected_opt_alg = OPTIMIZATION_ALG::DE;
+    unsigned int selected_opt_alg = OPTIMIZATION_ALG::AIS;
 
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
@@ -56,9 +56,9 @@ void Net_benchmark::run_benchmark(unsigned int nb_rep) {
         data_set.select_data_set(data_set_filenames[i]);
         // set largest topology
         max_topo.nb_input_units = data_set.training_set.X.n_cols;
-        max_topo.nb_units_per_hidden_layer = 20;
+        max_topo.nb_units_per_hidden_layer = 10;
         max_topo.nb_output_units = data_set.find_nb_prediction_classes(data_set.data);
-        max_topo.nb_hidden_layers = 2;
+        max_topo.nb_hidden_layers = 1;
 
         // 500 epochs in total is often more than enough
         double epsilon = -1;//find_termination_criteria_epsilon(200);
@@ -295,14 +295,12 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
     ofstream result_file;
     string result_filename = data_set.result_filename.substr(0,data_set.result_filename.size()-4) + "/results.mat";
     cout << "results file located at " << result_filename << endl;
-    result_file.open(result_filename.c_str(), ios::out); // data_set.result_filename.c_str()
+    result_file.open(result_filename.c_str(), ios::out);
     // check file successfully open
     if(!result_file.is_open()) {
         cout << "Couldn't open results file, experiment aborted. Is it located in: \"" << data_set.result_filename.c_str() << "\" ?" << endl;
         exit(0);
     }
-
-    cout<<"computing learning curves"<<endl;
 
     //
     // PERFORMANCES DURING TRAINING

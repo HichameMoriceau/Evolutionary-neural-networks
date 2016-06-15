@@ -50,7 +50,6 @@ mat NeuralNet::forward_propagate(mat X) {
 }
 
 mat NeuralNet::forward_propagate(mat X, vector<mat> &Zs, vector<mat> &As) {
-
     // return variable (output value of hypothesis)
     mat H;
     unsigned int total_nb_layers = topology.nb_hidden_layers+2;
@@ -164,6 +163,7 @@ void NeuralNet::print_topology(){
        << "--------------------------" << endl;
 }
 
+/*
 vec NeuralNet::get_genome(net_topology max_topo) {
     // instantiate genome with largest possible size
     vec genotype(max_topo.get_genome_length());
@@ -173,10 +173,11 @@ vec NeuralNet::get_genome(net_topology max_topo) {
     genotype[2]=get_topology().nb_output_units;
     genotype[3]=get_topology().nb_hidden_layers;
     // the rest contains weights
-    for(unsigned int i=0;i<get_params().size();++i)
-        genotype[4+i]=get_params()[i];
+    for(unsigned int i=0;i<max_topo.get_genome_length();++i)
+        genotype[i]=get_params()[i];
     return genotype;
 }
+*/
 
 vec NeuralNet::get_params(){                    return params;    }
 void NeuralNet::set_params(vec v){              params = v;       }

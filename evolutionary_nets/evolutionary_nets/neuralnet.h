@@ -98,7 +98,7 @@ public:
     void            print_topology();
 
     // getters and setters
-    vec             get_genome(net_topology max_topo);
+    //vec             get_genome(net_topology max_topo);
 
     vec             get_params();
     void            set_params(vec p);

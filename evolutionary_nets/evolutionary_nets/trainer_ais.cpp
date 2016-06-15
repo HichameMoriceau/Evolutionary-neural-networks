@@ -28,26 +28,12 @@ void Trainer_AIS::train(Data_set data_set, NeuralNet &net, mat &results_score_ev
 }
 
 NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_gens, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme, unsigned int current_gen) {
-    mat new_line;
     // flag alerting that optimization algorithm has had ~ same results for the past 100 generations
     bool plateau=false;
     // flag alerting that the GA has converged
     bool has_converged=false;
-    // recorded characteristics
-    double prediction_accuracy=0;
-    double score=0;
-    double MSE  =0;
-    double pop_score_variance=100;
-    double pop_score_stddev=0;
-    double pop_score_mean=0;
-    double pop_score_median=0;
-    double ensemble_accuracy=0;
-    double ensemble_score=0;
-    double pop_score=0;
-    double pop_accuracy=0;
 
     vector<NeuralNet> ensemble=population;
-
     evaluate_population(population, data_set);
     NeuralNet trained_model=population[0];
 
@@ -77,71 +63,9 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
         */
 
         // optimize model params and topology using training-set
-        clonal_selection_topology_evolution(data_set, min_topo, max_topo, selected_mutation_scheme);
+        clonal_selection_topology_evolution(data_set, min_topo, max_topo, selected_mutation_scheme,results_score_evolution,i);
 
-        // record model performances on new data
-        prediction_accuracy=trained_model.get_accuracy();
-        score              =trained_model.get_f1_score();
-        MSE                =trained_model.get_MSE();
-        double validation_accuracy=trained_model.get_validation_acc();
-        double validation_score=trained_model.get_validation_score();
-        // compute stats
-        pop_score_variance=compute_score_variance(population);
-        pop_score_stddev  =compute_score_stddev(population);
-        pop_score_mean    =compute_score_mean(population);
-        pop_score_median  =compute_score_median(population);
-        // record results (performances and topology description)
-        unsigned int inputs            =trained_model.get_topology().nb_input_units;
-        unsigned int hidden_units      =trained_model.get_topology().nb_units_per_hidden_layer;
-        unsigned int outputs           =trained_model.get_topology().nb_output_units;
-        unsigned int nb_hidden_layers  =trained_model.get_topology().nb_hidden_layers;
-        // format result line
-        new_line << i+1  // i + nb_epochs * index_cross_validation_section
-                 << MSE
-                 << prediction_accuracy
-                 << score
-                 << pop_score_variance
-
-                 << pop_score_stddev
-                 << pop_score_mean
-                 << pop_score_median
-                 << population.size()
-                 << inputs
-
-                 << hidden_units
-                 << outputs
-                 << nb_hidden_layers
-                 << true
-                 << selected_mutation_scheme
-
-                 << ensemble_accuracy
-                 << ensemble_score
-                 << validation_accuracy
-                 << validation_score
-                 << nb_err_func_calls
-
-                 << endr;
-
-        // append result line to result matrix
-        results_score_evolution=join_vert(results_score_evolution, new_line);
-
-        cout << fixed
-             << setprecision(2)
-             << "Gen="            << i+1 // i + nb_epochs * index_cross_validation_section
-             << "\ttrain.score="          << score
-             << "  train.MSE="            << MSE
-             << "  train.acc="            << prediction_accuracy
-             << "  score.mean=" << pop_score_mean
-             << "  score.var=" << pop_score_variance
-             << "\tNB.hid.lay="     << nb_hidden_layers
-             << "  NB.hid.units="   << hidden_units
-             << "\tval.score=" << validation_score
-             << " val.acc=" << validation_accuracy
-             //<< "\tens.acc=" << ensemble_accuracy
-             //<< "  ens.score=" << ensemble_score
-             << "  NB err.func.calls="<<nb_err_func_calls
-             << endl;
-
+        /*
         // checking for convergence (termination criterion)
         // if 33% of the total_nb_generations have been executed on CV fold
         if(i>(nb_epochs/3)) {
@@ -155,11 +79,12 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
             // otherwise always force training on first 10% of total generations
             has_converged=false;
         }
+        */
     }
     return trained_model;
 }
 
-void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int selected_mutation_scheme){
+void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int selected_mutation_scheme,mat& results_score_evolution, unsigned int gen){
     unsigned int pop_size=population.size();
     // Number of individuals retained
     unsigned int selection_size=pop_size*100/100;
@@ -175,6 +100,20 @@ void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_top
     // differential_weight [0,2]
     double F=1;
     // -- --
+
+    // recorded characteristics
+    double prediction_accuracy=0;
+    double score=0;
+    double MSE  =0;
+    double pop_score_variance=100;
+    double pop_score_stddev=0;
+    double pop_score_mean=0;
+    double pop_score_median=0;
+    double ensemble_accuracy=0;
+    double ensemble_score=0;
+    double pop_score=0;
+    double pop_accuracy=0;
+    mat new_line;
 
     for(unsigned int g=0; g<pop_size; ++g) {
         // instantiate subpopulations
@@ -212,15 +151,14 @@ void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_top
                 }while(index_c==index_b || index_c==index_a || index_c==index_x);
 
                 // store corresponding individual in pop
-                vec indiv_a=population[index_a].get_genome(max_topo);
-                vec indiv_b=population[index_b].get_genome(max_topo);
-                vec indiv_c=population[index_c].get_genome(max_topo);
-
-                vec original_model =population[index_x].get_genome(max_topo);
-                vec candidate_model=population[index_x].get_genome(max_topo);
+                vec indiv_a=population[index_a].get_params();
+                vec indiv_b=population[index_b].get_params();
+                vec indiv_c=population[index_c].get_params();
+                vec original_model =population[index_x].get_params();
+                vec candidate_model=population[index_x].get_params();
 
                 unsigned int up_to = population[index_x].get_topology().get_genome_length();
-                candidate_model=mutative_crossover(CR, F, up_to, min_topo, max_topo, original_model,indiv_a, indiv_b, indiv_c);
+                mutative_crossover(CR, F, up_to, min_topo, max_topo, original_model,candidate_model,indiv_a, indiv_b, indiv_c);
 
                 NeuralNet candidate_net=to_NeuralNet(candidate_model);
                 // compute offspring's performances
@@ -229,6 +167,72 @@ void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_top
                 // update clone if interesting
                 if(candidate_net.get_f1_score()>pop_clones[i][j].get_f1_score())
                     pop_clones[i][j]=candidate_net;
+
+                // print out learning metrics
+
+                // record model performances on new data
+                prediction_accuracy=population[0].get_accuracy();
+                score              =population[0].get_f1_score();
+                MSE                =population[0].get_MSE();
+                double validation_accuracy=population[0].get_validation_acc();
+                double validation_score=population[0].get_validation_score();
+                // compute stats
+                pop_score_variance=compute_score_variance(population);
+                pop_score_stddev  =compute_score_stddev(population);
+                pop_score_mean    =compute_score_mean(population);
+                pop_score_median  =compute_score_median(population);
+                // record results (performances and topology description)
+                unsigned int inputs            =population[0].get_topology().nb_input_units;
+                unsigned int hidden_units      =population[0].get_topology().nb_units_per_hidden_layer;
+                unsigned int outputs           =population[0].get_topology().nb_output_units;
+                unsigned int nb_hidden_layers  =population[0].get_topology().nb_hidden_layers;
+                // format result line
+                new_line << nb_err_func_calls
+                         << MSE
+                         << prediction_accuracy
+                         << score
+                         << pop_score_variance
+
+                         << pop_score_stddev
+                         << pop_score_mean
+                         << pop_score_median
+                         << population.size()
+                         << inputs
+
+                         << hidden_units
+                         << outputs
+                         << nb_hidden_layers
+                         << true
+                         << selected_mutation_scheme
+
+                         << ensemble_accuracy
+                         << ensemble_score
+                         << validation_accuracy
+                         << validation_score
+                         << gen
+
+                         << endr;
+
+                // append result line to result matrix
+                results_score_evolution=join_vert(results_score_evolution, new_line);
+
+                cout << fixed
+                     << setprecision(2)
+                     << "NB.calls.err.func=" << nb_err_func_calls
+                     << "\ttrain.score="          << score
+                     << "  train.MSE="            << MSE
+                     << "  train.acc="            << prediction_accuracy
+                     << "  score.mean=" << pop_score_mean
+                     << "  score.var=" << pop_score_variance
+                     << "\tNB.hid.lay="     << nb_hidden_layers
+                     << "  NB.hid.units="   << hidden_units
+                     << "\tval.score=" << validation_score
+                     << " val.acc=" << validation_accuracy
+                     //<< "\tens.acc=" << ensemble_accuracy
+                     //<< "  ens.score=" << ensemble_score
+                     << "  gen=" << gen
+                     << endl;
+
             }
         }
 
@@ -279,49 +283,49 @@ vector<NeuralNet> Trainer_AIS::add_all(vector<vector<NeuralNet>> all_populations
     return pop;
 }
 
-vec Trainer_AIS::mutative_crossover(double CR, double F, unsigned int genome_length, net_topology min_topo, net_topology max_topo, vec original_model, vec indiv_a, vec indiv_b, vec indiv_c){
+void Trainer_AIS::mutative_crossover(double CR, double F, unsigned int genome_length, net_topology min_topo, net_topology max_topo, vec original_model, vec &candidate_model, vec indiv_a, vec indiv_b, vec indiv_c){
     unsigned int problem_dimensionality=max_topo.get_genome_length();
-    vec tmp_genome(problem_dimensionality);
+    // clone original to candidate but let the genome be large enough to grow up to max_topo
+    vec candidate=randu<vec>(problem_dimensionality);
     for(unsigned int i=0;i<original_model.n_elem;i++)
-        tmp_genome(i)=original_model(i);
+        candidate(i)=original_model(i);
     // pick random index
     unsigned int R    = generate_random_integer_between_range(1, problem_dimensionality);
     // used to generate random 0 or 1
     unsigned int rand = generate_random_integer_between_range(1, 50);
-    // element wise crossover & mutation
+    // crossover + mutation
     for(unsigned int k=0; k<genome_length; ++k) {
         if( floor(generate_random_integer_between_range(1,problem_dimensionality) == R |
                   (rand%2) < CR)) {
             // protect number of I/Os to be altered
             if( (k!=0) && (k!=2) ) {
                 // using a DE/rand/1 scheme
-                tmp_genome[k]  = mutation_scheme_DE_rand_1(F, indiv_a[k], indiv_b[k], indiv_c[k]);
+                candidate[k]  = mutation_scheme_DE_rand_1(F, indiv_a[k], indiv_b[k], indiv_c[k]);
                 // make sure NB hid. units doesn't break contract
                 if(k==1){
                     do{
-                        tmp_genome[1] = (((int) abs( mutation_scheme_DE_rand_1(F, indiv_a[1], indiv_b[1], indiv_c[1]))) % max_topo.nb_units_per_hidden_layer) + 1;
-                    }while(!(tmp_genome[1]>=min_topo.nb_units_per_hidden_layer && tmp_genome[1]<=max_topo.nb_units_per_hidden_layer));
+                        candidate[1] = (((int) abs( mutation_scheme_DE_rand_1(F, indiv_a[1], indiv_b[1], indiv_c[1]))) % max_topo.nb_units_per_hidden_layer) + 1;
+                    }while(!(candidate[1]>=min_topo.nb_units_per_hidden_layer && candidate[1]<=max_topo.nb_units_per_hidden_layer));
                 }else if(k==3){
                     // make sure NB hid. lay. doesn't break contract
                     do{
-                        tmp_genome[3] = (((int) abs(mutation_scheme_DE_rand_1(F, indiv_a[3], indiv_b[3], indiv_c[3])) ) % max_topo.nb_hidden_layers) + 1;
-                    }while(!(tmp_genome[3]>=min_topo.nb_hidden_layers && tmp_genome[3]<=max_topo.nb_hidden_layers));
+                        candidate[3] = (((int) abs(mutation_scheme_DE_rand_1(F, indiv_a[3], indiv_b[3], indiv_c[3])) ) % max_topo.nb_hidden_layers) + 1;
+                    }while(!(candidate[3]>=min_topo.nb_hidden_layers && candidate[3]<=max_topo.nb_hidden_layers));
                 }
             }
 
             // once topology is chosen
             if(k==4){
                 net_topology candidate_topology;
-                candidate_topology.nb_input_units=(unsigned int) tmp_genome[0];
-                candidate_topology.nb_units_per_hidden_layer=(unsigned int) tmp_genome[1];
-                candidate_topology.nb_output_units=(unsigned int) tmp_genome[2];
-                candidate_topology.nb_hidden_layers=(unsigned int) tmp_genome[3];
-                genome_length=candidate_topology.get_genome_length();
+                candidate_topology.nb_input_units = (unsigned int) candidate[0];
+                candidate_topology.nb_units_per_hidden_layer = (unsigned int) candidate[1];
+                candidate_topology.nb_output_units = (unsigned int) candidate[2];
+                candidate_topology.nb_hidden_layers = (unsigned int) candidate[3];
+                //genome_length = candidate_topology.get_total_nb_weights();
             }
         }
     }
-    // return offspring
-    return tmp_genome;
+    candidate_model=candidate;
 }
 
 double Trainer_AIS::mutation_scheme_DE_rand_1(double F, double x_rand_1, double x_rand_2, double x_rand_3){

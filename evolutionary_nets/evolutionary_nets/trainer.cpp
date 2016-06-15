@@ -373,17 +373,8 @@ NeuralNet Trainer::to_NeuralNet(vec p){
     t.nb_units_per_hidden_layer=(unsigned int) p[1];
     t.nb_output_units=(unsigned int) p[2];
     t.nb_hidden_layers=(unsigned int) p[3];
-    // retrieve params
-    unsigned int size_params=t.get_total_nb_weights();
-    vec tmp_params(size_params);
-    tmp_params[0]=(unsigned int)p[0];
-    tmp_params[1]=(unsigned int)p[1];
-    tmp_params[2]=(unsigned int)p[2];
-    tmp_params[3]=(unsigned int)p[3];
-    for(unsigned int i=0; i<size_params; ++i)
-        tmp_params[i]=p[i];
     NeuralNet net(t);
-    net.set_params(tmp_params);
+    net.set_params(p);
     return net;
 }
 

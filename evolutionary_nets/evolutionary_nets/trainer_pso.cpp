@@ -28,18 +28,7 @@ void Trainer_PSO::train(Data_set data_set, NeuralNet &net, mat &results_score_ev
 }
 
 NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_gens, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme, unsigned int current_gen) {
-    double prediction_accuracy = 0;
-    double score=0;
-    double MSE=0;
-    double pop_score_variance=100;
-    double pop_score_stddev=0;
-    double pop_score_mean=0;
-    double pop_score_median=0;
-    double ensemble_accuracy=0;
-    double ensemble_score=0;
-    double pop_score=0;
-    double pop_accuracy=0;
-    mat new_line;
+
     // flag alerting learning stagnation
     bool plateau = false;
     // flag alerting that the GA has converged
@@ -50,6 +39,8 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
     unsigned int nb_params = max_topo.get_total_nb_weights()+4;
     // personal best particle
     vector<NeuralNet> pBests = generate_population(population.size(), max_topo, data_set);
+
+    double pop_score_variance=100;
 
     evaluate_population(population, data_set);
     NeuralNet trained_model=population[0];
@@ -93,72 +84,10 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
         */
 
         // optimize model params and topology using training-set
-        PSO_topology_evolution(population, velocities, data_set, max_topo, pBests, trained_model, pop_score_variance);
+        PSO_topology_evolution(velocities, data_set, max_topo, pBests, trained_model, pop_score_variance,results_score_evolution,i);
 
-        // record model performances on new data
-        prediction_accuracy =   trained_model.get_accuracy();
-        score               =   trained_model.get_f1_score();
-        MSE                 =   trained_model.get_MSE();
-        double validation_accuracy=trained_model.get_validation_acc();
-        double validation_score=trained_model.get_validation_score();
-        // compute stats
-        pop_score_variance  =   compute_score_variance(population);
-        pop_score_stddev    =   compute_score_stddev(population);
-        pop_score_mean      =   compute_score_mean(population);
-        pop_score_median    =   compute_score_median(population);
-        // record results (performances and topology description)
-        unsigned int inputs             =   trained_model.get_topology().nb_input_units;
-        unsigned int hidden_units       =   trained_model.get_topology().nb_units_per_hidden_layer;
-        unsigned int outputs            =   trained_model.get_topology().nb_output_units;
-        unsigned int nb_hidden_layers   =   trained_model.get_topology().nb_hidden_layers;
 
-        // format result line
-        new_line << i+1  // i + nb_epochs * index_cross_validation_section
-                 << MSE
-                 << prediction_accuracy
-                 << score
-                 << pop_score_variance
-
-                 << pop_score_stddev
-                 << pop_score_mean
-                 << pop_score_median
-                 << population.size()
-                 << inputs
-
-                 << hidden_units
-                 << outputs
-                 << nb_hidden_layers
-                 << true
-                 << -1
-
-                 << ensemble_accuracy
-                 << ensemble_score
-                 << validation_accuracy
-                 << validation_score
-                 << nb_err_func_calls
-
-                 << endr;
-
-        // append result line to result matrix
-        results_score_evolution = join_vert(results_score_evolution, new_line);
-
-        cout << fixed
-             << setprecision(2)
-             << "Gen="            << i+1 // i + nb_epochs * index_cross_validation_section
-             << "\ttrain.score="          << score
-             << "  train.MSE="            << MSE
-             << "  train.acc="            << prediction_accuracy
-             << "  score.mean=" << pop_score_mean
-             << "  score.var=" << pop_score_variance
-             << "\tNB.hid.lay="     << nb_hidden_layers
-             << "  NB.hid.units="   << hidden_units
-             << "\tval.score=" << validation_score
-             << " val.acc=" << validation_accuracy
-             //<< "\tens.acc=" << ensemble_accuracy
-             //<< "  ens.score=" << ensemble_score
-             << "  NB err.func.calls="<<nb_err_func_calls
-             << endl;
-
+        /*
         // checking for convergence (termination criterion)
         // if 33% of the total_nb_generations have been executed
         if(i>(nb_epochs/3)) {
@@ -170,11 +99,12 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
             has_converged = (pop_score_variance<epsilon) && (plateau);
         }else// otherwise always force training on first 10% of total generations
             has_converged = false;
+        */
     }
     return trained_model;
 }
 
-void Trainer_PSO::PSO_topology_evolution(vector<NeuralNet> &pop, vector<vec> &velocities, Data_set data_set, net_topology max_topo, vector<NeuralNet> &pBest, NeuralNet gBest, double pop_score_variance){
+void Trainer_PSO::PSO_topology_evolution(vector<vec> &velocities, Data_set data_set, net_topology max_topo, vector<NeuralNet> &pBest, NeuralNet gBest, double pop_score_variance, mat& results_score_evolution, unsigned int gen){
     unsigned int genome_size = max_topo.get_genome_length();
     // ** PSO settings **
     // velocity weight
@@ -185,33 +115,46 @@ void Trainer_PSO::PSO_topology_evolution(vector<NeuralNet> &pop, vector<vec> &ve
     double c2 = 1.494;
     // ** **
 
+    // learning metrics variables
+    double prediction_accuracy = 0;
+    double score=0;
+    double MSE=0;
+    double pop_score_stddev=0;
+    double pop_score_mean=0;
+    double pop_score_median=0;
+    double ensemble_accuracy=0;
+    double ensemble_score=0;
+    double pop_score=0;
+    double pop_accuracy=0;
+    mat new_line;
+
     // update pBest of each particle
-    for(unsigned int p=0; p<pop.size(); p++){
+    for(unsigned int p=0; p<population.size(); p++){
         // if particle is closer to target than pBest : set particle as <pBest>
-        if(pop[p].get_f1_score() > pBest[p].get_f1_score())
-            pBest[p] = pop[p];
+        if(population[p].get_f1_score() > pBest[p].get_f1_score())
+            pBest[p] = population[p];
     }
 
     // update gBest
-    for(unsigned int p=0; p<pop.size(); p++){
+    for(unsigned int p=0; p<population.size(); p++){
         // if particle is closer to target than gBest : set particle as <gBest>
         if(pBest[p].get_f1_score() > gBest.get_f1_score())
-            gBest = pop[p];
+            gBest = population[p];
     }
 
     // for each particle
-    for(unsigned int p=0; p<pop.size(); p++) {
+    for(unsigned int p=0; p<population.size(); p++) {
         for(unsigned int i=0; i<genome_size; i++){
             double r1 = f_rand(0,1);
             double r2 = f_rand(0,1);
             // calculate velocity
             velocities[p][i] = w*velocities[p][i]
-                    + c1*r1 * (pBest[p].get_params()[i] - pop[p].get_params()[i])
-                    + c2*r2 * (gBest.get_params()[i]    - pop[p].get_params()[i]);
+                    + c1*r1 * (pBest[p].get_params()[i] - population[p].get_params()[i])
+                    + c2*r2 * (gBest.get_params()[i]    - population[p].get_params()[i]);
             velocities[p][i] = clip(velocities[p][i], -5, 5);
         }
 
-        vec particle=pop[p].get_params();
+        vec particle=population[p].get_params();
         // update particle data
         for(unsigned int i=0; i<particle.n_elem; i++){
             switch(i){
@@ -236,14 +179,78 @@ void Trainer_PSO::PSO_topology_evolution(vector<NeuralNet> &pop, vector<vec> &ve
                 break;
             }
         }
+
         NeuralNet candidate=to_NeuralNet(particle);
         candidate.get_fitness_metrics(data_set);
         nb_err_func_calls++;
-        if(candidate.get_f1_score()>=pop[p].get_f1_score())
-            pop[p] = candidate;
+        if(candidate.get_f1_score()>=population[p].get_f1_score())
+            population[p] = candidate;
+
+        // print out learning metrics
+        // record model performances on new data
+        prediction_accuracy =   population[0].get_accuracy();
+        score               =   population[0].get_f1_score();
+        MSE                 =   population[0].get_MSE();
+        double validation_accuracy=population[0].get_validation_acc();
+        double validation_score=population[0].get_validation_score();
+        // compute stats
+        pop_score_variance  =   compute_score_variance(population);
+        pop_score_stddev    =   compute_score_stddev(population);
+        pop_score_mean      =   compute_score_mean(population);
+        pop_score_median    =   compute_score_median(population);
+        // record results (performances and topology description)
+        unsigned int inputs             =   population[0].get_topology().nb_input_units;
+        unsigned int hidden_units       =   population[0].get_topology().nb_units_per_hidden_layer;
+        unsigned int outputs            =   population[0].get_topology().nb_output_units;
+        unsigned int nb_hidden_layers   =   population[0].get_topology().nb_hidden_layers;
+
+        // format result line
+        new_line << nb_err_func_calls //i+1
+                 << MSE
+                 << prediction_accuracy
+                 << score
+                 << pop_score_variance
+
+                 << pop_score_stddev
+                 << pop_score_mean
+                 << pop_score_median
+                 << population.size()
+                 << inputs
+
+                 << hidden_units
+                 << outputs
+                 << nb_hidden_layers
+                 << true
+                 << -1
+
+                 << ensemble_accuracy
+                 << ensemble_score
+                 << validation_accuracy
+                 << validation_score
+                 << gen
+
+                 << endr;
+
+        // append result line to result matrix
+        results_score_evolution = join_vert(results_score_evolution, new_line);
+
+        cout << fixed
+             << setprecision(2)
+             << "Gen="            << nb_err_func_calls //i+1
+             << "\ttrain.score="          << score
+             << "  train.MSE="            << MSE
+             << "  train.acc="            << prediction_accuracy
+             << "  score.mean=" << pop_score_mean
+             << "  score.var=" << pop_score_variance
+             << "\tNB.hid.lay="     << nb_hidden_layers
+             << "  NB.hid.units="   << hidden_units
+             << "\tval.score=" << validation_score
+             << " val.acc=" << validation_accuracy
+             //<< "\tens.acc=" << ensemble_accuracy
+             //<< "  ens.score=" << ensemble_score
+             << "  Gen="<<gen
+             << endl;
     }
-    // update population
-    population=pop;
 }
 
 double Trainer_PSO::clip(double x, double min, double max) {
