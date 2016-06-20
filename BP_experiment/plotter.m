@@ -56,8 +56,8 @@ grid on;
 plot(results(:,20),results(:,4),  'k', 'LineWidth', 1);
 plot(results(:,20),results(:,3),  'r', 'LineWidth', 1);
 plot(results(:,20),results(:,18), 'm', 'LineWidth', 1);
-x=results(end,20)
-y=100
+x=results(end,20);
+y=100;
 axis([0, results(end,20), 0, 100]);
 title( strcat(data_set_name, " - population size : ", num2str(population_size), " - ", num2str(nb_replicates), " replicates"));
 legend('[Error amongst replicates] Corrected sample standard deviation','Best indiv accuracy on training set','Best indiv f1 score on training set', 'Best indiv accuracy on CV set', "location", "southeast");
@@ -88,19 +88,21 @@ plot_name = strcat(data_set_name, "-MSEVSepochs.png");
 print('-dpng', '-tiff', plot_name);
 hold off;
 
+
 #
 # RESULT TABLE
 #
 
-# calculate index values of 10 rows sampled (evenly distributed)
+nb_err_calls=results(end,1)-results(1,1);
+
+# calculate index values of 10 evenly separated rows
 indexes=ones(10,1);
 for i = [1:10]
-    indexes(i)=nb_gens*(i*10/100);
+    indexes(i)=nb_err_calls*(i*10/100);
 endfor
-indexes=round(indexes)
-
-nb_cols=size(results)(2)
-nb_gens
+    
+indexes=round(indexes);
+nb_cols=size(results)(2);
 
 # store each row in result table
 table=ones(10,nb_cols);
@@ -109,10 +111,11 @@ for i = [1:10]
 endfor
 
 format("compact")
-output_precision(0.1,"local")
 cd ../data/;
 
-# header:
-#gens, mse, train acc, train score, pop score var, pop score stddev, pop score mean, pop score median, pop size, nb inputs, nb hid units, nb outputs, nb hid layers, is pop diverse?, mutation scheme (0=DE/RAND, 1=DE/BEST), ensemble acc, ensemble score, val acc, val score, nb calls to err function
-table_filename=strcat(data_set_name, "-res-table.csv")
+
+table_filename=strcat("BPresults/BP-",data_set_name, "-res-table.csv");
+fprintf("Saved as: \n\t->\"%s\"\n" , table_filename);
 dlmwrite(table_filename, table, ", ")
+
+fprintf("Columns:\nnb calls to err function, mse, train acc, train score, pop score var, pop score stddev, pop score mean, pop score median, pop size, nb inputs, nb hid units, nb outputs, nb hid layers, is pop diverse?, mutation scheme (0=DE/RAND, 1=DE/BEST), ensemble acc, ensemble score, val acc, val score, gens\n");

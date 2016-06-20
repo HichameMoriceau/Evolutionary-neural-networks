@@ -107,6 +107,7 @@ int main(int argc, char * argv []){
     ed.result_file="data/results-bp-fixed-iris.mat";
     experiment(nb_gens,nb_reps,ed);
     break;
+
   case 4:
     ed.exp_type=EXP_TYPE::CASCADE;
     ed.dataset_filename=ds_filenames[0];
@@ -407,7 +408,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
 
       double err=0;
       mat line;
-      unsigned int epoch=i+b*gens+1;
+      unsigned int epoch=i;
       double pop_score_mean=-1;
       double pop_score_variance=-1;
       double pop_score_stddev=-1;
@@ -425,7 +426,7 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
       mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
       compute_error_acc_score(conf_mat, labels, err, prediction_accuracy, score);
       
-      std::cout<<"epoch="<<epoch
+      std::cout<<"epoch="<<epoch<<"of"<<gens
 	       <<"\tBP"<<b
 	       <<"\tscore="<<score
 	       <<"\tacc="<<prediction_accuracy
@@ -747,7 +748,7 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
 
       double err=0;
       mat line;
-      unsigned int epoch=i+b*gens+1;
+      unsigned int epoch=i;
       double pop_score_mean=-1;
       double pop_score_variance=-1;
       double pop_score_stddev=-1;
@@ -766,7 +767,7 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
       mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
       compute_error_acc_score(conf_mat, labels, err, prediction_accuracy, score);
 
-      cout<<"epoch="<<epoch
+      cout<<"epoch="<<epoch<<"of"<<gens
 	  <<"\tBP"<<b
 	  <<"\tscore="<<score
 	  <<"\tacc="<<prediction_accuracy
