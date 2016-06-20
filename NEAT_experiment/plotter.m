@@ -14,10 +14,10 @@ cd 'images/';
 
 population_size	= results(1,9);
 nb_replicates   = results(1,end);
+nb_gens         = results(end,1);
 
-TEST_SCORE = results(1,end-3);
-TEST_ACC = results(1,end-2);
-
+TEST_SCORE = results(1,end-2); # was -3
+TEST_ACC = results(1,end-1); # was -2
 
 #
 # TRAINING PERFS
@@ -34,8 +34,8 @@ title( strcat(data_set_name, " - population size : ", num2str(population_size), 
 legend('[Error amongst replicates] Corrected sample standard deviation','Best indiv accuracy on training set','Best indiv f1 score on training set', 'Best indiv accuracy on CV set', "location", "southeast");
 xlabel('Number of generations');
 ylabel('Performance of best individual while training');
-text(align_right, 50 , strcat("Score on unseen test data =", num2str(TEST_SCORE)));
-text(align_right, 46 , strcat("Score on unseen test data =", num2str(TEST_ACC)));
+text(align_right, 50 , strcat("SCORE on unseen test data =", num2str(TEST_SCORE)));
+text(align_right, 46 , strcat("ACC on unseen test data =", num2str(TEST_ACC)));
 # add topology description
 text(align_right, 42 , "Final topology:");
 text(align_right, 38 , strcat("NB inputs            =", num2str(results(end,10))) );
@@ -61,8 +61,8 @@ title( strcat(data_set_name, " - population size : ", num2str(population_size), 
 legend('[Error amongst replicates] Corrected sample standard deviation','Best indiv accuracy on training set','Best indiv f1 score on training set', 'Best indiv accuracy on CV set', "location", "southeast");
 xlabel('Number of calls to the error function');
 ylabel('Performance of best individual while training');
-text(align_right, 50 , strcat("Score on unseen test data =", num2str(TEST_SCORE)));
-text(align_right, 46 , strcat("Score on unseen test data =", num2str(TEST_ACC)));
+text(align_right, 50 , strcat("SCORE on unseen test data =", num2str(TEST_SCORE)));
+text(align_right, 46 , strcat("ACC on unseen test data =", num2str(TEST_ACC)));
 # add topology description
 text(align_right, 42 , "Final topology:");
 text(align_right, 38 , strcat("NB inputs            =", num2str(results(end,10))) );
@@ -116,6 +116,7 @@ plot(results(:,1), results(:,7), 'b', 'LineWidth', 1);
 hold on;
 grid on;
 title(strcat(data_set_name, " - Mean of individuals's scores against nb generations"));
+axis([0,nb_gens,0,100])
 legend('Mean', "location", "southeast");
 xlabel('Number of generations');
 ylabel('Mean of population score on validation-set');
@@ -124,18 +125,34 @@ print('-dpng', '-tiff', plot_name);
 hold off;
 
 
+
 #
-# LEARNING CURVES
+# RESULT TABLE
 #
-#{
-plot(results_increasingly_large_training_set(:,1),results_increasingly_large_training_set(:,2), 'r');
-hold on;
-title(strcat(data_set_name, " - Learning curves"));
-plot(results_increasingly_large_training_set(:,1),results_increasingly_large_training_set(:,4), 'b');
-legend('Error training-set', 'Error validation-set');
-xlabel('m (training set size)');
-ylabel('Error');
-plot_name = strcat(data_set_name, "-learning_curve-increasingly_large_training_set.png");
-print('-dpng', '-tiff', plot_name);
-hold off;
-#}
+
+nb_err_calls=results(end,1)-results(1,1);
+
+# calculate index values of 10 evenly separated rows
+indexes=ones(10,1);
+for i = [1:10]
+    indexes(i)=nb_err_calls*(i*10/100);
+endfor
+    
+indexes=round(indexes);
+nb_cols=size(results)(2);
+
+# store each row in result table
+table=ones(10,nb_cols);
+for i = [1:10]
+    table(i,:)=results(indexes(i),:);
+endfor
+
+format("compact")
+cd ../data/;
+
+
+table_filename=strcat("NEATresults/NEAT-",data_set_name, "-res-table.csv");
+fprintf("Saved as: \n\t->\"%s\"\n" , table_filename);
+dlmwrite(table_filename, table, ", ")
+
+fprintf("Columns:\nnb calls to err function, mse, train acc, train score, pop score var, pop score stddev, pop score mean, pop score median, pop size, nb inputs, nb hid units, nb outputs, nb hid layers, is pop diverse?, mutation scheme (0=DE/RAND, 1=DE/BEST), ensemble acc, ensemble score, val acc, val score, gens\n");

@@ -35,10 +35,10 @@ namespace NEAT {
   public:
      // *ADDED by Hichame Moriceau*
     double training_accuracy; 
-    double validation_accuracy;
-    double test_accuracy;
     double training_fitness;
+    double validation_accuracy;
     double validation_fitness;
+    double test_accuracy;
     double test_fitness;
     // **
 
