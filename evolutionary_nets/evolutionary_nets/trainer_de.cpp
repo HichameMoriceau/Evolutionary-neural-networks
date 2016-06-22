@@ -13,12 +13,8 @@ Trainer_DE::Trainer_DE(){
     t.nb_output_units = 2;
     t.nb_hidden_layers = 1;
     NeuralNet ann(t);
-
-    cout<<"generating 100 indivs"<<endl;
-
     // default population size: 100
     population = generate_random_population(100,ann);
-    cout<<"generated 100 indivs"<<endl;
 }
 
 void Trainer_DE::train(Data_set data_set, NeuralNet &net){
@@ -41,7 +37,7 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
     // using vectors as genotype
     vector<NeuralNet> ensemble = population;
 
-    evaluate_population(population, data_set);
+    evaluate_population(population, data_set,results_score_evolution);
     NeuralNet trained_model=population[0];
 
     /**
@@ -216,6 +212,7 @@ void Trainer_DE::differential_evolution_topology_evolution(Data_set data_set, ne
         // append result line to result matrix
         results_score_evolution = join_vert(results_score_evolution, new_line);
 
+#ifndef NO_SCREEN_OUT
         cout << fixed
              << setprecision(2)
              << "NB.err.func.call=" << nb_err_func_calls // i+1
@@ -232,6 +229,7 @@ void Trainer_DE::differential_evolution_topology_evolution(Data_set data_set, ne
                 //<< "\tens.acc=" << ensemble_accuracy
                 //<< "  ens.score=" << ensemble_score
              << endl;
+#endif
     }
 }
 

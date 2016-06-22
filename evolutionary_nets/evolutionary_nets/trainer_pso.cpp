@@ -42,7 +42,7 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
 
     double pop_score_variance=100;
 
-    evaluate_population(population, data_set);
+    evaluate_population(population, data_set,results_score_evolution);
     NeuralNet trained_model=population[0];
 
     vector<vec> velocities;
@@ -234,6 +234,7 @@ void Trainer_PSO::PSO_topology_evolution(vector<vec> &velocities, Data_set data_
         // append result line to result matrix
         results_score_evolution = join_vert(results_score_evolution, new_line);
 
+#ifndef NO_SCREEN_OUT
         cout << fixed
              << setprecision(2)
              << "Gen="            << nb_err_func_calls //i+1
@@ -250,6 +251,7 @@ void Trainer_PSO::PSO_topology_evolution(vector<vec> &velocities, Data_set data_
              //<< "  ens.score=" << ensemble_score
              << "  Gen="<<gen
              << endl;
+#endif
     }
 }
 

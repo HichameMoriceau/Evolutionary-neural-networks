@@ -34,7 +34,7 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
     bool has_converged=false;
 
     vector<NeuralNet> ensemble=population;
-    evaluate_population(population, data_set);
+    evaluate_population(population, data_set,results_score_evolution);
     NeuralNet trained_model=population[0];
 
     /**
@@ -216,6 +216,7 @@ void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_top
                 // append result line to result matrix
                 results_score_evolution=join_vert(results_score_evolution, new_line);
 
+#ifndef NO_SCREEN_OUT
                 cout << fixed
                      << setprecision(2)
                      << "NB.calls.err.func=" << nb_err_func_calls
@@ -232,7 +233,7 @@ void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_top
                      //<< "  ens.score=" << ensemble_score
                      << "  gen=" << gen
                      << endl;
-
+#endif
             }
         }
 
