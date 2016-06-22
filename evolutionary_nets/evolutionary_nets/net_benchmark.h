@@ -17,7 +17,7 @@
 using namespace std;
 using namespace chrono;
 
-enum OPTIMIZATION_ALG{ DE, PSO, AIS};
+enum OPTIMIZATION_ALG{ DE=0, PSO=1, AIS=2};
 
 class Net_benchmark
 {
@@ -41,7 +41,7 @@ public:
                 // dtor
                 ~Net_benchmark();
 
-   void         run_benchmark(unsigned int nb_rep);
+   void         run_benchmark(vector<string> data_set_filenames,unsigned int nb_reps, unsigned int nb_gens, unsigned int pop_size);
 
    double       find_termination_criteria_epsilon(unsigned int many_generations);
 

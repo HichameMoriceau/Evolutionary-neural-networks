@@ -132,7 +132,6 @@ void Data_set::select_data_set(unsigned int chosen_data_set_index) {
 }
 
 void Data_set::select_data_set(string filename) {
-
     string base_name = filename.substr(5,filename.size()-9);
     // set Octave variable names
     data_set_filename = filename;

@@ -47,4 +47,3 @@ QMAKE_CXXFLAGS_DEBUG += -O3
 # using OpenMP for faster processing
 QMAKE_CXXFLAGS_DEBUG += -fopenmp
 QMAKE_LFLAGS += -fopenmp
-

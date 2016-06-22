@@ -80,8 +80,8 @@ NeuralNet Trainer::train_topology_plus_weights(Data_set data_set, net_topology m
     // append Cross Validation error to result matrix
     mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
     mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
-    results_score_evolution=join_horiz(results_score_evolution, test_score_m);
     results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
+    results_score_evolution=join_horiz(results_score_evolution, test_score_m);
     cout<<"Performances on test set: F1 score="<<test_score<<", acc="<<test_acc<<endl;
     mat mutation_scheme=ones(results_score_evolution.n_rows,1) * selected_mutation_scheme;
     results_score_evolution=join_horiz(results_score_evolution, mutation_scheme);
@@ -174,7 +174,7 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
 
 void Trainer::elective_accuracy(vector<NeuralNet> pop, Data_set data_set, double &ensemble_accuracy, double &ensemble_score){
     // sort pop by fitness
-    evaluate_population(pop, data_set);
+    //evaluate_population(pop, data_set);
     unsigned int nb_individuals=pop.size();
     unsigned int nb_classes=pop[0].get_topology().nb_output_units;
     unsigned int nb_examples=data_set.training_set.Y.n_rows;
@@ -289,8 +289,6 @@ vector<NeuralNet> Trainer::generate_population(unsigned int pop_size, net_topolo
         NeuralNet tmp_net(t);
         pop[i]=tmp_net;
     }
-    // update all fitness values
-    evaluate_population(pop, d);
     return pop;
 }
 
@@ -357,11 +355,78 @@ vector<NeuralNet> Trainer::generate_random_topology_population(unsigned int quan
     return pop;
 }
 
-void Trainer::evaluate_population(vector<NeuralNet> &pop, Data_set d) {
+void Trainer::evaluate_population(vector<NeuralNet> &pop, Data_set d, mat& results_score_evolution) {
+
+
+    // recorded metrics and printing vars
+    mat new_line;
+    double prediction_accuracy = 0;
+    double score = 0;
+    double MSE   = 0;
+    double pop_score_variance = 100;
+    double pop_score_stddev = 0;
+    double pop_score_mean = 0;
+    double pop_score_median = 0;
+    double ensemble_accuracy = 0;
+    double ensemble_score = 0;
+    double pop_score = 0;
+    double pop_accuracy=0;
+
     // update all performance metrics
-    for(unsigned int i=0 ; i < pop.size() ; ++i)
+    for(unsigned int i=0 ; i < pop.size() ; ++i){
         pop[i].get_fitness_metrics(d);
-    nb_err_func_calls+=pop.size();
+        nb_err_func_calls++;
+        // sort by fittest
+        sort(pop.begin(), pop.end());
+
+        // print results
+        // record model performances on new data
+        prediction_accuracy =   population[0].get_accuracy();
+        score               =   population[0].get_f1_score();
+        MSE                 =   population[0].get_MSE();
+        double validation_accuracy=population[0].get_validation_acc();
+        double validation_score=population[0].get_validation_score();
+        // compute stats
+        pop_score_variance  =   compute_score_variance(population);
+        pop_score_stddev    =   compute_score_stddev(population);
+        pop_score_mean      =   compute_score_mean(population);
+        pop_score_median    =   compute_score_median(population);
+        // record results (performances and topology description)
+        unsigned int inputs             =   population[0].get_topology().nb_input_units;
+        unsigned int hidden_units       =   population[0].get_topology().nb_units_per_hidden_layer;
+        unsigned int outputs            =   population[0].get_topology().nb_output_units;
+        unsigned int nb_hidden_layers   =   population[0].get_topology().nb_hidden_layers;
+        // format result line
+        new_line << nb_err_func_calls // i+1
+                 << MSE
+                 << prediction_accuracy
+                 << score
+                 << pop_score_variance
+
+                 << pop_score_stddev
+                 << pop_score_mean
+                 << pop_score_median
+                 << population.size()
+                 << inputs
+
+                 << hidden_units
+                 << outputs
+                 << nb_hidden_layers
+                 << true
+                 << -1
+
+                 << ensemble_accuracy
+                 << ensemble_score
+                 << validation_accuracy
+                 << validation_score
+                 << nb_err_func_calls
+
+                 << endr;
+
+        // append result line to result matrix
+        results_score_evolution = join_vert(results_score_evolution, new_line);
+
+    }
     // sort pop according to score
     sort(pop.begin(), pop.end());
 }

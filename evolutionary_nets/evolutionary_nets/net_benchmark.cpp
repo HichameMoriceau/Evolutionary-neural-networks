@@ -1,5 +1,4 @@
 #include "net_benchmark.h"
-//#include "data_set.h"
 
 Net_benchmark::Net_benchmark() {
     // set default data-set
@@ -9,7 +8,6 @@ Net_benchmark::Net_benchmark() {
     max_topo.nb_units_per_hidden_layer = data_set.training_set.X.n_cols * 4;
     max_topo.nb_output_units = 1;
     max_topo.nb_hidden_layers = 2;
-
     //  Set default net topology
     unsigned int dataset_nb_features = data_set.training_set.X.n_cols;
     net_topology t;
@@ -18,7 +16,6 @@ Net_benchmark::Net_benchmark() {
     t.nb_output_units = 1;
     t.nb_hidden_layers = 1;
     set_topology(t);
-
     // instantiate optimization algorithms
     evo_trainer       = Trainer_DE();
     experiment_file.open("random-seeds.txt", ios::app);
@@ -28,57 +25,49 @@ Net_benchmark::~Net_benchmark(){
     experiment_file.close();
 }
 
-void Net_benchmark::run_benchmark(unsigned int nb_rep) {
-    vector<string> data_set_filenames;
-    data_set_filenames.push_back("data/iris-data-transformed.csv"); // multi-class problem
-    data_set_filenames.push_back("data/breast-cancer-malignantOrBenign-data-transformed.csv");
-    data_set_filenames.push_back("data/wine-data-transformed.csv"); // multi-class problem
-    data_set_filenames.push_back("data/breast-cancer-recurrence-data-transformed.csv");
-
-
-    nb_replicates=nb_rep;
-    unsigned int pop_size_GA = 70;
-    unsigned int nb_generations_GA = 200;
-    unsigned int total_nb_data_sets = 1;
-
-    unsigned int selected_opt_alg = OPTIMIZATION_ALG::AIS;
-
+void Net_benchmark::run_benchmark(vector<string> data_set_filenames,unsigned int nb_reps, unsigned int nb_gens, unsigned int pop_size) {
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
     unsigned int mutation_scheme = MUTATION_SCHEME_BEST;
 
-    string start_time_str = get_current_date_time();
-    auto start_time = system_clock::now();
-    // for each data-set
-    for(unsigned int i=0; i<total_nb_data_sets; i++) {
-        cout << "using data set " << data_set_filenames[i] << endl;
-        // use data requested by user
-        data_set.select_data_set(data_set_filenames[i]);
-        // set largest topology
-        max_topo.nb_input_units = data_set.training_set.X.n_cols;
-        max_topo.nb_units_per_hidden_layer = 10;
-        max_topo.nb_output_units = data_set.find_nb_prediction_classes(data_set.data);
-        max_topo.nb_hidden_layers = 1;
+    nb_replicates=nb_reps;
 
-        // 500 epochs in total is often more than enough
-        double epsilon = -1;//find_termination_criteria_epsilon(200);
-        // save results of cross-validated training
-        train_net_and_save_performances(pop_size_GA, nb_generations_GA, selected_opt_alg, epsilon, mutation_scheme);
+    // for each algorithm
+    for(unsigned int a=OPTIMIZATION_ALG::DE; a<=OPTIMIZATION_ALG::AIS;a++){
+        unsigned int selected_opt_alg = a;
+        // measure total time taken for each algorithm
+        string start_time_str = get_current_date_time();
+        auto start_time = system_clock::now();
+        // apply on each data-set
+        for(unsigned int i=0; i<data_set_filenames.size(); i++) {
+            // use data requested by user
+            data_set.select_data_set(data_set_filenames[i]);
+            // set largest topology
+            max_topo.nb_input_units = data_set.training_set.X.n_cols;
+            max_topo.nb_units_per_hidden_layer = 10;
+            max_topo.nb_output_units = data_set.find_nb_prediction_classes(data_set.data);
+            max_topo.nb_hidden_layers = 1;
+
+            // 500 epochs in total is often more than enough
+            double epsilon = -1;//find_termination_criteria_epsilon(200);
+            // save results of cross-validated training
+            train_net_and_save_performances(pop_size, nb_gens, selected_opt_alg, epsilon, mutation_scheme);
+        }
+        auto end_time = system_clock::now();
+        string end_time_str = get_current_date_time();
+        auto experiment_duration = duration_cast<std::chrono::minutes>(end_time-start_time).count();
+
+        cout << endl
+             << "Training started at  : " << start_time_str << endl
+             << "Training finished at : " << end_time_str << " to produce result data "
+             << "USING: " << nb_replicates << " replicates and " << data_set_filenames.size() << " data sets)" << endl
+             << "experiment duration :\t" << experiment_duration << " minutes" << endl;
+
+        experiment_file << "Training started at  : " << start_time_str << endl
+                        << "Training finished at : " << end_time_str << " (to produce result data "
+                        << "USING: " << nb_replicates << " replicates and " <<data_set_filenames.size()<< " data sets)" << endl
+                        << "experiment duration :\t" << experiment_duration << " minutes" << endl;
     }
-    auto end_time = system_clock::now();
-    string end_time_str = get_current_date_time();
-    auto experiment_duration = duration_cast<std::chrono::minutes>(end_time-start_time).count();
-
-    cout << endl
-         << "Training started at  : " << start_time_str << endl
-         << "Training finished at : " << end_time_str << " to produce result data "
-         << "USING: " << nb_replicates << " replicates and " << total_nb_data_sets << " data sets)" << endl
-         << "experiment duration :\t" << experiment_duration << " minutes" << endl;
-
-    experiment_file << "Training started at  : " << start_time_str << endl
-                    << "Training finished at : " << end_time_str << " (to produce result data "
-                    << "USING: " << nb_replicates << " replicates and " <<total_nb_data_sets << " data sets)" << endl
-                    << "experiment duration :\t" << experiment_duration << " minutes" << endl;
 }
 
 double Net_benchmark::find_termination_criteria_epsilon(unsigned int many_generations) {
@@ -293,8 +282,21 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
 
     // declare file for writing-out results
     ofstream result_file;
-    string result_filename = data_set.result_filename.substr(0,data_set.result_filename.size()-4) + "/results.mat";
-    cout << "results file located at " << result_filename << endl;
+    string result_filename = data_set.result_filename.substr(0,data_set.result_filename.size()-4);
+    // produce differentiable result file prefix for each algorithm
+    switch(selected_opt_alg){
+    case OPTIMIZATION_ALG::DE:
+        result_filename+="/DE-";
+        break;
+    case OPTIMIZATION_ALG::PSO:
+        result_filename+="/PSO-";
+        break;
+    case OPTIMIZATION_ALG::AIS:
+        result_filename+="/AIS-";
+        break;
+    }
+    result_filename+="results.mat";
+    data_set.result_filename=result_filename;
     result_file.open(result_filename.c_str(), ios::out);
     // check file successfully open
     if(!result_file.is_open()) {
@@ -311,12 +313,11 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
 
     // save results
     averaged_performances = join_horiz(averaged_performances, ones(averaged_performances.n_rows,1) * nb_replicates);
-
-    cout<<"results written on "<<data_set.result_filename.c_str()<<endl;
-
     // save error amonst replicates
     print_results_octave_format(result_file, averaged_performances, "results");
     print_results_octave_format(result_file, err_perfs, "err_results");
+    // inform user of where to find result file
+    cout<<"results written on "<<data_set.result_filename.c_str()<<endl;
 }
 
 void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, string data_set_filename, vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_algorithm,double epsilon, unsigned int selected_mutation_scheme){

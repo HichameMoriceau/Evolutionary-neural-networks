@@ -13,6 +13,9 @@
 
 using namespace std;
 
+// Comment to show training progress
+#define NO_SCREEN_OUT
+
 /**
  * @brief The Trainer class
  *        Abstract parent class for all Trainer objects.
@@ -66,7 +69,7 @@ public:
      */
     vector<vec>         generate_random_topology_genome_population(unsigned int quantity, NeuralNet largest_net);
     vector<NeuralNet>   generate_random_topology_population(unsigned int quantity, net_topology min_topo, net_topology max_topo);
-    void                evaluate_population(vector<NeuralNet> &pop, Data_set d);
+    void                evaluate_population(vector<NeuralNet> &pop, Data_set d, mat &results_score_evolution);
 
     vec                 get_genome(NeuralNet n, net_topology largest_topology);
     NeuralNet           to_NeuralNet(vec genome);
