@@ -84,6 +84,8 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
             has_converged = false;
         }
         */
+        // if MAX nb of calls to the error function is reached: stop training
+        if(nb_err_func_calls>=max_nb_err_func_calls)break;
     }
     return trained_model;
 }
@@ -230,6 +232,8 @@ void Trainer_DE::differential_evolution_topology_evolution(Data_set data_set, ne
                 //<< "  ens.score=" << ensemble_score
              << endl;
 #endif
+        // if MAX nb of calls to the error function is reached: stop training
+        if(nb_err_func_calls>=max_nb_err_func_calls)break;
     }
 }
 

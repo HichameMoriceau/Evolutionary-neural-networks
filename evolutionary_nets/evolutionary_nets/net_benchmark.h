@@ -19,6 +19,14 @@ using namespace chrono;
 
 enum OPTIMIZATION_ALG{ DE=0, PSO=1, AIS=2};
 
+
+struct exp_files{
+  vector<string> dataset_filenames;
+  unsigned int max_nb_err_func_calls;
+  unsigned int nb_reps;
+  unsigned int pop_size;
+};
+
 class Net_benchmark
 {
 
@@ -41,7 +49,7 @@ public:
                 // dtor
                 ~Net_benchmark();
 
-   void         run_benchmark(vector<string> data_set_filenames,unsigned int nb_reps, unsigned int nb_gens, unsigned int pop_size);
+   void         run_benchmark(exp_files ef);
 
    double       find_termination_criteria_epsilon(unsigned int many_generations);
 

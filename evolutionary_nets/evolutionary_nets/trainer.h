@@ -29,8 +29,9 @@ public:
     double              epsilon = 1.0f;
 
     unsigned int        nb_epochs;
-protected:
+
     unsigned int        nb_err_func_calls;
+    unsigned int        max_nb_err_func_calls;
 
 public:
 
@@ -83,6 +84,8 @@ public:
     void                set_epsilon(double e){epsilon=e;}
     unsigned int        get_nb_epochs(){return nb_epochs;}
     void                set_nb_epochs(unsigned int e){ nb_epochs  = e;}
+
+    void                set_max_nb_err_func_calls(unsigned int n){max_nb_err_func_calls=n;}
 
     // other routines
     void                insert_individual( NeuralNet indiv){population[population.size()/2] = indiv;}

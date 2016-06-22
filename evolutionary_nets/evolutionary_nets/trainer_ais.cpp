@@ -80,6 +80,8 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
             has_converged=false;
         }
         */
+        // if MAX nb of calls to the error function is reached: stop training
+        if(nb_err_func_calls>=max_nb_err_func_calls)break;
     }
     return trained_model;
 }
@@ -234,7 +236,12 @@ void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_top
                      << "  gen=" << gen
                      << endl;
 #endif
+
+                // if MAX nb of calls to the error function is reached: stop training
+                if(nb_err_func_calls>=max_nb_err_func_calls)break;
             }
+            // if MAX nb of calls to the error function is reached: stop training
+            if(nb_err_func_calls>=max_nb_err_func_calls)break;
         }
 
 
@@ -248,6 +255,9 @@ void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_top
         vector<NeuralNet> rand_indivs=generate_random_topology_population(nb_rand_cells, min_topo, max_topo);
         for(unsigned int k=0;k<nb_rand_cells;k++)
             population[pop_size-nb_rand_cells+k]=rand_indivs[k];
+
+        // if MAX nb of calls to the error function is reached: stop training
+        if(nb_err_func_calls>=max_nb_err_func_calls)break;
     }
 }
 

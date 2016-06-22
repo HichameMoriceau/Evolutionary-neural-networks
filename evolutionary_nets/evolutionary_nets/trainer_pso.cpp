@@ -100,6 +100,8 @@ NeuralNet Trainer_PSO::evolve_through_iterations(Data_set data_set, net_topology
         }else// otherwise always force training on first 10% of total generations
             has_converged = false;
         */
+        // if MAX nb of calls to the error function is reached: stop training
+        if(nb_err_func_calls>=max_nb_err_func_calls)break;
     }
     return trained_model;
 }
@@ -252,6 +254,8 @@ void Trainer_PSO::PSO_topology_evolution(vector<vec> &velocities, Data_set data_
              << "  Gen="<<gen
              << endl;
 #endif
+        // if MAX nb of calls to the error function is reached: stop training
+        if(nb_err_func_calls>=max_nb_err_func_calls)break;
     }
 }
 

@@ -25,12 +25,12 @@ Net_benchmark::~Net_benchmark(){
     experiment_file.close();
 }
 
-void Net_benchmark::run_benchmark(vector<string> data_set_filenames,unsigned int nb_reps, unsigned int nb_gens, unsigned int pop_size) {
+void Net_benchmark::run_benchmark(exp_files ef) {
     unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
     unsigned int mutation_scheme = MUTATION_SCHEME_BEST;
 
-    nb_replicates=nb_reps;
+    nb_replicates=ef.nb_reps;
 
     // for each algorithm
     for(unsigned int a=OPTIMIZATION_ALG::DE; a<=OPTIMIZATION_ALG::AIS;a++){
@@ -39,9 +39,9 @@ void Net_benchmark::run_benchmark(vector<string> data_set_filenames,unsigned int
         string start_time_str = get_current_date_time();
         auto start_time = system_clock::now();
         // apply on each data-set
-        for(unsigned int i=0; i<data_set_filenames.size(); i++) {
+        for(unsigned int i=0; i<ef.dataset_filenames.size(); i++) {
             // use data requested by user
-            data_set.select_data_set(data_set_filenames[i]);
+            data_set.select_data_set(ef.dataset_filenames[i]);
             // set largest topology
             max_topo.nb_input_units = data_set.training_set.X.n_cols;
             max_topo.nb_units_per_hidden_layer = 10;
@@ -51,7 +51,7 @@ void Net_benchmark::run_benchmark(vector<string> data_set_filenames,unsigned int
             // 500 epochs in total is often more than enough
             double epsilon = -1;//find_termination_criteria_epsilon(200);
             // save results of cross-validated training
-            train_net_and_save_performances(pop_size, nb_gens, selected_opt_alg, epsilon, mutation_scheme);
+            train_net_and_save_performances(ef.pop_size, ef.max_nb_err_func_calls, selected_opt_alg, epsilon, mutation_scheme);
         }
         auto end_time = system_clock::now();
         string end_time_str = get_current_date_time();
@@ -60,12 +60,12 @@ void Net_benchmark::run_benchmark(vector<string> data_set_filenames,unsigned int
         cout << endl
              << "Training started at  : " << start_time_str << endl
              << "Training finished at : " << end_time_str << " to produce result data "
-             << "USING: " << nb_replicates << " replicates and " << data_set_filenames.size() << " data sets)" << endl
+             << "USING: " << nb_replicates << " replicates and " << ef.dataset_filenames.size() << " data sets)" << endl
              << "experiment duration :\t" << experiment_duration << " minutes" << endl;
 
         experiment_file << "Training started at  : " << start_time_str << endl
                         << "Training finished at : " << end_time_str << " (to produce result data "
-                        << "USING: " << nb_replicates << " replicates and " <<data_set_filenames.size()<< " data sets)" << endl
+                        << "USING: " << nb_replicates << " replicates and " <<ef.dataset_filenames.size()<< " data sets)" << endl
                         << "experiment duration :\t" << experiment_duration << " minutes" << endl;
     }
 }
@@ -261,17 +261,17 @@ double Net_benchmark::corrected_sample_std_dev(mat score_vector){
     return s;
 }
 
-void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, unsigned int nb_generations_GA, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme) {
+void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, unsigned int max_nb_err_func_calls, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme) {
     set_topology(max_topo);
-    evo_trainer.set_nb_epochs(nb_generations_GA);
+    //evo_trainer.set_nb_epochs(max_nb_gens);
+    evo_trainer.set_max_nb_err_func_calls(max_nb_err_func_calls);
     // experiment.txt header
     experiment_file << "------------------------------------" << endl
                     << "Data-set\t\t"               << data_set.data_set_filename  << endl
                     << "NB replicates\t\t"          << nb_replicates            << endl
                     << "GA population size\t"       << pop_size_GA              << endl
-                    << "Max NB generations\t"       << nb_generations_GA * 11   << endl
+                    << "Max NB Calls to err function\t"       << max_nb_err_func_calls * 11   << endl
                     << "GA Termination criterion"   << "if population score variance < " << epsilon << " then stop" << endl
-                    << "NB generations per fold"    << nb_generations_GA     << endl
                     << "End of search space\t"      << max_topo.to_string() << " (nb inputs_units/layer_nb outputs_nb_hid.lay)" << endl
                     << "------------------------------------" << endl
                     << "\n" << "\n";
@@ -303,7 +303,6 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
         cout << "Couldn't open results file, experiment aborted. Is it located in: \"" << data_set.result_filename.c_str() << "\" ?" << endl;
         exit(0);
     }
-
     //
     // PERFORMANCES DURING TRAINING
     //
@@ -350,6 +349,7 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
         cout<<"Differential Evolution on "<<data_set_filename<<endl;
         // initialize optimization algorithm
         trainer_de.set_nb_epochs(evo_trainer.get_nb_epochs());
+        trainer_de.set_max_nb_err_func_calls(evo_trainer.max_nb_err_func_calls);
         trainer_de.set_epsilon(epsilon);
         trainer_de.set_population(evo_trainer.get_population());
         trained_net = trainer_de.train_topology_plus_weights(d, max_t, results_score_evolution, selected_mutation_scheme);
@@ -358,6 +358,7 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
         cout<<"Particle Swarm Optimization on "<<data_set_filename<<endl;
         // initialize optimization algorithm
         trainer_pso.set_nb_epochs(evo_trainer.get_nb_epochs());
+        trainer_pso.set_max_nb_err_func_calls(evo_trainer.max_nb_err_func_calls);
         trainer_pso.set_epsilon(epsilon);
         trainer_pso.set_population(evo_trainer.get_population());
         trained_net = trainer_pso.train_topology_plus_weights(d, max_t, results_score_evolution, -1);
@@ -366,6 +367,7 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
         cout<<"Clonal Selection on "<<data_set_filename<<endl;
         // initialize optimization algorithm
         trainer_ais.set_nb_epochs(evo_trainer.get_nb_epochs());
+        trainer_ais.set_max_nb_err_func_calls(evo_trainer.max_nb_err_func_calls);
         trainer_ais.set_epsilon(epsilon);
         trainer_ais.set_population(evo_trainer.get_population());
         trained_net = trainer_ais.train_topology_plus_weights(d, max_t, results_score_evolution, -1);
@@ -374,6 +376,7 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
         cout<<"Default Differential Evolution on "<<data_set_filename<<endl;
         // initialize optimization algorithm
         trainer_de.set_nb_epochs(evo_trainer.get_nb_epochs());
+        trainer_de.set_max_nb_err_func_calls(evo_trainer.max_nb_err_func_calls);
         trainer_de.set_epsilon(epsilon);
         trainer_de.set_population(evo_trainer.get_population());
 
