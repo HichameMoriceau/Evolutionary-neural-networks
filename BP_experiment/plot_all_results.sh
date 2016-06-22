@@ -1,19 +1,12 @@
 #!/bin/bash
 
 
-(exec "./plotter.m" "data/results-bp-fixed-bcm.mat" "WINE-BP-FIXED")
+#./plotter.m data/results-bp-fixed-bcm.mat  BP-FIXED BCM
+#./plotter.m data/results-bp-fixed-wine.mat BP-FIXED WINE
+#./plotter.m data/results-bp-fixed-bcr.mat  BP-FIXED BCR
+#./plotter.m data/results-bp-fixed-iris.mat BP-FIXED IRIS
 
-(exec "./plotter.m" "data/results-bp-fixed-wine.mat" "WINE-BP-FIXED")
-
-(exec "./plotter.m" "data/results-bp-fixed-bcr.mat" "BCR-BP-FIXED")
-
-(exec "./plotter.m" "data/results-bp-fixed-iris.mat" "IRIS-BP-FIXED")
-
-
-(exec "./plotter.m" "data/results-bp-cascade-bcm.mat" "BCM-BP-CASCADE")
-
-(exec "./plotter.m" "data/results-bp-cascade-wine.mat" "WINE-BP-CASCADE")
-
-(exec "./plotter.m" "data/results-bp-cascade-bcr.mat" "BCR-BP-CASCADE")
-
-(exec "./plotter.m" "data/results-bp-cascade-iris.mat" "IRIS-BP-CASCADE")
+./plotter.m data/results-bp-cascade-bcm.mat  BP-CASCADE BCM 
+./plotter.m data/results-bp-cascade-wine.mat BP-CASCADE WINE
+./plotter.m data/results-bp-cascade-bcr.mat  BP-CASCADE BCR
+./plotter.m data/results-bp-cascade-iris.mat BP-CASCADE IRIS

@@ -10,6 +10,9 @@
 using namespace std;
 using namespace arma;
 
+// Comment to display evolution on screen
+#define NO_SCREEN_OUT
+
 enum EXP_TYPE{FIXED, CASCADE};
 
 struct exp_details{
@@ -83,6 +86,7 @@ int main(int argc, char * argv []){
   ds_filenames.push_back((char*)"data/iris-data-transformed.data"); // multi-class
 
   switch(exp_index){
+/*
   case 0:
     ed.exp_type=EXP_TYPE::FIXED;
     ed.dataset_filename=ds_filenames[0];
@@ -107,6 +111,7 @@ int main(int argc, char * argv []){
     ed.result_file="data/results-bp-fixed-iris.mat";
     experiment(nb_gens,nb_reps,ed);
     break;
+*/
 
   case 4:
     ed.exp_type=EXP_TYPE::CASCADE;
@@ -257,8 +262,7 @@ void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accu
   // general f1 score = average of all classes score
   computed_score = (computed_score/nb_local_classes)*100;
   // make sure score doesn't hit 0 (NEAT doesn't seem to like that)
-  if(computed_score==0)
-    computed_score=0.1;
+  if(computed_score==0) computed_score=0.1;
   // compute accuracy
   double TP =0;
   for(unsigned int i=0; i<nb_classes; i++){
@@ -293,12 +297,62 @@ struct fann_train_data* fann_instantiate_data(unsigned int nb_examples,unsigned 
   return data;
 }
 
+void standardize(mat &D){
+    // for each column
+    for(unsigned int i=0; i<D.n_rows; ++i){
+        // for each element in this column (do not standardize target attribute)
+        for(unsigned int j=0; j<D.n_cols; ++j){
+            // apply feature scaling and mean normalization
+            D(i,j) = (D(i,j) - mean(D.col(j))) / (max(D.col(j))-min(D.col(j)));
+        }
+    }
+}
+
+mat array2D_to_mat(fann_type** data, unsigned int height,unsigned int width){
+  mat m(height,width);
+  for(unsigned int i=0;i<height;i++)
+    for(unsigned int j=0;j<width;j++)
+      m(i,j)=data[i][j];
+  return m;
+}
+
+fann_type** mat_to_array2D(mat d){
+  //double array[d.n_rows][d.n_cols];
+  fann_type** array=0;
+  array=new fann_type*[d.n_rows];
+  for(unsigned int i=0;i<d.n_rows;i++){
+    array[i]= new fann_type[d.n_cols];
+    for(unsigned int j=0;j<d.n_cols;j++){
+      array[i][j]=d(i,j);
+    }
+  }
+  return array;
+}
+
 void fann_separate_data(fann_train_data data,fann_train_data* training_data,fann_train_data* validation_data, fann_train_data* test_data){
   unsigned int nb_inputs=training_data->num_input;
   unsigned int nb_outputs=training_data->num_output;
   unsigned int nb_train_ex=training_data->num_data;
   unsigned int nb_val_ex=validation_data->num_data;
-  unsigned int nb_test_ex=test_data->num_data;
+  unsigned int nb_test_ex=test_data->num_data;  
+
+  cout<<"converting"<<endl;
+  // data pre-processing: apply feature scaling
+  mat d=array2D_to_mat(data.input, data.num_data, nb_inputs);
+  standardize(d);
+  data.input=mat_to_array2D(d);
+  cout<<"converted"<<endl;
+
+  cout<<"data input="<<endl;
+
+  /*
+  for(unsigned int i=0; i<; ++i){
+    for(unsigned int j=0; j<; ++j){
+      
+    }
+  }
+  */
+
   // fill in TRAINING SET
   for(unsigned int i=0;i<nb_train_ex;i++){
     for(unsigned int j=0;j<nb_inputs;j++)
@@ -320,6 +374,7 @@ void fann_separate_data(fann_train_data data,fann_train_data* training_data,fann
     for(unsigned int j=0;j<nb_outputs;j++)
       test_data->output[i][j]=data.output[i+nb_train_ex+nb_val_ex][j];
   }
+  cout<<"data subsets filled"<<endl;
 }
 
 unsigned int fann_get_nb_hidden_units(fann* best_ann, unsigned int nb_hid_layers){
@@ -399,16 +454,17 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
   fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
   fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
 
-  // initiate training
+
+  gens/=nb_bp_searches;
+  // initiating training
   for(unsigned int b=0;b<nb_bp_searches;b++){
     //reset ann
     fann_randomize_weights(ann,min_weight,max_weight);
     for(unsigned int i=0;i<gens;i++){
       fann_train_epoch(ann,train_data);
 
-      double err=0;
       mat line;
-      unsigned int epoch=i;
+      unsigned int epoch=i+b*gens;
       double pop_score_mean=-1;
       double pop_score_variance=-1;
       double pop_score_stddev=-1;
@@ -416,24 +472,42 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
       double score=-1;//fann_get_f1_score(best_ann);
       double validation_accuracy=-1;
       double validation_score=-1;
+      double train_err=0,val_err=0;
+
       unsigned int nb_hid_layers_best=fann_get_num_layers(best_ann); // NB LAYERS IS FIXED
       unsigned int nb_hid_units_best=nb_hid_units; // NB UNITS IS FIXED
       double MSE=fann_get_MSE(best_ann);
       if(nb_classes==1) nb_classes=2;
 
+      // calculate perfs on training set
       mat preds,labels;
       fann_get_preds_labels(best_ann, train_data,preds,labels);
       mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
-      compute_error_acc_score(conf_mat, labels, err, prediction_accuracy, score);
-      
-      std::cout<<"epoch="<<epoch<<"of"<<gens
+      compute_error_acc_score(conf_mat, labels, train_err, prediction_accuracy, score);
+      // calculate perfs of BEST on validation set
+      mat val_preds,val_labels;
+      fann_get_preds_labels(best_ann, val_data,val_preds,val_labels);
+      mat val_conf_mat=generate_conf_mat(nb_classes,val_preds,val_labels);
+      compute_error_acc_score(val_conf_mat, val_labels, val_err, validation_accuracy, validation_score);
+      // calculate perfs of CURRENT ANN on validation set
+      mat val_preds_cur,val_labels_cur;
+      double val_err_cur=0, validation_accuracy_cur=0, validation_score_cur=0;
+      fann_get_preds_labels(ann, val_data,val_preds_cur,val_labels_cur);
+      mat val_conf_mat_cur=generate_conf_mat(nb_classes,val_preds_cur,val_labels_cur);
+      compute_error_acc_score(val_conf_mat_cur, val_labels_cur, val_err_cur, validation_accuracy_cur, validation_score_cur);
+
+#ifndef NO_SCREEN_OUT      
+      std::cout<<"epoch="<<epoch<<"of"<<gens*(b+1)
 	       <<"\tBP"<<b
 	       <<"\tscore="<<score
 	       <<"\tacc="<<prediction_accuracy
 	       <<"\tmse="<<MSE
 	       <<"\tNB.hid.units="<<nb_hid_units_best
 	       <<"\tNB.hid.layers="<<nb_hid_layers_best
+	       <<"\tval.score="<<validation_score
+	       <<"\tval.acc="<<validation_accuracy
 	       <<endl;
+#endif
 
       // format result line (-1 corresponds to irrelevant attributes)
       line << epoch
@@ -458,14 +532,17 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
 	   << -1//ensemble_score
 	   << validation_accuracy
 	   << validation_score
-	   << epoch//nb_calls_err_func
+	   << epoch
 
 	   << endr;
       // Write results on file
       res_mat=join_vert(res_mat,line);
 
+      double ann_val_mse=fann_test_data(ann,val_data);
+      double best_val_mse=fann_test_data(best_ann,val_data);
+
       // memorize best network
-      if(fann_get_MSE(ann)<fann_get_MSE(best_ann))
+      if(ann_val_mse<best_val_mse)
 	best_ann=fann_copy(ann);
     }
     cout<<endl;
@@ -483,6 +560,21 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
   cout<<"Performances on test set: ACC="<<test_acc<<"\tSCORE="<<test_score<<"\tERR="<<test_err
       <<endl
       <<endl;
+
+  // append TEST error to result matrix
+  mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
+  mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
+  results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
+  results_score_evolution=join_horiz(results_score_evolution, test_score_m);
+
+  // print-out best perfs
+  double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
+  res_mats_training_perfs.push_back(results_score_evolution);
+
+  ofstream experiment_file("random-seeds.txt",ios::app);
+  cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
+  experiment_file<<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
+  experiment_file.close();
 
   // clean-up memory
   fann_destroy(ann);
@@ -511,21 +603,6 @@ void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigne
   free(test_data->input);
   free(test_data->output);
   free(test_data);
-
-  // append Cross Validation error to result matrix
-  mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
-  mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
-  results_score_evolution=join_horiz(results_score_evolution, test_score_m);
-  results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
-  
-  // print-out best perfs
-  double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
-  res_mats_training_perfs.push_back(results_score_evolution);
-
-  ofstream experiment_file("random-seeds.txt",ios::app);
-  cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
-  experiment_file<<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
-  experiment_file.close();
 }
 
 
@@ -705,13 +782,14 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
   fann_randomize_weights(ann,min_weight,max_weight);
   fann_randomize_weights(best_ann,min_weight,max_weight);
   fann_train_epoch(best_ann,train_data);
-
+  
   fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
   fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
 
   // Layer Growth Factor (<LGF> times the number of input attributes)
   unsigned int LGF=2;
 
+  gens/=nb_opt_algs;
   // initiating training
   for(unsigned int b=0;b<nb_opt_algs;b++){
     cout<<"nb hid layers="<<nb_hid_layers<<endl;
@@ -748,7 +826,7 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
 
       double err=0;
       mat line;
-      unsigned int epoch=i;
+      unsigned int epoch=i+b*gens;
       double pop_score_mean=-1;
       double pop_score_variance=-1;
       double pop_score_stddev=-1;
@@ -756,25 +834,35 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
       double score=-1;//fann_get_f1_score(best_ann);
       double validation_accuracy=-1;
       double validation_score=-1;
+      double val_err=-1;
       unsigned int nb_hid_layers_best=fann_get_num_layers(best_ann)-2;
       unsigned int nb_hid_units_best=fann_get_nb_hidden_units(best_ann,nb_hid_layers_best);
-
       double MSE=fann_get_MSE(best_ann);
 
       if(nb_classes==1) nb_classes=2;
+      // calculate perfs on training set
       mat preds,labels;
       fann_get_preds_labels(best_ann, train_data,preds,labels);
       mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
       compute_error_acc_score(conf_mat, labels, err, prediction_accuracy, score);
+      // calculate perfs on validation set
+      mat val_preds,val_labels;
+      fann_get_preds_labels(best_ann, val_data,val_preds,val_labels);
+      mat val_conf_mat=generate_conf_mat(nb_classes,val_preds,val_labels);
+      compute_error_acc_score(val_conf_mat, val_labels, val_err, validation_accuracy, validation_score);
 
-      cout<<"epoch="<<epoch<<"of"<<gens
+#ifndef NO_SCREEN_OUT
+      cout<<"epoch="<<epoch<<"of"<<gens*(b+1)
 	  <<"\tBP"<<b
 	  <<"\tscore="<<score
 	  <<"\tacc="<<prediction_accuracy
 	  <<"\tmse="<<MSE
 	  <<"\tNB.hid.units="<<nb_hid_units_best
 	  <<"\tNB.hid.layers="<<nb_hid_layers_best
+	  <<"\tval.score="<<validation_score
+	  <<"\tval.acc="<<validation_accuracy
 	  <<endl;
+#endif
 
       // format result line (-1 corresponds to irrelevant attributes)
       line << epoch
@@ -852,11 +940,23 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
   free(test_data->output);
   free(test_data);
 
+  /*
+  cout<<"deleting"<<endl;
+  for(unsigned int i=0;i<data->num_data;i++)
+    delete []data->input[i];
+  delete []data->input;
+
+  for(unsigned int i=0;i<data->num_data;i++)
+    delete []data->output[i];
+  delete []data->output;
+  cout<<"deleted"<<endl;
+  */
+
   // append Cross Validation error to result matrix
   mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
   mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
-  results_score_evolution=join_horiz(results_score_evolution, test_score_m);
   results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
+  results_score_evolution=join_horiz(results_score_evolution, test_score_m);
 
   // print-out best perfs
   double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
