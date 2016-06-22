@@ -92,9 +92,7 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
   std::vector<double> all_fitnesses;
   // find fittest
   for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){
-    // un-comment to see full population
-    //std::cout<<"org"<<c<<"\tfit="<<(*curorg)->fitness<<"\tacc="<<(*curorg)->accuracy<<"\tNB nodes="<<(((*curorg)->gnome)->nodes).size()<<std::endl;
-    if((*curorg)->fitness>best_fit){
+    if((*curorg)->fitness>best_org.fitness){
       // memorize organism
       best_org.error=(*curorg)->error;
       best_org.training_accuracy=(*curorg)->training_accuracy;
@@ -368,6 +366,39 @@ mat compute_learning_curves_perfs(unsigned int nb_gens, unsigned int nb_reps,vec
     return averaged_performances;
 }
 
+void standardize(mat &D){
+    // for each column
+    for(unsigned int i=0; i<D.n_rows; ++i){
+        // for each element in this column (do not standardize target attribute)
+        for(unsigned int j=0; j<D.n_cols-1; ++j){
+            // apply feature scaling and mean normalization
+            D(i,j) = (D(i,j) - mean(D.col(j))) / (max(D.col(j))-min(D.col(j)));
+        }
+    }
+}
+
+mat array2D_to_mat(double** data, unsigned int height,unsigned int width){
+  mat m(height,width);
+  for(unsigned int i=0;i<height;i++)
+    for(unsigned int j=0;j<width;j++)
+      m(i,j)=data[i][j];
+  return m;
+}
+
+double** mat_to_array2D(mat d){
+  //double array[d.n_rows][d.n_cols];
+  double** array=0;
+  array=new double*[d.n_rows];
+  for(unsigned int i=0;i<d.n_rows;i++){
+    array[i]= new double[d.n_cols];
+    for(unsigned int j=0;j<d.n_cols;j++){
+      array[i][j]=d(i,j);
+    }
+  }
+  return array;
+}
+
+
 void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int nb_gens,vector<mat>& res_mats_training_perfs,exp_files ef){
   cout<<"RUNNING multiclass_training_task"<<endl;
   // result matrices (to be interpreted by Octave script <Plotter.m>)
@@ -408,6 +439,12 @@ void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int 
   double best_fit=0;
   unsigned int nb_examples=-1,nb_attributes=-1;
   double** data=load_data_array(ef.dataset_filename,nb_examples, nb_attributes);
+
+  // data pre-processing: apply feature scaling
+  mat d=array2D_to_mat(data, nb_examples, nb_attributes);
+  standardize(d);
+  data=mat_to_array2D(d);
+
   unsigned int training_height=nb_examples*(double(60)/100);
   unsigned int validation_height=nb_examples*(double(20)/100);
   unsigned int test_height=nb_examples*(double(20)/100);  
@@ -438,6 +475,10 @@ void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int 
     for(unsigned int j=0;j<nb_attributes;j++)
       test_data[i][j]=data[training_height+validation_height+i][j];
   }
+
+  for(unsigned int i=0;i<nb_examples;i++)
+    delete []data[i];
+  delete []data;
 
   // evaluate population
   for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){    
