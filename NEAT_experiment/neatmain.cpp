@@ -27,24 +27,28 @@ using namespace std;
  */
 int main(int argc, char *argv[]) {
 
-  int pause;
   NEAT::Population *p=0;
   srand( (unsigned)time( NULL ) );
 
-  if (argc != 5) {
-    cerr << "Invalid arguments:\n\tArg1=NEAT parameters file (.ne file)\n\tArg2=CHOSEN EXPERIMENT INDEX\n\tArg3=NB REPLICATES\n\tArg4=NB GENERATIONS" << endl;
+  if (argc != (5+1)) {
+    cerr << "Invalid arguments:\n\tArg1=NEAT parameters file (.ne file)\n\tArg2=CHOSEN EXPERIMENT INDEX\n\tArg3=NB REPLICATES\n\tArg4=NB GENERATIONS\n\tArg5=POP SIZE" << endl;
     return -1;
   }
 
   //Load in the params
   NEAT::load_neat_params(argv[1],true);
-  unsigned int choice =atoi(argv[2]);
-  unsigned int nb_reps=atoi(argv[3]);
-  unsigned int nb_gens=atoi(argv[4]);
 
-  exp_files expfiles;
+  exp_files ef;
+  ef.nb_gens=atoi(argv[4]);
+  ef.nb_reps=atoi(argv[3]);
+  ef.pop_size=atoi(argv[5]);
+  unsigned int choice =atoi(argv[2]);
 
   switch(choice){
+/* 
+   //
+   // Original code: REINFORCEMENT LEARNING TASKS
+   //
   case 1:
     p = pole1_test(nb_gens);
     break;
@@ -57,29 +61,34 @@ int main(int argc, char *argv[]) {
   case 4:
     p=xor_test(nb_gens);
     break;
+*/
+    //
+    // SUPERVISED LEARNING EXPERIMENTS:
+    //
+
   case 5: // BREAST CANCER MALIGNANCY
-    expfiles.startgene="bcmstartgenes";
-    expfiles.dataset_filename="data/breast-cancer-malignantOrBenign-data-transformed.csv";
-    expfiles.result_file="data/results-neat-bcm.mat";
-    multiclass_test(nb_gens,nb_reps, expfiles);
+    ef.startgene="bcmstartgenes";
+    ef.dataset_filename="data/breast-cancer-malignantOrBenign-data-transformed.csv";
+    ef.result_file="data/results-neat-bcm.mat";
+    multiclass_test(ef);
     break;
   case 6: // IRIS
-    expfiles.startgene="irisstartgenes";
-    expfiles.dataset_filename="data/iris-data-transformed.csv";
-    expfiles.result_file="data/results-neat-iris.mat";
-    multiclass_test(nb_gens,nb_reps, expfiles);
+    ef.startgene="irisstartgenes";
+    ef.dataset_filename="data/iris-data-transformed.csv";
+    ef.result_file="data/results-neat-iris.mat";
+    multiclass_test(ef);
     break;
   case 7: // WINE
-    expfiles.startgene="winestartgenes";
-    expfiles.dataset_filename="data/wine-data-transformed.csv";
-    expfiles.result_file="data/results-neat-wine.mat";
-    multiclass_test(nb_gens,nb_reps, expfiles);
+    ef.startgene="winestartgenes";
+    ef.dataset_filename="data/wine-data-transformed.csv";
+    ef.result_file="data/results-neat-wine.mat";
+    multiclass_test(ef);
     break;
   case 8: // BREAST CANCER RECURRENCE
-    expfiles.startgene="bcrstartgenes";
-    expfiles.dataset_filename="breast-cancer-recurrence-data-transformed.csv";
-    expfiles.result_file="data/results-neat-bcr.mat";
-    multiclass_test(nb_gens,nb_reps, expfiles);
+    ef.startgene="bcrstartgenes";
+    ef.dataset_filename="breast-cancer-recurrence-data-transformed.csv";
+    ef.result_file="data/results-neat-bcr.mat";
+    multiclass_test(ef);
     break;
   default:
     cout<<"Not an available option."<<endl;

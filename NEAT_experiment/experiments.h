@@ -41,7 +41,7 @@ using namespace NEAT;
 
 
 // The Breast Cancer Malignancy (BCM) routines *****************************
-void multiclass_test(int gens, unsigned int nb_reps,exp_files ef);
+void multiclass_test(exp_files ef);
 void multiclass_epoch(Population *pop,int generation, Organism& best_org, mat &res_mat,unsigned int& nb_calls_err_func,exp_files ef);
 // generic multiclass fitness function
 void multiclass_evaluate(Organism* org,string dataset_filename, mat &res_mat,unsigned int& nb_calls_err_func,Population *pop, unsigned int generation, Organism& best_org);
@@ -52,8 +52,8 @@ double** load_data_array(string dataset_filename,unsigned int &height, unsigned 
 unsigned int count_nb_classes(mat labels);
 mat generate_conf_mat(unsigned int nb_classes, mat preds,mat labels);
 void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness);
-mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_files ef);
-void multiclass_training_task(unsigned int i, unsigned int nb_replicates, unsigned int gens, vector<mat> &result_matrices_training_perfs, exp_files ef);
+mat compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, exp_files ef);
+void multiclass_training_task(unsigned int i, vector<mat> &result_matrices_training_perfs, exp_files ef);
 unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
 mat to_multiclass_format(mat predictions);
 mat average_matrices(vector<mat> results);

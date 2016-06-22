@@ -19,13 +19,13 @@
 
 #define NO_SCREEN_OUT 
 
-void multiclass_test(int gens, unsigned int nb_reps, exp_files ef){
+void multiclass_test(exp_files ef){
   std::ofstream oFile(ef.result_file.c_str(),std::ios::out);
   vector<mat> res_mats_training_perfs;
-  mat avrg_mat=compute_learning_curves_perfs(gens,nb_reps,res_mats_training_perfs,ef);
-  mat res_mat_err = compute_replicate_error(nb_reps,res_mats_training_perfs);
+  mat avrg_mat=compute_learning_curves_perfs(res_mats_training_perfs,ef);
+  mat res_mat_err = compute_replicate_error(ef.nb_reps,res_mats_training_perfs);
   // save results
-  avrg_mat = join_horiz(avrg_mat, ones(avrg_mat.n_rows,1) * nb_reps);
+  avrg_mat = join_horiz(avrg_mat, ones(avrg_mat.n_rows,1) * ef.nb_reps);
   // plot results
   print_results_octave_format(oFile,avrg_mat,"results");
   print_results_octave_format(oFile,res_mat_err,"err_results");
@@ -343,7 +343,7 @@ void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accu
   fitness=computed_score;
 }
 
-mat compute_learning_curves_perfs(unsigned int nb_gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_files ef){
+mat compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, exp_files ef){
     // return variable
     mat averaged_performances;
 
@@ -353,10 +353,9 @@ mat compute_learning_curves_perfs(unsigned int nb_gens, unsigned int nb_reps,vec
         // kick off a single thread
 #pragma omp single
         {
-            for(unsigned int i=0; i<nb_reps; ++i) {
-	      cout<<"REP"<<i<<endl;
+            for(unsigned int i=0; i<ef.nb_reps; ++i) {
 #pragma omp task
-	      multiclass_training_task(i, nb_reps,nb_gens,result_matrices_training_perfs,ef);
+	      multiclass_training_task(i,result_matrices_training_perfs,ef);
             }
         }
     }
@@ -399,14 +398,14 @@ double** mat_to_array2D(mat d){
 }
 
 
-void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int nb_gens,vector<mat>& res_mats_training_perfs,exp_files ef){
+void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perfs,exp_files ef){
   cout<<"RUNNING multiclass_training_task"<<endl;
   // result matrices (to be interpreted by Octave script <Plotter.m>)
   mat results_score_evolution;
 
   cout << endl
        << "***"
-       << "\tRUNNING REPLICATE " << i+1 << "/" << nb_reps << "\t ";
+       << "\tRUNNING REPLICATE " << i+1 << "/" << ef.nb_reps << "\t ";
 
   // set seed
   unsigned int seed=i*10;
@@ -429,7 +428,7 @@ void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int 
   iFile.close();
 
   //Spawn the Population
-  pop=new Population(start_genome,NEAT::pop_size);
+  pop=new Population(start_genome,ef.pop_size);
   pop->verify();
  
   unsigned int nb_calls_err_func=0;
@@ -550,7 +549,7 @@ void multiclass_training_task(unsigned int i, unsigned int nb_reps,unsigned int 
   }
   //results_score_evolution=join_vert(results_score_evolution, res_mat);
 
-  for(unsigned int gen=1;gen<=nb_gens;gen++){
+  for(unsigned int gen=1;gen<=ef.nb_gens;gen++){
     multiclass_epoch(pop,gen,best_org,res_mat,nb_calls_err_func,ef);
   }
   results_score_evolution=join_vert(results_score_evolution, res_mat);
