@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
   NEAT::load_neat_params(argv[1],true);
 
   exp_files ef;
-  ef.nb_gens=atoi(argv[4]);
   ef.nb_reps=atoi(argv[3]);
+  ef.max_nb_err_func_calls=atoi(argv[4]);
   ef.pop_size=atoi(argv[5]);
   unsigned int choice =atoi(argv[2]);
 

@@ -15,9 +15,9 @@
 */
 #include "experiments.h"
 #include <cstring>
-#include <omp.h> // Added by: Hichame Moriceau
+#include <omp.h>
 
-#define NO_SCREEN_OUT 
+//#define NO_SCREEN_OUT 
 
 void multiclass_test(exp_files ef){
   std::ofstream oFile(ef.result_file.c_str(),std::ios::out);
@@ -33,7 +33,6 @@ void multiclass_test(exp_files ef){
 
 void multiclass_epoch(Population* pop,int generation,Organism& best_org, mat &res_mat,unsigned int& nb_calls_err_func, exp_files ef){
   vector<Organism*>::iterator curorg;
-  vector<Species*>::iterator curspecies;
   //Evaluate each organism on a test
   for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg)
     multiclass_evaluate(*curorg,ef.dataset_filename,res_mat, nb_calls_err_func, pop,generation, best_org);
@@ -47,7 +46,7 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
 
   vector<Organism*>::iterator curorg;
   vector<Species*>::iterator curspecies;
-  double best_fit=0;
+
   unsigned int nb_examples=-1,nb_attributes=-1;
   double** data=load_data_array(dataset_filename,nb_examples, nb_attributes);
   unsigned int training_height=nb_examples*(double(60)/100);
@@ -58,7 +57,6 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
   double** test_data=0;
   
   net=org->net;
-
   training_data=new double*[training_height];
   // populate <training_data>
   for(unsigned int i=0;i<training_height;i++){
@@ -102,8 +100,6 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
       best_org.test_accuracy=(*curorg)->test_accuracy;
       best_org.test_fitness=(*curorg)->test_fitness;
       best_org.fitness=(*curorg)->fitness;
-      // update comparison value
-      best_fit=(*curorg)->training_fitness;
     }
     // memorize organism's fitness
     all_fitnesses.push_back((*curorg)->training_fitness);
@@ -188,18 +184,17 @@ void evaluate_perfs(double** data,
   //Load and activate the network on each input
   int net_depth=net->max_depth(); //The max depth of the network to be activated
   int relax; //Activates until relaxation
-  double this_out; //The current output
   unsigned int nb_classes=net->outputs.size();
   double out[nb_examples][nb_classes];
 
-  for(int count=0;count<nb_examples;count++){
+  for(unsigned int count=0;count<nb_examples;count++){
     net->load_sensors(data[count]);
     //Relax net and get output
     success=net->activate();
     //use depth to ensure relaxation
     for (relax=0;relax<=net_depth;relax++){
       success=net->activate();
-      this_out=(*(net->outputs.begin()))->activation;
+      (*(net->outputs.begin()))->activation;
     }
     for(unsigned int i=0;i<net->outputs.size(); i++)
       out[count][i]=(*(net->outputs[i])).activation;
@@ -207,11 +202,6 @@ void evaluate_perfs(double** data,
   }
   
   if (success) {
-    double errsum=0,computed_score=0,computed_acc=0;
-    // true/false  positives/negatives,
-    unsigned int tp=0,tn=0,fp=0,fn=0;
-    double p=-1, r=-1, score=-1;
-
     mat preds =zeros(nb_examples,nb_classes);
     mat labels=zeros(nb_examples,1);
 
@@ -308,7 +298,7 @@ void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accu
   unsigned int nb_examples=0;
   for(unsigned int i=0;i<nb_classes;i++)
     nb_examples+=sum(conf_mat.row(i));
-  double computed_score=0, computed_acc=0, errsum=0;
+  double computed_score=0, computed_acc=0;
   vec scores(nb_classes);
   // computing f1 score for each label
   for(unsigned int i=0; i<nb_classes; i++){
@@ -430,12 +420,9 @@ void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perf
   //Spawn the Population
   pop=new Population(start_genome,ef.pop_size);
   pop->verify();
- 
-  unsigned int nb_calls_err_func=0;
   Organism best_org(0.0f,start_genome,1);
 
   vector<Organism*>::iterator curorg;
-  double best_fit=0;
   unsigned int nb_examples=-1,nb_attributes=-1;
   double** data=load_data_array(ef.dataset_filename,nb_examples, nb_attributes);
 
@@ -488,6 +475,8 @@ void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perf
     (*curorg)->fitness=(*curorg)->training_fitness;
   }
 
+
+  unsigned int nb_calls_err_func=0;
   std::vector<double> all_fitnesses;
   // accumulate fitness values
   for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++)
@@ -549,9 +538,26 @@ void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perf
   }
   //results_score_evolution=join_vert(results_score_evolution, res_mat);
 
-  for(unsigned int gen=1;gen<=ef.nb_gens;gen++){
-    multiclass_epoch(pop,gen,best_org,res_mat,nb_calls_err_func,ef);
+  unsigned int gen=1;
+  
+  // train until MAX nb of calls to the error function is reached
+  for(;nb_calls_err_func<ef.max_nb_err_func_calls;gen++){
+    //multiclass_epoch(pop,gen,best_org,res_mat,nb_calls_err_func,ef);    
+    vector<Organism*>::iterator curorg;
+    // for each individual: evaluate performances
+    for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg){
+      multiclass_evaluate(*curorg,ef.dataset_filename,res_mat, nb_calls_err_func, pop,gen, best_org);
+      // if MAX NB of calls to the error function is reached
+      if(nb_calls_err_func>=ef.max_nb_err_func_calls){
+	// exit evaluation loop
+	break;
+      }
+    }
+    // train for a single generation
+    pop->epoch(gen);
+    gen++;
   }
+
   results_score_evolution=join_vert(results_score_evolution, res_mat);
 
   double test_score=best_org.test_fitness;

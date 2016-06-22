@@ -25,7 +25,7 @@ struct exp_files{ // ADDED by Hichame Moriceau
   string startgene;
   string dataset_filename;
   string result_file;
-  unsigned int nb_gens;
+  unsigned int max_nb_err_func_calls;
   unsigned int nb_reps;
   unsigned int pop_size;
 };
