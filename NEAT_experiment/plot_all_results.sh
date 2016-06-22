@@ -1,9 +1,9 @@
 #!/bin/bash
 
-(exec "./plotter.m" "data/results-neat-bcm.mat" "BCM-NEAT")
+./plotter.m data/results-neat-bcm.mat NEAT BCM
 
-(exec "./plotter.m" "data/results-neat-iris.mat" "IRIS-NEAT")
+./plotter.m data/results-neat-iris.mat NEAT IRIS
 
-(exec "./plotter.m" "data/results-neat-wine.mat" "WINE-NEAT")
+./plotter.m data/results-neat-wine.mat NEAT WINE
 
-#(exec "./plotter.m" "data/results-neat-bcr.mat" "BCR-NEAT")
+#./plotter.m data/results-neat-bcr.mat NEAT BCR
