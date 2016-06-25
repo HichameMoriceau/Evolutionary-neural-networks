@@ -10,7 +10,7 @@ This work contains implementations of the following techniques:
  - [Particle Swarm Optimization](https://en.wikipedia.org/wiki/Particle_swarm_optimization) (PSO)
  - [Artificial Immune System: Clonal Selection](https://en.wikipedia.org/wiki/Artificial_immune_system) (AIS)
  - [Training, Validation and Test data subsets](https://class.coursera.org/ml-005/lecture/61)
- - [F1 score measure of prediction ability](https://en.wikipedia.org/wiki/F1_score)
+ - [F1 score](https://en.wikipedia.org/wiki/F1_score) measure of prediction ability, [MSE](https://en.wikipedia.org/wiki/Mean_squared_error) and %accuracy
  - Basic statistics (mean, variance) => (an implementation of the [k-fold cross-validation](https://en.wikipedia.org/wiki/Cross-validation_(statistics)) method can be found but wasn't used for the experiment)
  - [Neural Network Ensemble](http://www.sciencedirect.com/science/article/pii/S000437020200190X) (*commented for later study*)
 
