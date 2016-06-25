@@ -2,25 +2,28 @@
 ###### [Pursuing the work done for my bachelor's dissertation over the course of a research internship]
 
 
-Neural Networks are a very popular technique for supervised learning challenges. This project focuses on the automation of the search for the most adequate neural net architecture and weights for any given use-case. 
-
-Given a maximum size neural network topology (architecture) the population based optimization algorithm(s) autonomously find an appropriate topology and set of weights. The algorithm was tested on 3 data sets: Breast Cancer Malignant (Diagnostic), Breast Cancer Recurrence and Haberman's survival test.
+Neural Networks are probably the most used model class for solving supervised learning problems. This project focuses on the automation of the design of the most adequate architecture and weights for solving any classification problem (PSO, DE).
 
 This work contains implementations of the following techniques:
  - [Vectorized Feedforward Neural Network](https://en.wikipedia.org/wiki/Feedforward_neural_network) of any topology (using Linear Algebra)
- - [Differential Evolution](https://en.wikipedia.org/wiki/Differential_evolution)
- - [Particle Swarm Optimization](https://en.wikipedia.org/wiki/Particle_swarm_optimization)
- - [Neural Network Ensemble](http://www.sciencedirect.com/science/article/pii/S000437020200190X)
- - [K-Fold Cross Validation](https://en.wikipedia.org/wiki/Cross-validation_(statistics)#k-fold_cross-validation)
+ - [Differential Evolution](https://en.wikipedia.org/wiki/Differential_evolution) (DE)
+ - [Particle Swarm Optimization](https://en.wikipedia.org/wiki/Particle_swarm_optimization) (PSO)
+ - [Artificial Immune System: Clonal Selection](https://en.wikipedia.org/wiki/Artificial_immune_system) (AIS)
+ - [Training, Validation and Test data subsets](https://class.coursera.org/ml-005/lecture/61)
+ - [F1 score measure of prediction ability](https://en.wikipedia.org/wiki/F1_score)
+ - Basic statistics (mean, variance) => (an implementation of the [k-fold cross-validation](https://en.wikipedia.org/wiki/Cross-validation_(statistics)) method can be found but wasn't used for the experiment)
+ - [Neural Network Ensemble](http://www.sciencedirect.com/science/article/pii/S000437020200190X) (*commented for later study*)
 
-The program leverages the [Armadillo C++](http://arma.sourceforge.net/) Linear Algebra library and each replicate of the experiment is ran as an [OpenMP](http://openmp.org/wp/) thread.
+## Used libraries
+The application leverages the following libraries:
+ - [Armadillo C++](http://arma.sourceforge.net/) Linear Algebra library 
+ - [FANN C++](http://leenissen.dk/fann/wp/) library (implements the Gradient Descent/Back Propagation algorithm)
+ - [NEAT C++](http://nn.cs.utexas.edu/?neat-c) (Neuro Evolution of Augmenting Topologies => adapted to solve classification problems)
 
-
-## Training Algorithms
-
-For anyone interested in implementing a highly reliable and versatile optimization algorithm I would recommend taking a peek at Differential Evolution first since it is simple and powerful (results are comparable to the state-of-the-art). Both techniques are constructive stochastic algorithms and therefore do not guarantee that the best solution will be found. As opposed to gradient-based techniques (e.g. Back Propagation) they are inherently better at global search and tend to more rarely fall into local optimas. 
+## Performance considerations
+For improved performances, some tasks are ran *concurrently*: Each replicate of the experiment is ran as an [OpenMP](http://openmp.org/wp/) thread.
 
 
 ## Documentation
 
-Please refer to `/dissertation/memoir.pdf` for more details as well as the results and conclusions of the experiment.
+My bachelor's dissertation is accessible at `/dissertation/memoir.pdf` if you want to find out more on the theory/background of neural networks, evolutionary algorithms and see the results of the initial experiment.
