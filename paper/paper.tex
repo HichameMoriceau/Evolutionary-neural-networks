@@ -1,0 +1,88 @@
+\documentclass[a4paper,12pt, oneside]{report}
+
+%\usepackage{csvsimple}
+%\usepackage{lipsum}
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+\usepackage{wrapfig}
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+{\normalfont\huge\bfseries}{}{0pt}{\Huge}
+\titlespacing*{\chapter} {0pt}{0pt}{15pt}
+\usepackage{algpseudocode,algorithm}
+\usepackage{multicol}
+\usepackage{diagbox,booktabs,amsmath}
+\usepackage{graphicx}
+\usepackage{cite}
+\graphicspath{ {images/} }
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref} % hyperlinks
+\usepackage{url}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{txfonts}
+\usepackage{geometry} % all margins
+ \geometry{
+   a4paper,
+   total={210mm,297mm},
+   left=25mm,
+   right=25mm,
+   top=25mm,
+   bottom=25mm,
+ }
+
+\begin{document}
+
+\title{?}
+\author{Hichame Moriceau\\
+  Computing Science Honours project\\ \\
+  School of Computing,\\
+  Edinburgh Napier University,\\
+  10 Colinton Road,\\
+  United Kingdom,\\
+  EH10 5DT\\}
+\date{\today}
+\maketitle
+
+\begin{abstract}
+
+\end{abstract}
+
+\section{Introduction}
+
+\section{Related Work}
+
+\section{Methodology}
+
+\section{Results}
+
+\section{Conclusions}
+
+
+\clearpage
+\bibliography{internship_sources}{}
+\bibliographystyle{plain}
+
+\end{document}
