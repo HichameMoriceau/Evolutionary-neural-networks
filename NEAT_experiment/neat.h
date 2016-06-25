@@ -21,7 +21,7 @@
 #include<string>
 using namespace std;
 
-struct exp_files{ // ADDED by Hichame Moriceau
+struct exp_files{
   string startgene;
   string dataset_filename;
   string result_file;

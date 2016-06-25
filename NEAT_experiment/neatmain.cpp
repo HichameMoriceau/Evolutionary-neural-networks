@@ -23,7 +23,7 @@ using namespace std;
 /**
  * Compile & Run with:
  * $ make # (No direct use of g++ here)
- * $ ./neat test.ne 5 4 300 # experiment 5, 4 replicates, 300 generations
+ * $ ./neat test.ne 0 4 300 # experiment 0, 4 replicates, 300 generations
  */
 int main(int argc, char *argv[]) {
 
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
   srand( (unsigned)time( NULL ) );
 
   if (argc != (5+1)) {
-    cerr << "Invalid arguments:\n\tArg1=NEAT parameters file (.ne file)\n\tArg2=CHOSEN EXPERIMENT INDEX\n\tArg3=NB REPLICATES\n\tArg4=NB GENERATIONS\n\tArg5=POP SIZE" << endl;
+    cerr << "Invalid arguments:\n\tArg1=NEAT parameters file (.ne file)\n\tArg2=CHOSEN EXPERIMENT INDEX\n\tArg3=NB REPLICATES\n\tArg4=NB GENERATIONS\n\tArg5=POP SIZE\n\t(CLI args override file settings)." << endl;
     return -1;
   }
 
@@ -44,41 +44,25 @@ int main(int argc, char *argv[]) {
   ef.pop_size=atoi(argv[5]);
   unsigned int choice =atoi(argv[2]);
 
-  switch(choice){
-/* 
-   //
-   // Original code: REINFORCEMENT LEARNING TASKS
-   //
-  case 1:
-    p = pole1_test(nb_gens);
-    break;
-  case 2:
-    p = pole2_test(nb_gens,1);
-    break;
-  case 3:
-    p = pole2_test(nb_gens,0);
-    break;
-  case 4:
-    p=xor_test(nb_gens);
-    break;
-*/
-    //
-    // SUPERVISED LEARNING EXPERIMENTS:
-    //
 
-  case 5: // BREAST CANCER MALIGNANCY
+  //
+  // SUPERVISED LEARNING EXPERIMENTS
+  //
+
+  switch(choice){
+  case 0: // BREAST CANCER MALIGNANCY
     ef.startgene="bcmstartgenes";
     ef.dataset_filename="data/breast-cancer-malignantOrBenign-data-transformed.csv";
     ef.result_file="data/results-neat-bcm.mat";
     multiclass_test(ef);
     break;
-  case 6: // IRIS
+  case 1: // IRIS
     ef.startgene="irisstartgenes";
     ef.dataset_filename="data/iris-data-transformed.csv";
     ef.result_file="data/results-neat-iris.mat";
     multiclass_test(ef);
     break;
-  case 7: // WINE
+  case 2: // WINE
     ef.startgene="winestartgenes";
     ef.dataset_filename="data/wine-data-transformed.csv";
     ef.result_file="data/results-neat-wine.mat";

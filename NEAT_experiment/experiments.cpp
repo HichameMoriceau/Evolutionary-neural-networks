@@ -17,7 +17,7 @@
 #include <cstring>
 #include <omp.h>
 
-//#define NO_SCREEN_OUT 
+#define NO_SCREEN_OUT 
 
 void multiclass_test(exp_files ef){
   std::ofstream oFile(ef.result_file.c_str(),std::ios::out);
@@ -46,7 +46,6 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
 
   vector<Organism*>::iterator curorg;
   vector<Species*>::iterator curspecies;
-
   unsigned int nb_examples=-1,nb_attributes=-1;
   double** data=load_data_array(dataset_filename,nb_examples, nb_attributes);
   unsigned int training_height=nb_examples*(double(60)/100);
@@ -54,8 +53,7 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
   unsigned int test_height=nb_examples*(double(20)/100);  
   double** training_data=0;
   double** validation_data=0;
-  double** test_data=0;
-  
+  double** test_data=0;  
   net=org->net;
   training_data=new double*[training_height];
   // populate <training_data>
