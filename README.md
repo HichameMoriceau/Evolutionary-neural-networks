@@ -10,7 +10,7 @@ The platform is composed of 3 benchmarks:
  - The NEAT experiment (see `NEAT_experiment` directory)
  - The Evolutionary nets experiment (see `evolutionary_nets` directory => executable is built from the build directory)
 
-The benchmark can be ran as a whole (see `run_all_benchmarks.sh`) or independently (see each `run_experiment.sh` script). See the below for more information on the *libraries* and *acronyms* used here.
+The benchmark can be ran as a whole (see `run_all_benchmarks.sh`) or independently (see the `run_experiment.sh` script of each experiment directory). See the below for more information on the *libraries* and *acronyms* used here.
 
 Algorithms:
  - [Differential Evolution](https://en.wikipedia.org/wiki/Differential_evolution) (referred to as: *DE*)
@@ -33,21 +33,30 @@ The application leverages the following libraries:
  - [FANN C++](http://leenissen.dk/fann/wp/) library (implements the Gradient Descent/Back Propagation algorithm)
  - [NEAT C++](http://nn.cs.utexas.edu/?neat-c) (Neuro Evolution of Augmenting Topologies => adapted to solve classification problems)
 
-Simply run `$ sudo apt-get install libarmadillo-dev libfann-dev octave`. Octave is optional but allows you to generate plots by running pre-written scripts such as `$ ./plot_all_results.sh`, which generates plots such as the MSE, F1 score and %accuracy against the number of calls made to the error function and so on (with error bars).
+Simply run:
+
+`$ sudo apt-get install libarmadillo-dev libfann-dev octave`. 
+
+Octave is optional but allows you to generate plots by running pre-written scripts such as `$ ./plot_all_results.sh`, which generates plots such as the MSE, F1 score and %accuracy against the number of calls made to the error function and so on (with error bars).
 
 ## Running the benchmark
 
 Download the repository:
+
 `$ git clone https://github.com/HichameMoriceau/Evolutionary-neural-networks.git`
 
 Naviguate into it:
+
 `$ cd Evolutionary-neural-networks/`
 
 Give execution permission to the bash script:
+
 `$ chmod +x run_all_benchmarks.sh`
 
 At this stage you might want to modify the hard coded parameters (Number of replicates, population size etc.) in the .sh script.
+
 Run all experiments:
+
 `$ ./run_all_benchmarks.sh`
 
 
