@@ -65,8 +65,14 @@ exp_files read_args(int argc, char** argv){
   }else{
     exp_files ef;
     unsigned int nb_ds=argc-(2+1);
-    for(unsigned int i=0;i<nb_ds;i++)
-      ef.dataset_filenames.push_back(argv[i+1]);
+    for(unsigned int i=0;i<nb_ds;i++){
+      string s(argv[i+1]);
+      // replace .CSV extension by .DATA
+      s=s.substr(0,s.size()-3);
+      s+="data";
+      // save filename
+      ef.dataset_filenames.push_back(s);
+    }
     ef.nb_reps=std::atoi(argv[nb_ds+1]);
     ef.max_nb_err_func_calls=std::atoi(argv[nb_ds+2]);
     return ef;
@@ -86,24 +92,14 @@ int main(int argc, char * argv []){
   // fetch & save CLI args
   exp_files ef=read_args(argc,argv);
   
-  /*
-  for(unsigned int i=0;i<ef.dataset_filenames.size();i++){
-    cout<<"ds"<<i<<" : "<<ef.dataset_filenames[i]<<endl;
-  }
-  cout<<ef.nb_reps<<" replicates"<<endl;
-  cout<<ef.max_nb_err_func_calls<<" err func calls"<<endl;
-  exit(0);
-  */
-
   // for each data set
   for(unsigned int i=0;i<ef.dataset_filenames.size();i++){
+    // set data set filename
     ef.current_ds=ef.dataset_filenames[i];
+    // construct appropriate result filename
     ef.result_file=ef.dataset_filenames[i].substr(0,ef.dataset_filenames[i].size()-5);
     replace(ef.result_file.begin(),ef.result_file.end(),'-','_');
     ef.result_file+="_results/BPcascade-results.mat";
-
-    cout<<"result file for "<<ef.dataset_filenames[i]<<" is "<<ef.result_file<<endl;
-    
     // run experiment
     experiment(ef);
   }
