@@ -44,21 +44,15 @@ Octave is optional but allows you to generate plots by running pre-written scrip
 Download the repository:
 
 `$ git clone https://github.com/HichameMoriceau/Evolutionary-neural-networks.git`
-
-Naviguate into it:
-
 `$ cd Evolutionary-neural-networks/`
-
-Give execution permission to the bash script:
-
 `$ chmod +x run_all_benchmarks.sh`
-
-At this stage you might want to modify the hard coded parameters (Number of replicates, population size etc.) in the .sh script.
-
-Run all experiments:
-
 `$ ./run_all_benchmarks.sh`
 
+You might be interested in modifying the hard coded parameters (Number of replicates, population size etc.) in the `run_all_benchmarks.sh` script.
+
+## Adding more data sets
+
+*pending*
 
 ## Performance considerations
 For improved performances, each replicate of the experiment is ran *concurrently* as an [OpenMP](http://openmp.org/wp/) thread.
