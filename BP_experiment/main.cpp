@@ -14,10 +14,12 @@ using namespace arma;
 
 enum EXP_TYPE{FIXED, CASCADE};
 
-struct exp_details{
-  string dataset_filename;
+struct exp_files{
+  vector<string> dataset_filenames;
   string result_file;
-  EXP_TYPE exp_type;
+  string current_ds;
+  unsigned int max_nb_err_func_calls;
+  unsigned int nb_reps;
 };
 
 vector<string> split(const string& str, int delimiter(int) = ::isspace){
@@ -35,12 +37,12 @@ vector<string> split(const string& str, int delimiter(int) = ::isspace){
 }
 
 int rand_int(int min, int max);
-void experiment(int gens, unsigned int nb_reps, exp_details ef);
-mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_details ef);
+void experiment(exp_files ef);
+mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_files ef);
 struct fann_train_data* fann_instantiate_data(unsigned int nb_examples,unsigned int nb_inputs,unsigned int nb_outputs);
 void fann_separate_data(fann_train_data data,fann_train_data* training_data,fann_train_data* validation_data, fann_train_data* test_data);
 unsigned int fann_get_nb_hidden_units(fann* best_ann, unsigned int nb_hid_layers);
-void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_details ef);
+void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef);
 unsigned int count_nb_classes(mat labels);
 mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels);
 void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness);
@@ -54,6 +56,23 @@ mat to_matrix(double a);
 double corrected_sample_std_dev(mat score_vector);
 const string get_current_date_time();
 
+exp_files read_args(int argc, char** argv){
+  if(argc<(3+1)) {
+    cout<<"At least 3 arguments expected."<<endl;
+    cout<<"Arg1: 1 or more data sets."<<endl;
+    cout<<"Arg2: Nb of replicates."<<endl;
+    cout<<"Arg3: Max number of calls to the error function."<<endl;
+  }else{
+    exp_files ef;
+    unsigned int nb_ds=argc-(2+1);
+    for(unsigned int i=0;i<nb_ds;i++)
+      ef.dataset_filenames.push_back(argv[i+1]);
+    ef.nb_reps=std::atoi(argv[nb_ds+1]);
+    ef.max_nb_err_func_calls=std::atoi(argv[nb_ds+2]);
+    return ef;
+  }
+}
+
 /**
    Experiment: Running multiple instances of a neural network
    trained using Gradient Descent and the Back Propagation algorithm.
@@ -64,53 +83,31 @@ const string get_current_date_time();
    # ./runme 0 30 100 # run 30 replicates of the first experiment
 */
 int main(int argc, char * argv []){
-  if(argc<(3+1)){ 
-    cout<<"Too few args provided. Expected: './runme EXP_INDEX NB_REPLICATES NB GENERATIONS'"<<endl;
-    return 0;
-  }
+  // fetch & save CLI args
+  exp_files ef=read_args(argc,argv);
   
-  exp_details ed;
-  // selected experiment
-  unsigned int exp_index=atoi(argv[1]);
-  // number of replicates
-  unsigned int nb_reps=atoi(argv[2]);
-  // recorded best error value
-  unsigned int nb_gens=atoi(argv[3]);
-
-  vector<char*> ds_filenames;
-  ds_filenames.push_back((char*)"data/breast-cancer-malignantOrBenign-data-transformed.data");
-  ds_filenames.push_back((char*)"data/wine-data-transformed.data"); // multi-class
-  ds_filenames.push_back((char*)"data/breast-cancer-recurrence-data-transformed.data");
-  ds_filenames.push_back((char*)"data/iris-data-transformed.data"); // multi-class
-
-  switch(exp_index){
-  case 0:
-    ed.exp_type=EXP_TYPE::CASCADE;
-    ed.dataset_filename=ds_filenames[0];
-    ed.result_file="data/breast_cancer_malignantOrBenign_data_transformed_results/BPcascade-results.mat";
-    experiment(nb_gens,nb_reps,ed);
-    break;
-  case 1:
-    ed.exp_type=EXP_TYPE::CASCADE;
-    ed.dataset_filename=ds_filenames[1];
-    ed.result_file="data/wine_data_transformed_results/BPcascade-results.mat";
-    experiment(nb_gens,nb_reps,ed);
-    break;
-  case 2:
-    ed.exp_type=EXP_TYPE::CASCADE;
-    ed.dataset_filename=ds_filenames[2];
-    ed.result_file="data/breast_cancer_recurrence_data_transformed_results/BPcascade-results.mat";
-    experiment(nb_gens,nb_reps,ed);
-    break;
-  case 3:
-    ed.exp_type=EXP_TYPE::CASCADE;
-    ed.dataset_filename=ds_filenames[3];
-    ed.result_file="data/iris_data_transformed_results/BPcascade-results.mat";
-    experiment(nb_gens,nb_reps,ed);
-    break;
-  default:
-    cout<<"Please use an appropriate experiment index"<<endl;
+  /*
+  for(unsigned int i=0;i<ef.dataset_filenames.size();i++){
+    cout<<"ds"<<i<<" : "<<ef.dataset_filenames[i]<<endl;
   }
+  cout<<ef.nb_reps<<" replicates"<<endl;
+  cout<<ef.max_nb_err_func_calls<<" err func calls"<<endl;
+  exit(0);
+  */
+
+  // for each data set
+  for(unsigned int i=0;i<ef.dataset_filenames.size();i++){
+    ef.current_ds=ef.dataset_filenames[i];
+    ef.result_file=ef.dataset_filenames[i].substr(0,ef.dataset_filenames[i].size()-5);
+    replace(ef.result_file.begin(),ef.result_file.end(),'-','_');
+    ef.result_file+="_results/BPcascade-results.mat";
+
+    cout<<"result file for "<<ef.dataset_filenames[i]<<" is "<<ef.result_file<<endl;
+    
+    // run experiment
+    experiment(ef);
+  }
+
   return 0;
 }
 
@@ -119,19 +116,19 @@ int rand_int(int min, int max){
   return min + (rand() % (int)(max - min + 1));
 }
 
-void experiment(int gens, unsigned int nb_reps, exp_details ef){
+void experiment(exp_files ef){
   std::ofstream oFile(ef.result_file.c_str(),std::ios::out);
   vector<mat> res_mats_training_perfs;
-  mat avrg_mat=compute_learning_curves_perfs(gens,nb_reps,res_mats_training_perfs,ef);
-  mat res_mat_err = compute_replicate_error(nb_reps,res_mats_training_perfs);
+  mat avrg_mat=compute_learning_curves_perfs(ef.max_nb_err_func_calls,ef.nb_reps,res_mats_training_perfs,ef);
+  mat res_mat_err = compute_replicate_error(ef.nb_reps,res_mats_training_perfs);
   // save results
-  avrg_mat = join_horiz(avrg_mat, ones(avrg_mat.n_rows,1) * nb_reps);
+  avrg_mat = join_horiz(avrg_mat, ones(avrg_mat.n_rows,1) * ef.nb_reps);
   // plot results
   print_results_octave_format(oFile,avrg_mat,"results");
   print_results_octave_format(oFile,res_mat_err,"err_results");
 }
 
-mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_details ed){
+mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_files ed){
   // return variable
   mat averaged_performances;
   // for each replicate
@@ -451,7 +448,7 @@ const string get_current_date_time(){
   return buffer;
 }
 
-void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_details ef){
+void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef){
   // result matrices (to be interpreted by Octave script <Plotter.m>)
   mat results_score_evolution;
   mat res_mat;
@@ -460,14 +457,14 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
   cout << endl
        << "***"
        << "\tRUNNING REPLICATE " << i+1 << "/" << nb_reps << "\t "
-       << "DATA: " << ef.dataset_filename << endl;
+       << "DATA: " << ef.current_ds << endl;
 
   // set seed
   unsigned int seed=i*10;
   std::srand(seed);
 
   // load data set
-  struct fann_train_data *data=fann_read_train_from_file(ef.dataset_filename.c_str());
+  struct fann_train_data *data=fann_read_train_from_file(ef.current_ds.c_str());
   // randomize examples order
   fann_shuffle_train_data(data);
 
@@ -702,7 +699,7 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
   res_mats_training_perfs.push_back(results_score_evolution);
 
   ofstream experiment_file("random-seeds.txt",ios::app);
-  cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
-  experiment_file<<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
+  cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.current_ds<<endl;
+  experiment_file<<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.current_ds<<endl;
   experiment_file.close();
 }
