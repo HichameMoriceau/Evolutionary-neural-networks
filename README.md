@@ -41,12 +41,16 @@ Octave is optional but allows you to generate plots by running pre-written scrip
 
 ## Running the benchmark
 
-Download the repository:
+
 
 ```
+$ # Download the repository:
 $ git clone https://github.com/HichameMoriceau/Evolutionary-neural-networks.git
+$ # Go into it
 $ cd Evolutionary-neural-networks/
+$ # give execution permissions (must be done for all bash scripts)
 $ chmod +x run_all_benchmarks.sh
+$ # Execute benchmark (all 5 algorithms)
 $ ./run_all_benchmarks.sh
 ```
 
