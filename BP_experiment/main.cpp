@@ -4,7 +4,6 @@
 #include<vector>
 #include<fann.h>
 #include<armadillo>
-#include<string>
 #include<omp.h>
 #include <iomanip> // setprecision
 using namespace std;
@@ -254,7 +253,6 @@ struct fann_train_data* fann_instantiate_data(unsigned int nb_examples,unsigned 
   data->num_data=nb_examples;
   data->num_input=nb_inputs;
   data->num_output=nb_outputs;
-  cout<<"setting num_data to "<<data->num_data<<endl;
   // allocate 2D arrays attributes of struct
   data->input=(fann_type**) malloc(nb_examples*sizeof(fann_type *));
   data->output=(fann_type **) malloc(nb_examples*sizeof(fann_type *));
@@ -303,24 +301,10 @@ void fann_separate_data(fann_train_data data,fann_train_data* training_data,fann
   unsigned int nb_train_ex=training_data->num_data;
   unsigned int nb_val_ex=validation_data->num_data;
   unsigned int nb_test_ex=test_data->num_data;  
-
-  cout<<"converting"<<endl;
   // data pre-processing: apply feature scaling
   mat d=array2D_to_mat(data.input, data.num_data, nb_inputs);
   standardize(d);
   data.input=mat_to_array2D(d);
-  cout<<"converted"<<endl;
-
-  cout<<"data input="<<endl;
-
-  /*
-  for(unsigned int i=0; i<; ++i){
-    for(unsigned int j=0; j<; ++j){
-      
-    }
-  }
-  */
-
   // fill in TRAINING SET
   for(unsigned int i=0;i<nb_train_ex;i++){
     for(unsigned int j=0;j<nb_inputs;j++)
@@ -342,7 +326,6 @@ void fann_separate_data(fann_train_data data,fann_train_data* training_data,fann
     for(unsigned int j=0;j<nb_outputs;j++)
       test_data->output[i][j]=data.output[i+nb_train_ex+nb_val_ex][j];
   }
-  cout<<"data subsets filled"<<endl;
 }
 
 unsigned int fann_get_nb_hidden_units(fann* best_ann, unsigned int nb_hid_layers){
@@ -514,12 +497,9 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
   desc_vec.push_back(nb_outputs);
   // cast to array
   unsigned int *desc_array=&desc_vec[0];
-
   const float desired_error=(const float) 0.00f;
   const unsigned int epochs_between_reports=1;
-
-  fann_type min_weight=-1;
-  fann_type max_weight=+1;
+  fann_type min_weight=-1,max_weight=+1;
 
   unsigned int nb_classes=train_data->num_output;
 
@@ -572,51 +552,62 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
     for(unsigned int i=0;i<gens;i++){
       fann_train_epoch(ann,train_data);
 
-      double err=0;
+
       mat line;
       unsigned int epoch=i+b*gens;
-      double pop_score_mean=-1;
-      double pop_score_variance=-1;
-      double pop_score_stddev=-1;
-      double prediction_accuracy=0;//fann_get_accuracy(best_ann, train_data);
-      double score=-1;//fann_get_f1_score(best_ann);
-      double validation_accuracy=-1;
-      double validation_score=-1;
-      double val_err=-1;
+      double pop_score_mean=0,pop_score_variance=0,pop_score_stddev=0;
+      double training_accuracy=0,training_score=0;
+      double validation_accuracy=0,validation_score=0;
+      double test_accuracy=0,test_score=0;
+      double validation_cur_score=0, validation_cur_accuracy=0;
+      double train_err=0,val_err=0,test_err=0, val_cur_err=0;
+
       unsigned int nb_hid_layers_best=fann_get_num_layers(best_ann)-2;
       unsigned int nb_hid_units_best=fann_get_nb_hidden_units(best_ann,nb_hid_layers_best);
-      double MSE=fann_get_MSE(best_ann);
+      double train_mse=fann_get_MSE(best_ann);
 
       if(nb_classes==1) nb_classes=2;
-      // calculate perfs on training set
+      // calculate BEST perfs on TRAINING set
       mat preds,labels;
       fann_get_preds_labels(best_ann, train_data,preds,labels);
       mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
-      compute_error_acc_score(conf_mat, labels, err, prediction_accuracy, score);
-      // calculate perfs on validation set
+      compute_error_acc_score(conf_mat, labels, train_err, training_accuracy, training_score);
+      // calculate BEST perfs on VALIDATION set
       mat val_preds,val_labels;
       fann_get_preds_labels(best_ann, val_data,val_preds,val_labels);
       mat val_conf_mat=generate_conf_mat(nb_classes,val_preds,val_labels);
       compute_error_acc_score(val_conf_mat, val_labels, val_err, validation_accuracy, validation_score);
+      // calculate BEST perfs on TEST set
+      mat test_preds,test_labels;
+      fann_get_preds_labels(best_ann, test_data,test_preds,test_labels);
+      mat test_conf_mat=generate_conf_mat(nb_classes,test_preds,test_labels);
+      compute_error_acc_score(test_conf_mat, test_labels, test_err, test_accuracy, test_score);
+      // calculate CURRENT on VALIDATION set
+      mat val_cur_preds,val_cur_labels;
+      fann_get_preds_labels(ann, val_data,val_cur_preds,val_cur_labels);
+      mat val_cur_conf_mat=generate_conf_mat(nb_classes,val_cur_preds,val_cur_labels);
+      compute_error_acc_score(val_cur_conf_mat, val_cur_labels, val_cur_err, validation_cur_accuracy, validation_cur_score);
 
 #ifndef NO_SCREEN_OUT
       cout<<"epoch="<<epoch<<"of"<<gens*(b+1)
-	  <<"\tBP"<<b
-	  <<"\tscore="<<score
-	  <<"\tacc="<<prediction_accuracy
-	  <<"\tmse="<<MSE
+	  <<" BP"<<b
+	  <<"\ttrain.score="<<training_score
+	  <<"\ttrain.acc="<<training_accuracy
+	  <<"\tmse="<<train_mse
+	  <<"\tval.score="<<validation_score
+	  <<" val.acc="<<validation_accuracy
+	  <<"\ttest.score="<<test_score
+	  <<" test.acc="<<test_accuracy
 	  <<"\tNB.hid.units="<<nb_hid_units_best
 	  <<"\tNB.hid.layers="<<nb_hid_layers_best
-	  <<"\tval.score="<<validation_score
-	  <<"\tval.acc="<<validation_accuracy
 	  <<endl;
 #endif
 
       // format result line (-1 corresponds to irrelevant attributes)
       line << epoch
-	   << MSE
-	   << prediction_accuracy
-	   << score
+	   << train_mse
+	   << training_accuracy
+	   << training_score
 	   << pop_score_variance
 
 	   << pop_score_stddev
@@ -635,14 +626,16 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
 	   << -1//ensemble_score
 	   << validation_accuracy
 	   << validation_score
-	   << epoch//nb_calls_err_func
+	   << test_accuracy
+	   << test_score
+	   << epoch
 
 	   << endr;
       // Write results on file
       res_mat=join_vert(res_mat,line);
 
-      // memorize best network
-      if(fann_get_MSE(ann)<fann_get_MSE(best_ann))
+      // memorize network that best performs on VALIDATION set
+      if(val_cur_err<val_err)
 	best_ann=fann_copy(ann);
     }
     // clear heap
@@ -650,9 +643,7 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
   }
   results_score_evolution=join_vert(results_score_evolution, res_mat);
 
-  double test_score=0;
-  double test_acc=0;
-  double test_err=0;
+  double test_score=0,test_acc=0,test_err=0;
   // compute ACC and SCORE on TEST SET
   mat test_preds,test_labels;
   fann_get_preds_labels(best_ann, test_data,test_preds,test_labels);
