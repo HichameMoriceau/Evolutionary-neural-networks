@@ -16,18 +16,22 @@
 #ifndef _NERO_NEAT_H_
 #define _NERO_NEAT_H_
 
-#include <cstdlib>
-#include <cstring>
+#include<cstdlib>
+#include<cstring>
 #include<string>
+#include<vector>
 using namespace std;
 
 struct exp_files{
-  string startgene;
-  string dataset_filename;
+  vector<string> dataset_filenames;
+  string current_ds;
   string result_file;
   unsigned int max_nb_err_func_calls;
   unsigned int nb_reps;
   unsigned int pop_size;
+  // neat specific files
+  string neuroevolution_settings;
+  string startgene;
 };
 
 

@@ -20,66 +20,67 @@
 #include "experiments.h"
 using namespace std;
 
+// returns number of replicates selected by user (default=1)
+exp_files read_args(int argc, char** argv){
+    if(argc<(5+1)) {
+        cout<<"At least 4 arguments expected."<<endl;
+        cout<<"Arg1: 1 or more data sets."<<endl;
+        cout<<"Arg2: neuroevolution settings file (*.ne)."<<endl;
+        cout<<"Arg3: Nb of replicates."<<endl;
+        cout<<"Arg4: Max number of calls to the error function."<<endl;
+        cout<<"Arg5: Algorithm population size."<<endl;
+        exit(0);
+    }else{
+        exp_files ef;
+        unsigned int nb_ds=argc-(4+1);
+        for(unsigned int i=0;i<nb_ds;i++)
+            ef.dataset_filenames.push_back(argv[i+1]);
+	ef.neuroevolution_settings=argv[nb_ds+1];
+        ef.nb_reps=std::atoi(argv[nb_ds+2]);
+        ef.max_nb_err_func_calls=std::atoi(argv[nb_ds+4]);
+        ef.pop_size=std::atoi(argv[nb_ds+4]);
+        return ef;
+    }
+}
+
 /**
  * Compile & Run with:
  * $ make # (No direct use of g++ here)
  * $ ./neat test.ne 0 4 300 # experiment 0, 4 replicates, 300 generations
  */
 int main(int argc, char *argv[]) {
+  // read CLI args
+  exp_files ef=read_args(argc,argv);
+  
+  for(unsigned int i=0;i<ef.dataset_filenames.size();i++)
+    cout<<"ds"<<i<<" : "<<ef.dataset_filenames[i]<<endl;
 
-  NEAT::Population *p=0;
-  srand( (unsigned)time( NULL ) );
+  cout<<"neuroevolution_settings="<<ef.neuroevolution_settings<<endl;
+  cout<<"nb_reps="<<ef.nb_reps<<endl;
+  cout<<"max_nb_err_func_calls="<<ef.max_nb_err_func_calls<<endl;
+  cout<<"pop size="<<ef.pop_size<<endl;
 
-  if (argc != (5+1)) {
-    cerr << "Invalid arguments:\n\tArg1=NEAT parameters file (.ne file)\n\tArg2=CHOSEN EXPERIMENT INDEX\n\tArg3=NB REPLICATES\n\tArg4=NB GENERATIONS\n\tArg5=POP SIZE\n\t(CLI args override file settings)." << endl;
-    return -1;
+  //Load in the neuro evolution params
+  NEAT::load_neat_params(ef.neuroevolution_settings.c_str(),true);
+
+  // for each data set
+  for(unsigned int i=0;i<ef.dataset_filenames.size();i++){
+    ef.current_ds=ef.dataset_filenames[i];
+    ef.result_file=ef.dataset_filenames[i].substr(0,ef.dataset_filenames[i].size()-4);
+    replace(ef.result_file.begin(),ef.result_file.end(),'-','_');
+    ef.startgene=ef.result_file+"_startgenes";
+    ef.startgene=ef.startgene.substr(5, ef.startgene.size());
+    ef.result_file+="_results/NEAT-results.mat";
+    
+    cout<<"startgene filename = "<<ef.startgene<<endl;
+    cout<<"current ds         = "<<ef.current_ds<<endl;
+    cout<<"result_filename    = "<<ef.result_file<<endl;
+    cout<<"nb reps            = "<<ef.nb_reps<<endl;
+    cout<<"pop size           = "<<ef.pop_size<<endl;
+    // run experiment
+    multiclass_test(ef);    
   }
 
-  //Load in the params
-  NEAT::load_neat_params(argv[1],true);
-
-  exp_files ef;
-  ef.nb_reps=atoi(argv[3]);
-  ef.max_nb_err_func_calls=atoi(argv[4]);
-  ef.pop_size=atoi(argv[5]);
-  unsigned int choice =atoi(argv[2]);
-
-
-  //
-  // SUPERVISED LEARNING EXPERIMENTS
-  //
-
-  switch(choice){
-  case 0: // BREAST CANCER MALIGNANCY
-    ef.startgene="bcmstartgenes";
-    ef.dataset_filename="data/breast-cancer-malignantOrBenign-data-transformed.csv";
-    ef.result_file="data/breast_cancer_malignantOrBenign_data_transformed_results/NEAT-results.mat";
-    multiclass_test(ef);
-    break;
-  case 1: // IRIS
-    ef.startgene="irisstartgenes";
-    ef.dataset_filename="data/iris-data-transformed.csv";
-    ef.result_file="data/iris_data_transformed_results/NEAT-results.mat";
-    multiclass_test(ef);
-    break;
-  case 2: // WINE
-    ef.startgene="winestartgenes";
-    ef.dataset_filename="data/wine-data-transformed.csv";
-    ef.result_file="data/wine_data_transformed_results/NEAT-results.mat";
-    multiclass_test(ef);
-    break;
-  case 3: // BREAST CANCER RECURRENCE
-    ef.startgene="bcrstartgenes";
-    ef.dataset_filename="data/breast-cancer-recurrence-data-transformed.csv";
-    ef.result_file="data/breast_cancer_recurrence_data_transformed_results/NEAT-results.mat";
-    multiclass_test(ef);
-    break;
-  default:
-    cout<<"Not an available option:"<<choice<<" (incorrect CLI arg 1)"<<endl;
-  }
-
-  if (p)
-    delete p;
   return 0;
 }
 

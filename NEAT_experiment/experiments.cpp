@@ -36,7 +36,7 @@ void multiclass_epoch(Population* pop,int generation,Organism& best_org, mat &re
   vector<Organism*>::iterator curorg;
   //Evaluate each organism on a test
   for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg)
-    multiclass_evaluate(*curorg,ef.dataset_filename,res_mat, nb_calls_err_func, pop,generation, best_org);
+    multiclass_evaluate(*curorg,ef.current_ds,res_mat, nb_calls_err_func, pop,generation, best_org);
   pop->epoch(generation);
 }
 
@@ -426,7 +426,7 @@ void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perf
 
   vector<Organism*>::iterator curorg;
   unsigned int nb_examples=-1,nb_attributes=-1;
-  double** data=load_data_array(ef.dataset_filename,nb_examples, nb_attributes);
+  double** data=load_data_array(ef.current_ds,nb_examples, nb_attributes);
 
   // data pre-processing: apply feature scaling
   mat d=array2D_to_mat(data, nb_examples, nb_attributes);
@@ -475,7 +475,7 @@ void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perf
     vector<Organism*>::iterator curorg;
     // for each individual: evaluate performances
     for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg){
-      multiclass_evaluate(*curorg,ef.dataset_filename,res_mat, nb_calls_err_func, pop,gen, best_org);
+      multiclass_evaluate(*curorg,ef.current_ds,res_mat, nb_calls_err_func, pop,gen, best_org);
       // if MAX NB of calls to the error function is reached
       if(nb_calls_err_func>=ef.max_nb_err_func_calls)
 	break;// exit evaluation loop
@@ -503,8 +503,8 @@ void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perf
   // print best results
   ofstream experiment_file("random-seeds.txt",ios::app);
   double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
-  cout            << "THREAD&REPLICATE" << omp_get_thread_num() << i << "\tseed=" << seed << "\ttrain.score=" << "\t" << best_score << " on " << ef.dataset_filename << endl;
-  experiment_file << "THREAD&REPLICATE" << omp_get_thread_num() << i << "\tseed=" << seed << "\ttrain.score=" << "\t" << best_score << " on " << ef.dataset_filename << endl;
+  cout            << "THREAD&REPLICATE" << omp_get_thread_num() << i << "\tseed=" << seed << "\ttrain.score=" << "\t" << best_score << " on " << ef.current_ds << endl;
+  experiment_file << "THREAD&REPLICATE" << omp_get_thread_num() << i << "\tseed=" << seed << "\ttrain.score=" << "\t" << best_score << " on " << ef.current_ds << endl;
   experiment_file.close();
   delete pop;
 }
