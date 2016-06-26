@@ -53,29 +53,29 @@ int main(int argc, char *argv[]) {
   case 0: // BREAST CANCER MALIGNANCY
     ef.startgene="bcmstartgenes";
     ef.dataset_filename="data/breast-cancer-malignantOrBenign-data-transformed.csv";
-    ef.result_file="data/results-neat-bcm.mat";
+    ef.result_file="data/breast_cancer_malignantOrBenign_data_transformed_results/NEAT-results.mat";
     multiclass_test(ef);
     break;
   case 1: // IRIS
     ef.startgene="irisstartgenes";
     ef.dataset_filename="data/iris-data-transformed.csv";
-    ef.result_file="data/results-neat-iris.mat";
+    ef.result_file="data/iris_data_transformed_results/NEAT-results.mat";
     multiclass_test(ef);
     break;
   case 2: // WINE
     ef.startgene="winestartgenes";
     ef.dataset_filename="data/wine-data-transformed.csv";
-    ef.result_file="data/results-neat-wine.mat";
+    ef.result_file="data/wine_data_transformed_results/NEAT-results.mat";
     multiclass_test(ef);
     break;
-  case 8: // BREAST CANCER RECURRENCE
+  case 3: // BREAST CANCER RECURRENCE
     ef.startgene="bcrstartgenes";
-    ef.dataset_filename="breast-cancer-recurrence-data-transformed.csv";
-    ef.result_file="data/results-neat-bcr.mat";
+    ef.dataset_filename="data/breast-cancer-recurrence-data-transformed.csv";
+    ef.result_file="data/breast_cancer_recurrence_data_transformed_results/NEAT-results.mat";
     multiclass_test(ef);
     break;
   default:
-    cout<<"Not an available option."<<endl;
+    cout<<"Not an available option:"<<choice<<" (incorrect CLI arg 1)"<<endl;
   }
 
   if (p)

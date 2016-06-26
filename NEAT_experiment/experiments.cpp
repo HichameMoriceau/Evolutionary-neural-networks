@@ -17,6 +17,7 @@
 #include <cstring>
 #include <omp.h>
 
+// comment for printing out optimization evolution on screen
 #define NO_SCREEN_OUT 
 
 void multiclass_test(exp_files ef){
@@ -47,14 +48,17 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
   vector<Organism*>::iterator curorg;
   vector<Species*>::iterator curspecies;
   unsigned int nb_examples=-1,nb_attributes=-1;
+
   double** data=load_data_array(dataset_filename,nb_examples, nb_attributes);
   unsigned int training_height=nb_examples*(double(60)/100);
   unsigned int validation_height=nb_examples*(double(20)/100);
   unsigned int test_height=nb_examples*(double(20)/100);  
   double** training_data=0;
   double** validation_data=0;
-  double** test_data=0;  
+  double** test_data=0;
+
   net=org->net;
+
   training_data=new double*[training_height];
   // populate <training_data>
   for(unsigned int i=0;i<training_height;i++){
@@ -107,39 +111,41 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
   double pop_score_mean=pop->mean(all_fitnesses);
   double pop_score_variance=pop->var(all_fitnesses);
   double pop_score_stddev=pop->stddev(all_fitnesses);
-  double prediction_accuracy=best_org.training_accuracy;
-  double score=best_org.fitness;
+  double training_accuracy=best_org.training_accuracy;
+  double training_score=best_org.fitness;
   double validation_accuracy=best_org.validation_accuracy;
   double validation_score=best_org.validation_fitness;
+  double test_accuracy=best_org.test_accuracy;
+  double test_score=best_org.test_fitness;
   double MSE=best_org.error;
   unsigned int hidden_units=((best_org.gnome)->nodes).size();
 
 #ifndef NO_SCREEN_OUT
   std::cout<<"NB.err.func.calls="<<nb_calls_err_func
-	   <<"\tbest.indiv.fitness="<<score
-	   <<"\tacc="<<prediction_accuracy
-	   <<"\terr="<<MSE
+	   <<"\ttrain.score="<<training_score
+	   <<"\ttrain.acc="<<training_accuracy
+	   <<"\ttrain.err="<<MSE
 	   <<"\tNB nodes="<<hidden_units
-	   <<"\tpop.mean="<<pop_score_mean
-	   <<"\tpop.var="<<pop_score_variance
-	   <<"\tpop.stddev="<<pop_score_stddev<<endl;
+	   <<"\tpop.fit.mean="<<pop_score_mean
+	   <<"\tpop.fit.var="<<pop_score_variance
+	   <<"\tpop.fit.stddev="<<pop_score_stddev<<endl;
 #endif
 
   // format result line (-1 = irrelevant attributes)
   line << nb_calls_err_func
        << MSE
-       << prediction_accuracy
-       << score
+       << training_accuracy
+       << training_score
        << pop_score_variance
 
        << pop_score_stddev
        << pop_score_mean
        << -1//pop_score_median
        << pop->organisms.size()
-       << best_org.net->inputs.size() // inputs
+       << best_org.net->inputs.size()
 
        << hidden_units
-       << best_org.net->outputs.size()//outputs
+       << best_org.net->outputs.size()
        << -1//nb_hidden_layers
        << true
        << 0//selected_mutation_scheme
@@ -148,11 +154,14 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
        << -1//ensemble_score
        << validation_accuracy
        << validation_score
+       << test_accuracy
+       << test_score
        << generation
 
        << endr;
   // Write results on file
   res_mat=join_vert(res_mat,line);  
+  
   // clean-up memory
   for (unsigned int i=0; i<nb_examples; i++)
     delete [] data[i];
@@ -223,6 +232,7 @@ void evaluate_perfs(double** data,
 }
  
 double** load_data_array(string dataset_filename,unsigned int &height,unsigned int &width){
+
   double** data=0;
   string line, field;
   vector< vector<double> > array;  // the 2D array
@@ -267,16 +277,12 @@ unsigned int count_nb_classes(mat labels){
   for(unsigned int i=0; i<labels.n_rows; i++) {
     unsigned int current_pred_class = labels(i);
     is_known_class=false;
-    // for each known prediction classes
-    for(unsigned int j=0;j<array.size(); j++) {
-      // if current output is different from prediction class
-      if(current_pred_class==array[j]){
-	is_known_class = true;
-      }
-    }
-    if(array.empty() || (!is_known_class)){
+    // for each known prediction classes: if current output is different from prediction class
+    for(unsigned int j=0;j<array.size(); j++)
+      if(current_pred_class==array[j])
+	is_known_class = true; // flag current class as 'known'
+    if(array.empty() || (!is_known_class))
       array.push_back(current_pred_class);
-    }
   }
   return array.size();
 }
@@ -343,11 +349,12 @@ mat compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, e
         {
             for(unsigned int i=0; i<ef.nb_reps; ++i) {
 #pragma omp task
+	      {
 	      multiclass_training_task(i,result_matrices_training_perfs,ef);
+	      }
             }
         }
     }
-    cout<<"done computing each replicate"<<endl;
     // average PERFS of all replicates
     averaged_performances = average_matrices(result_matrices_training_perfs);
     return averaged_performances;
@@ -387,7 +394,6 @@ double** mat_to_array2D(mat d){
 
 
 void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perfs,exp_files ef){
-  cout<<"RUNNING multiclass_training_task"<<endl;
   // result matrices (to be interpreted by Octave script <Plotter.m>)
   mat results_score_evolution;
 
@@ -401,12 +407,10 @@ void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perf
 
   Population *pop=0;
   Genome *start_genome;
-
   mat res_mat;
 
   ifstream iFile(ef.startgene.c_str(),ios::in);
 
-  cout<<"Reading in the start genome"<<endl;
   //Read in the start Genome
   char curword[20];
   int id;
@@ -464,92 +468,17 @@ void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perf
     delete []data[i];
   delete []data;
 
-  // evaluate population
-  for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){    
-    // update perfs on each data subset
-    evaluate_perfs(test_data      ,test_height,      nb_attributes,(*curorg)->net,(*curorg)->error, (*curorg)->test_fitness,       (*curorg)->test_accuracy);
-    evaluate_perfs(validation_data,validation_height,nb_attributes,(*curorg)->net,(*curorg)->error, (*curorg)->validation_fitness, (*curorg)->validation_accuracy);
-    evaluate_perfs(training_data  ,training_height,  nb_attributes,(*curorg)->net,(*curorg)->error, (*curorg)->training_fitness,   (*curorg)->training_accuracy); 
-    (*curorg)->fitness=(*curorg)->training_fitness;
-  }
-
-
-  unsigned int nb_calls_err_func=0;
-  std::vector<double> all_fitnesses;
-  // accumulate fitness values
-  for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++)
-    all_fitnesses.push_back((*curorg)->training_fitness);
-
-  for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){
-    nb_calls_err_func++;
-    mat line;
-    double pop_score_mean=pop->mean(all_fitnesses);
-    double pop_score_variance=pop->var(all_fitnesses);
-    double pop_score_stddev=pop->stddev(all_fitnesses);
-    double prediction_accuracy=best_org.training_accuracy;
-    double score=best_org.fitness;
-    double validation_accuracy=best_org.validation_accuracy;
-    double validation_score=best_org.validation_fitness;
-    double MSE=best_org.error;
-    unsigned int hidden_units=((best_org.gnome)->nodes).size();
-
-#ifndef NO_SCREEN_OUT
-    std::cout<<"NB.err.func.calls="<<nb_calls_err_func
-	     <<"\tbest.indiv.fitness="<<score
-	     <<"\tacc="<<prediction_accuracy
-	     <<"\terr="<<MSE
-	     <<"\tNB nodes="<<hidden_units
-	     <<"\tpop.mean="<<pop_score_mean
-	     <<"\tpop.var="<<pop_score_variance
-	     <<"\tpop.stddev="<<pop_score_stddev<<endl;
-#endif
-
-    // format result line (-1 = irrelevant attributes)
-    line << nb_calls_err_func
-	 << MSE
-	 << prediction_accuracy
-	 << score
-	 << pop_score_variance
-
-	 << pop_score_stddev
-	 << pop_score_mean
-	 << -1//pop_score_median
-	 << pop->organisms.size()
-	 << best_org.net->inputs.size() // inputs
-
-	 << hidden_units
-	 << best_org.net->outputs.size()//outputs
-	 << -1//nb_hidden_layers
-	 << true
-	 << -1//selected_mutation_scheme
-
-	 << -1//ensemble_accuracy
-	 << -1//ensemble_score
-	 << validation_accuracy
-	 << validation_score
-	 << 0
-
-	 << endr;
-
-    // Write results on file
-    res_mat=join_vert(res_mat,line);
-  }
-  //results_score_evolution=join_vert(results_score_evolution, res_mat);
-
   unsigned int gen=1;
-  
+
   // train until MAX nb of calls to the error function is reached
-  for(;nb_calls_err_func<ef.max_nb_err_func_calls;gen++){
-    //multiclass_epoch(pop,gen,best_org,res_mat,nb_calls_err_func,ef);    
+  for(unsigned int nb_calls_err_func=0;nb_calls_err_func<ef.max_nb_err_func_calls;gen++){
     vector<Organism*>::iterator curorg;
     // for each individual: evaluate performances
     for(curorg=(pop->organisms).begin();curorg!=(pop->organisms).end();++curorg){
       multiclass_evaluate(*curorg,ef.dataset_filename,res_mat, nb_calls_err_func, pop,gen, best_org);
       // if MAX NB of calls to the error function is reached
-      if(nb_calls_err_func>=ef.max_nb_err_func_calls){
-	// exit evaluation loop
-	break;
-      }
+      if(nb_calls_err_func>=ef.max_nb_err_func_calls)
+	break;// exit evaluation loop
     }
     // train for a single generation
     pop->epoch(gen);
@@ -569,14 +498,13 @@ void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perf
   mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
   results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
   results_score_evolution=join_horiz(results_score_evolution, test_score_m);
-
-  // print-out best perfs
-  double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
   res_mats_training_perfs.push_back(results_score_evolution);
 
+  // print best results
   ofstream experiment_file("random-seeds.txt",ios::app);
-  cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<best_score<<" on "<<ef.dataset_filename<<endl;
-  experiment_file<<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<best_score<<" on "<<ef.dataset_filename<<endl;
+  double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
+  cout            << "THREAD&REPLICATE" << omp_get_thread_num() << i << "\tseed=" << seed << "\ttrain.score=" << "\t" << best_score << " on " << ef.dataset_filename << endl;
+  experiment_file << "THREAD&REPLICATE" << omp_get_thread_num() << i << "\tseed=" << seed << "\ttrain.score=" << "\t" << best_score << " on " << ef.dataset_filename << endl;
   experiment_file.close();
   delete pop;
 }
