@@ -41,7 +41,6 @@ mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector
 struct fann_train_data* fann_instantiate_data(unsigned int nb_examples,unsigned int nb_inputs,unsigned int nb_outputs);
 void fann_separate_data(fann_train_data data,fann_train_data* training_data,fann_train_data* validation_data, fann_train_data* test_data);
 unsigned int fann_get_nb_hidden_units(fann* best_ann, unsigned int nb_hid_layers);
-void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_details ef);
 void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_details ef);
 unsigned int count_nb_classes(mat labels);
 mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels);
@@ -86,55 +85,28 @@ int main(int argc, char * argv []){
   ds_filenames.push_back((char*)"data/iris-data-transformed.data"); // multi-class
 
   switch(exp_index){
-/*
   case 0:
-    ed.exp_type=EXP_TYPE::FIXED;
+    ed.exp_type=EXP_TYPE::CASCADE;
     ed.dataset_filename=ds_filenames[0];
-    ed.result_file="data/results-bp-fixed-bcm.mat";
+    ed.result_file="data/breast_cancer_malignantOrBenign_data_transformed_results/BPcascade-results.mat";
     experiment(nb_gens,nb_reps,ed);
     break;
   case 1:
-    ed.exp_type=EXP_TYPE::FIXED;
+    ed.exp_type=EXP_TYPE::CASCADE;
     ed.dataset_filename=ds_filenames[1];
-    ed.result_file="data/results-bp-fixed-wine.mat";
+    ed.result_file="data/wine_data_transformed_results/BPcascade-results.mat";
     experiment(nb_gens,nb_reps,ed);
     break;
   case 2:
-    ed.exp_type=EXP_TYPE::FIXED;
+    ed.exp_type=EXP_TYPE::CASCADE;
     ed.dataset_filename=ds_filenames[2];
-    ed.result_file="data/results-bp-fixed-bcr.mat";
+    ed.result_file="data/breast_cancer_recurrence_data_transformed_results/BPcascade-results.mat";
     experiment(nb_gens,nb_reps,ed);
     break;
   case 3:
-    ed.exp_type=EXP_TYPE::FIXED;
-    ed.dataset_filename=ds_filenames[3];
-    ed.result_file="data/results-bp-fixed-iris.mat";
-    experiment(nb_gens,nb_reps,ed);
-    break;
-*/
-
-  case 4:
-    ed.exp_type=EXP_TYPE::CASCADE;
-    ed.dataset_filename=ds_filenames[0];
-    ed.result_file="data/results-bp-cascade-bcm.mat";
-    experiment(nb_gens,nb_reps,ed);
-    break;
-  case 5:
-    ed.exp_type=EXP_TYPE::CASCADE;
-    ed.dataset_filename=ds_filenames[1];
-    ed.result_file="data/results-bp-cascade-wine.mat";
-    experiment(nb_gens,nb_reps,ed);
-    break;
-  case 6:
-    ed.exp_type=EXP_TYPE::CASCADE;
-    ed.dataset_filename=ds_filenames[2];
-    ed.result_file="data/results-bp-cascade-bcr.mat";
-    experiment(nb_gens,nb_reps,ed);
-    break;
-  case 7:
     ed.exp_type=EXP_TYPE::CASCADE;
     ed.dataset_filename=ds_filenames[3];
-    ed.result_file="data/results-bp-cascade-iris.mat";
+    ed.result_file="data/iris_data_transformed_results/BPcascade-results.mat";
     experiment(nb_gens,nb_reps,ed);
     break;
   default:
@@ -170,12 +142,8 @@ mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector
 #pragma omp single
     {
       for(unsigned int i=0; i<nb_reps; ++i) {
-	if(ed.exp_type==EXP_TYPE::FIXED){
 #pragma omp task
-	  multiclass_fixed_training_task(i, nb_reps,gens,result_matrices_training_perfs,ed);
-	}else if(ed.exp_type==EXP_TYPE::CASCADE){
 	  multiclass_cascade_training_task(i, nb_reps,gens,result_matrices_training_perfs,ed);
-	}
       }
     }
   }
@@ -385,226 +353,6 @@ unsigned int fann_get_nb_hidden_units(fann* best_ann, unsigned int nb_hid_layers
   free(layer_array);
   return count;
 }
-
-void multiclass_fixed_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_details ef){
-  // result matrices (to be interpreted by Octave script <Plotter.m>)
-  mat results_score_evolution;
-
-  cout << endl
-       << "***"
-       << "\tRUNNING REPLICATE " << i+1 << "/" << nb_reps << "\t "
-       << "DATA: " << ef.dataset_filename << endl;
-
-  // set seed
-  unsigned int seed=i*10;
-  std::srand(seed);
-
-  unsigned int nb_bp_searches=5;
-  mat res_mat;
-
-  // load data set
-  struct fann_train_data *data=fann_read_train_from_file(ef.dataset_filename.c_str());
-  // randomize examples order
-  fann_shuffle_train_data(data);
-
-  unsigned int nb_examples=data->num_data;
-  unsigned int nb_inputs=data->num_input;
-  unsigned int nb_outputs=data->num_output;
-  // define data subset proportions
-  unsigned int nb_train_ex=nb_examples*60/100;
-  unsigned int nb_val_ex=nb_examples*20/100;
-  unsigned int nb_test_ex=nb_examples*20/100;
-
-  // allocating memory for all subsets
-  fann_train_data*train_data=fann_instantiate_data(nb_train_ex,nb_inputs,nb_outputs);
-  fann_train_data*val_data=fann_instantiate_data(nb_val_ex,nb_inputs,nb_outputs);
-  fann_train_data*test_data=fann_instantiate_data(nb_test_ex,nb_inputs,nb_outputs);
-
-  // execute segmentation of TRAINING, VALIDATION and TEST sets
-  fann_separate_data(*data,train_data,val_data,test_data);
-  cout<<endl;
-
-  const unsigned int nb_layers=1;
-  const unsigned int nb_hid_units=10;
-  const float desired_error=(const float) 0.00f;
-  const unsigned int epochs_between_reports=1;
-
-  // encode topology description in array
-  vector<unsigned int> desc_vec;
-  desc_vec.push_back(nb_inputs);
-  for(unsigned int i=0;i<nb_layers;i++)
-    desc_vec.push_back(nb_hid_units);
-  desc_vec.push_back(nb_outputs);
-  // cast to array
-  unsigned int *desc_array=&desc_vec[0];
-
-  fann_type min_weight=-1;
-  fann_type max_weight=+1;
-
-  unsigned int nb_classes=train_data->num_output;
-
-  // instantiate net (total NB layers = nb hid layers + input & output layer)
-  struct fann* ann=fann_create_standard_array(nb_layers+2,desc_array);
-  struct fann* best_ann=fann_create_standard_array(nb_layers+2,desc_array);
-
-  fann_randomize_weights(ann,min_weight,max_weight);
-  fann_randomize_weights(best_ann,min_weight,max_weight);
-  fann_train_epoch(best_ann,train_data);
-
-  fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
-  fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
-
-
-  gens/=nb_bp_searches;
-  // initiating training
-  for(unsigned int b=0;b<nb_bp_searches;b++){
-    //reset ann
-    fann_randomize_weights(ann,min_weight,max_weight);
-    for(unsigned int i=0;i<gens;i++){
-      fann_train_epoch(ann,train_data);
-
-      mat line;
-      unsigned int epoch=i+b*gens;
-      double pop_score_mean=-1;
-      double pop_score_variance=-1;
-      double pop_score_stddev=-1;
-      double prediction_accuracy=0;//fann_get_accuracy(best_ann, data);
-      double score=-1;//fann_get_f1_score(best_ann);
-      double validation_accuracy=-1;
-      double validation_score=-1;
-      double train_err=0,val_err=0;
-
-      unsigned int nb_hid_layers_best=fann_get_num_layers(best_ann); // NB LAYERS IS FIXED
-      unsigned int nb_hid_units_best=nb_hid_units; // NB UNITS IS FIXED
-      double MSE=fann_get_MSE(best_ann);
-      if(nb_classes==1) nb_classes=2;
-
-      // calculate perfs on training set
-      mat preds,labels;
-      fann_get_preds_labels(best_ann, train_data,preds,labels);
-      mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
-      compute_error_acc_score(conf_mat, labels, train_err, prediction_accuracy, score);
-      // calculate perfs of BEST on validation set
-      mat val_preds,val_labels;
-      fann_get_preds_labels(best_ann, val_data,val_preds,val_labels);
-      mat val_conf_mat=generate_conf_mat(nb_classes,val_preds,val_labels);
-      compute_error_acc_score(val_conf_mat, val_labels, val_err, validation_accuracy, validation_score);
-      // calculate perfs of CURRENT ANN on validation set
-      mat val_preds_cur,val_labels_cur;
-      double val_err_cur=0, validation_accuracy_cur=0, validation_score_cur=0;
-      fann_get_preds_labels(ann, val_data,val_preds_cur,val_labels_cur);
-      mat val_conf_mat_cur=generate_conf_mat(nb_classes,val_preds_cur,val_labels_cur);
-      compute_error_acc_score(val_conf_mat_cur, val_labels_cur, val_err_cur, validation_accuracy_cur, validation_score_cur);
-
-#ifndef NO_SCREEN_OUT      
-      std::cout<<"epoch="<<epoch<<"of"<<gens*(b+1)
-	       <<"\tBP"<<b
-	       <<"\tscore="<<score
-	       <<"\tacc="<<prediction_accuracy
-	       <<"\tmse="<<MSE
-	       <<"\tNB.hid.units="<<nb_hid_units_best
-	       <<"\tNB.hid.layers="<<nb_hid_layers_best
-	       <<"\tval.score="<<validation_score
-	       <<"\tval.acc="<<validation_accuracy
-	       <<endl;
-#endif
-
-      // format result line (-1 corresponds to irrelevant attributes)
-      line << epoch
-	   << MSE
-	   << prediction_accuracy
-	   << score
-	   << pop_score_variance
-
-	   << pop_score_stddev
-	   << pop_score_mean
-	   << -1//pop_score_median
-	   << -1//pop->organisms.size()
-	   << nb_inputs // inputs
-
-	   << nb_hid_units_best
-	   << nb_outputs//outputs
-	   << nb_hid_layers_best
-	   << true
-	   << -1//selected_mutation_scheme
-
-	   << -1//ensemble_accuracy
-	   << -1//ensemble_score
-	   << validation_accuracy
-	   << validation_score
-	   << epoch
-
-	   << endr;
-      // Write results on file
-      res_mat=join_vert(res_mat,line);
-
-      double ann_val_mse=fann_test_data(ann,val_data);
-      double best_val_mse=fann_test_data(best_ann,val_data);
-
-      // memorize best network
-      if(ann_val_mse<best_val_mse)
-	best_ann=fann_copy(ann);
-    }
-    cout<<endl;
-  }
-  results_score_evolution=join_vert(results_score_evolution, res_mat);
-
-  double test_score=0;
-  double test_acc=0;
-  double test_err=0;
-  // compute ACC and SCORE on TEST SET
-  mat test_preds,test_labels;
-  fann_get_preds_labels(best_ann, test_data,test_preds,test_labels);
-  mat test_conf_mat=generate_conf_mat(nb_classes,test_preds,test_labels);
-  compute_error_acc_score(test_conf_mat, test_labels, test_err, test_acc, test_score);
-  cout<<"Performances on test set: ACC="<<test_acc<<"\tSCORE="<<test_score<<"\tERR="<<test_err
-      <<endl
-      <<endl;
-
-  // append TEST error to result matrix
-  mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
-  mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
-  results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
-  results_score_evolution=join_horiz(results_score_evolution, test_score_m);
-
-  // print-out best perfs
-  double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
-  res_mats_training_perfs.push_back(results_score_evolution);
-
-  ofstream experiment_file("random-seeds.txt",ios::app);
-  cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
-  experiment_file<<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.dataset_filename<<endl;
-  experiment_file.close();
-
-  // clean-up memory
-  fann_destroy(ann);
-  fann_destroy(best_ann);
-
-  for(unsigned int i=0; i<train_data->num_data;i++){
-    free(train_data->input[i]);
-    free(train_data->output[i]);
-  }
-  free(train_data->input);
-  free(train_data->output);
-  free(train_data);
-
-  for(unsigned int i=0; i<val_data->num_data;i++){
-    free(val_data->input[i]);
-    free(val_data->output[i]);
-  }
-  free(val_data->input);
-  free(val_data->output);
-  free(val_data);
-
-  for(unsigned int i=0; i<test_data->num_data;i++){
-    free(test_data->input[i]);
-    free(test_data->output[i]);
-  }
-  free(test_data->input);
-  free(test_data->output);
-  free(test_data);
-}
-
 
 unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations){
   unsigned int count=0;
