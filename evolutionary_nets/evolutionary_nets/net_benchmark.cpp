@@ -327,10 +327,6 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
     // result matrices (to be interpreted by Octave script <Plotter.m>)
     mat results_score_evolution;
 
-    cout<<endl
-       <<"***"
-      <<"\tRUNNING REPLICATE "<<i+1<<"/"<<nb_replicates<<"\t ";
-
     // set seed
     unsigned int seed=i*10;
     std::srand(seed);
@@ -390,8 +386,8 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
     double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
     // save obtained results in memory
     result_matrices_training_perfs.push_back(results_score_evolution);
-    cout            << "THREAD" << omp_get_thread_num() << " replicate=" << i << "\tseed=" << seed << "\tbest_score=" << "\t" << best_score << " on " << data_set_filename << endl;
-    experiment_file << "THREAD" << omp_get_thread_num() << " replicate=" << i << "\tseed=" << seed << "\tbest_score=" << "\t" << best_score << " on " << data_set_filename << endl;
+    cout            << "THREAD&REPLICATE" << omp_get_thread_num() << i << "\tseed=" << seed << "\ttrain.score=" << "\t" << best_score << " on " << data_set_filename << endl;
+    experiment_file << "THREAD&REPLICATE" << omp_get_thread_num() << i << "\tseed=" << seed << "\ttrain.score=" << "\t" << best_score << " on " << data_set_filename << endl;
 }
 
 mat Net_benchmark::compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme){

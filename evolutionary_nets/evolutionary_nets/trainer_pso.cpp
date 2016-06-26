@@ -195,6 +195,8 @@ void Trainer_PSO::PSO_topology_evolution(vector<vec> &velocities, Data_set data_
         MSE                 =   population[0].get_MSE();
         double validation_accuracy=population[0].get_validation_acc();
         double validation_score=population[0].get_validation_score();
+        double test_accuracy=population[0].get_test_acc();
+        double test_score=population[0].get_test_score();
         // compute stats
         pop_score_variance  =   compute_score_variance(population);
         pop_score_stddev    =   compute_score_stddev(population);
@@ -229,6 +231,8 @@ void Trainer_PSO::PSO_topology_evolution(vector<vec> &velocities, Data_set data_
                  << ensemble_score
                  << validation_accuracy
                  << validation_score
+                 << test_accuracy
+                 << test_score
                  << gen
 
                  << endr;

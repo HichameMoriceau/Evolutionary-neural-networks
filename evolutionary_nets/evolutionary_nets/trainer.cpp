@@ -72,7 +72,6 @@ NeuralNet Trainer::train_topology_plus_weights(Data_set data_set, net_topology m
     double test_acc  =0;
     //cross_validated_net=cross_validation_training(data_set, min_topo, max_topo, results_score_evolution, test_score, test_acc, selected_mutation_scheme);
     population=generate_random_topology_population(population.size(),min_topo, max_topo);
-
     cross_validated_net=evolve_through_iterations(data_set, min_topo, max_topo, nb_epochs, results_score_evolution, 1, selected_mutation_scheme, 1);
     // return test score&accuracy as reference
     test_score=cross_validated_net.get_f1_score(data_set.test_set);
@@ -386,6 +385,8 @@ void Trainer::evaluate_population(vector<NeuralNet> &pop, Data_set d, mat& resul
         MSE                 =   population[0].get_MSE();
         double validation_accuracy=population[0].get_validation_acc();
         double validation_score=population[0].get_validation_score();
+        double test_accuracy=population[0].get_test_acc();
+        double test_score=population[0].get_test_score();
         // compute stats
         pop_score_variance  =   compute_score_variance(population);
         pop_score_stddev    =   compute_score_stddev(population);
@@ -419,6 +420,8 @@ void Trainer::evaluate_population(vector<NeuralNet> &pop, Data_set d, mat& resul
                  << ensemble_score
                  << validation_accuracy
                  << validation_score
+                 << test_accuracy
+                 << test_score
                  << nb_err_func_calls
 
                  << endr;

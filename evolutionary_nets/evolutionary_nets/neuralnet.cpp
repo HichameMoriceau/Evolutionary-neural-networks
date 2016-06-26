@@ -268,15 +268,19 @@ void NeuralNet::get_fitness_metrics(Data_set D){
     // perform predictions on provided data-set
     mat H_train = forward_propagate(D.training_set.X);
     mat H_val   = forward_propagate(D.validation_set.X);
+    mat H_test  = forward_propagate(D.test_set.X);
     unsigned int nb_classes = topology.nb_output_units;
     // generate confusion matrix
     mat confusion_matrix_train=generate_conf_mat(nb_classes,H_train, D.training_set.Y);
-    mat confusion_matrix_val=generate_conf_mat(nb_classes,H_val, D.validation_set.Y);
+    mat confusion_matrix_val  =generate_conf_mat(nb_classes,H_val, D.validation_set.Y);
+    mat confusion_matrix_test =generate_conf_mat(nb_classes,H_test, D.test_set.Y);
     unsigned int nb_local_classes_t=count_nb_classes(D.training_set.Y);
     unsigned int nb_local_classes_val=count_nb_classes(D.validation_set.Y);
+    unsigned int nb_local_classes_test=count_nb_classes(D.test_set.Y);
     // update score values
     score=compute_score(confusion_matrix_train,nb_classes, nb_local_classes_t);
     validation_score=compute_score(confusion_matrix_val,nb_classes, nb_local_classes_val);
+    test_score=compute_score(confusion_matrix_test,nb_classes, nb_local_classes_test);
 
     /*ACC CALCULATION*/
     double TP =0;

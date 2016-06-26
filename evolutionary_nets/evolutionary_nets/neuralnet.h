@@ -55,12 +55,13 @@ private:
     double          score;
     double          validation_score;
     double          validation_acc;
+    double          test_score;
+    double          test_acc;
     double          mse;
 
 public:
-                    // ctor
+                    // ctors
                     NeuralNet();
-                    // ctor
                     NeuralNet(net_topology t);
 
     /**
@@ -119,6 +120,8 @@ public:
     double          get_accuracy(){return accuracy;}
     double          get_validation_acc(){return validation_acc;}
     double          set_validation_acc(double v_a){ validation_acc=v_a;}
+    double          get_test_acc(){return test_acc;}
+    double          set_test_acc(double v_a){ test_acc=v_a;}
     /**
      * \brief get_f1_score
      * \param d
@@ -130,6 +133,8 @@ public:
     double          get_f1_score(){return score;}
     double          get_validation_score(){ return validation_score; }
     double          set_validation_score(double v_s){ validation_score=v_s;}
+    double          get_test_score(){ return test_score; }
+    double          set_test_score(double v_s){ test_score=v_s;}
 
     void            set_f1_score(double s){ score=s;}
     void            set_accuracy(double a){ accuracy=a;}
