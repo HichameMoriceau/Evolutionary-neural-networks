@@ -23,10 +23,10 @@ Algorithms:
 
 This work also contains implementations of the following techniques:
  - [Vectorized Feedforward Neural Network](https://en.wikipedia.org/wiki/Feedforward_neural_network) of any topology (using Linear Algebra)
- - [Training, Validation and Test data subsets](https://class.coursera.org/ml-005/lecture/61)
- - [F1 score](https://en.wikipedia.org/wiki/F1_score) measure of prediction ability, [MSE](https://en.wikipedia.org/wiki/Mean_squared_error) and %accuracy
+ - [Segmentation of data set into Training, Validation and Test data subsets](https://class.coursera.org/ml-005/lecture/61)
+ - [F1 score](https://en.wikipedia.org/wiki/F1_score), [MSE](https://en.wikipedia.org/wiki/Mean_squared_error), %accuracy
  - [Neural Network Ensemble](http://www.sciencedirect.com/science/article/pii/S000437020200190X) (*commented for later study*)
- - Basic statistics (mean, variance) => (an implementation of the [k-fold cross-validation](https://en.wikipedia.org/wiki/Cross-validation_(statistics)) method can be found but wasn't used for the experiment)
+ - Basic statistics (mean, variance, etc.) => (an implementation of the [k-fold cross-validation](https://en.wikipedia.org/wiki/Cross-validation_(statistics)) method can be found but isn't currentl used for the experiment)
 
 ## Installation
 The application leverages the following libraries:
@@ -43,19 +43,24 @@ Octave is optional but allows you to generate plots by running pre-written scrip
 
 ## Running the benchmark
 
-
 ```
 $ # Download the repository:
 $ git clone https://github.com/HichameMoriceau/Evolutionary-neural-networks.git
-$ # Go into it
 $ cd Evolutionary-neural-networks/
-$ # give execution permissions (must be done for all bash scripts)
+$ # give execution permissions
 $ chmod +x run_all_benchmarks.sh
-$ # Execute benchmark (all 5 algorithms)
+$ # Execute benchmark (all 5 algorithms on all data sets)
 $ ./run_all_benchmarks.sh
 ```
 
-You might be interested in modifying the hard coded parameters (Number of replicates, population size etc.) in the `run_all_benchmarks.sh` script.
+Once you're all set, you might be interested in modifying the hard coded parameters (Number of replicates, population size etc.) in the `run_all_benchmarks.sh` script.
+
+#### Deleting the benchmark
+
+```
+rm -rf Evolutionary-neural-networks/
+sudo apt-get remove libarmadillo-dev libfann-dev octave
+```
 
 ## Adding more data sets to the benchmark
 
@@ -65,7 +70,7 @@ Please make sure that the data set only contains *numerical* values (you might w
 
 Feature scaling will then be automatically applied when the benchmark loads the data set. The benchmark support classification problem with any number of attributes or prediction classes (2 or more).
 
-### Adding your data set
+#### Adding your data set
 
  - Add your data set in the `data` directory 
  - In `data`, create a directory named after your data set following my convention ('-' must be replaced by "_", directory name must end with "_results")
@@ -73,7 +78,7 @@ Feature scaling will then be automatically applied when the benchmark loads the 
  - Add its path as CLI argument within the `run_all_benchmarks.sh` script (always using a .csv extension).
 
 
-### Converting your data set in a FANN readable format
+#### Converting your data set in a FANN readable format
 
 In the `formatting_scripts` directory you'll find C++ scripts to help you convert your .CSV data set into a .DATA format that the FANN library used in the `BP_experiment` will be able to use.
 
@@ -88,15 +93,15 @@ cat main.cpp | grep "g++"
 cat main.cpp | grep "./"
 ```
 
-### For NEAT
+#### For NEAT
 
 Run `make` within the `NEAT_experiment` directory. The code used here is the original NEAT C++ benchmark application and comes with a Makefile.
 
-### For evolutionary_nets
+#### For evolutionary_nets
 
 `evolutionary_nets` is a QT Creator project. Either build it from the IDE or follow [these instructions](http://stackoverflow.com/questions/19206462/compile-a-qt-project-from-command-line) to build it from CLI.
 
-## Performance considerations
+### Performance considerations
 
 For improved performances, each replicate of the experiment is ran *concurrently* as an [OpenMP](http://openmp.org/wp/) thread.
 
