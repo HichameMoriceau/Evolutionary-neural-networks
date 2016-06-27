@@ -62,7 +62,7 @@ rm -rf Evolutionary-neural-networks/
 sudo apt-get remove libarmadillo-dev libfann-dev octave
 ```
 
-## Adding more data sets to the benchmark
+## Adding more data sets
 
 #### Before adding your data set
 
@@ -75,6 +75,7 @@ Feature scaling will then be automatically applied when the benchmark loads the 
  - Add your data set in the `data` directory 
  - In `data`, create a directory named after your data set following my convention ('-' must be replaced by "_", directory name must end with "_results")
  - Make sure that `BP_experiment/data/` contains data sets in the FANN format and with a `.data` extension.
+ - Create a genome file required for NEAT to run (same convention except the filename must end with "startgenes"), look at the deprecated but insightful `NEATDOC.ps` documentation for how to write these. (It defines the initial topology to be evolved).
  - Add its path as CLI argument within the `run_all_benchmarks.sh` script (always using a .csv extension).
 
 
