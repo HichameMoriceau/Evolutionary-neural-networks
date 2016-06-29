@@ -45,7 +45,7 @@ unsigned int fann_get_nb_hidden_units(fann* best_ann, unsigned int nb_hid_layers
 void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef);
 unsigned int count_nb_classes(mat labels);
 mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels);
-void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness);
+void compute_mse_acc_score(mat preds, mat labels,unsigned int nb_classes,double& mse,double& accuracy,double& fitness);
 
 unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
 mat to_multiclass_format(mat predictions);
@@ -84,9 +84,8 @@ exp_files read_args(int argc, char** argv){
    trained using Gradient Descent and the Back Propagation algorithm.
    Author: Hichame Moriceau
    
-   Compile & Run with: 
-   # g++ -std=c++11 main.cpp -fopenmp -larmadillo -lfann -o runme
-   # ./runme 0 30 100 # run 30 replicates of the first experiment
+   Compile: # g++ -std=c++11 main.cpp -fopenmp -larmadillo -lfann -o runme
+   Run    : # ./runme data/breast-cancer-malignantOrBenign-data-transformed.csv 1 500 # 1 replicate 500 epochs
 */
 int main(int argc, char * argv []){
   // fetch & save CLI args
@@ -197,8 +196,8 @@ mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels){
   return conf_mat;
 }
 
-void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness){
-  unsigned int nb_classes=conf_mat.n_cols;
+void compute_mse_acc_score(mat preds, mat labels,unsigned int nb_classes,double& mse,double& accuracy,double& fitness){
+  mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
   // number of class present in the current subset of the data set
   unsigned int nb_local_classes=count_nb_classes(labels);
   unsigned int nb_examples=0;
@@ -232,8 +231,8 @@ void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accu
   // prevent -nan values
   if(computed_acc!=computed_acc)
     computed_acc=0;
-  // compute error
-  error=(nb_examples-TP)/nb_examples;
+  // compute mse
+  mse=as_scalar(sum(square(preds-labels)))/double(nb_examples);
   accuracy=computed_acc;
   fitness=computed_score;
 }
@@ -548,49 +547,46 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
 
       mat line;
       unsigned int epoch=i+b*gens;
-      double pop_score_mean=0,pop_score_variance=0,pop_score_stddev=0;
-      double training_accuracy=0,training_score=0;
-      double validation_accuracy=0,validation_score=0;
-      double test_accuracy=0,test_score=0;
-      double validation_cur_score=0, validation_cur_accuracy=0;
-      double train_err=0,val_err=0,test_err=0, val_cur_err=0;
+      double pop_score_mean=0,pop_score_var=0,pop_score_stddev=0;
+      double train_acc=0,train_score=0;
+      double val_acc=0,val_score=0;
+      double test_acc=0,test_score=0;
+      double val_cur_score=0, val_cur_accuracy=0;
+      double train_mse=0,val_mse=0,test_mse=0, val_cur_mse=0;
 
       unsigned int nb_hid_layers_best=fann_get_num_layers(best_ann)-2;
       unsigned int nb_hid_units_best=fann_get_nb_hidden_units(best_ann,nb_hid_layers_best);
-      double train_mse=fann_get_MSE(best_ann);
 
       if(nb_classes==1) nb_classes=2;
       // calculate BEST perfs on TRAINING set
       mat preds,labels;
       fann_get_preds_labels(best_ann, train_data,preds,labels);
-      mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
-      compute_error_acc_score(conf_mat, labels, train_err, training_accuracy, training_score);
+      compute_mse_acc_score(preds,labels,nb_classes,train_mse,train_acc,train_score);
       // calculate BEST perfs on VALIDATION set
       mat val_preds,val_labels;
       fann_get_preds_labels(best_ann, val_data,val_preds,val_labels);
-      mat val_conf_mat=generate_conf_mat(nb_classes,val_preds,val_labels);
-      compute_error_acc_score(val_conf_mat, val_labels, val_err, validation_accuracy, validation_score);
+      compute_mse_acc_score(val_preds,val_labels,nb_classes,val_mse, val_acc,val_score);
       // calculate BEST perfs on TEST set
       mat test_preds,test_labels;
       fann_get_preds_labels(best_ann, test_data,test_preds,test_labels);
-      mat test_conf_mat=generate_conf_mat(nb_classes,test_preds,test_labels);
-      compute_error_acc_score(test_conf_mat, test_labels, test_err, test_accuracy, test_score);
+      compute_mse_acc_score(test_preds, test_labels,nb_classes, test_mse, test_acc, test_score);
       // calculate CURRENT on VALIDATION set
       mat val_cur_preds,val_cur_labels;
       fann_get_preds_labels(ann, val_data,val_cur_preds,val_cur_labels);
-      mat val_cur_conf_mat=generate_conf_mat(nb_classes,val_cur_preds,val_cur_labels);
-      compute_error_acc_score(val_cur_conf_mat, val_cur_labels, val_cur_err, validation_cur_accuracy, validation_cur_score);
+      compute_mse_acc_score(val_cur_preds, val_cur_labels,nb_classes,val_cur_mse, val_cur_accuracy,val_cur_score);
 
 #ifndef NO_SCREEN_OUT
       cout<<"epoch="<<epoch<<"of"<<gens*(b+1)
 	  <<" BP"<<b
-	  <<"\ttrain.score="<<training_score
-	  <<"\ttrain.acc="<<training_accuracy
-	  <<"\tmse="<<train_mse
-	  <<"\tval.score="<<validation_score
-	  <<" val.acc="<<validation_accuracy
+	  <<"\ttrain.score="<<train_score
+	  <<"\ttrain.acc="<<train_acc
+	  <<"\ttrain.mse="<<train_mse
+	  <<"\tval.score="<<val_score
+	  <<" val.acc="<<val_acc
+	  <<" val.mse="<<val_mse
 	  <<"\ttest.score="<<test_score
-	  <<" test.acc="<<test_accuracy
+	  <<" test.acc="<<test_acc
+	  <<" test.mse="<<test_mse
 	  <<"\tNB.hid.units="<<nb_hid_units_best
 	  <<"\tNB.hid.layers="<<nb_hid_layers_best
 	  <<endl;
@@ -598,10 +594,10 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
 
       // format result line (-1 corresponds to irrelevant attributes)
       line << epoch
+	   << train_acc
+	   << train_score
 	   << train_mse
-	   << training_accuracy
-	   << training_score
-	   << pop_score_variance
+	   << pop_score_var
 
 	   << pop_score_stddev
 	   << pop_score_mean
@@ -617,10 +613,12 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
 
 	   << -1//ensemble_accuracy
 	   << -1//ensemble_score
-	   << validation_accuracy
-	   << validation_score
-	   << test_accuracy
+	   << val_acc
+	   << val_score
+	   << val_mse
+	   << test_acc
 	   << test_score
+	   << test_mse
 	   << epoch
 
 	   << endr;
@@ -628,7 +626,7 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
       res_mat=join_vert(res_mat,line);
 
       // memorize network that best performs on VALIDATION set
-      if(val_cur_err<val_err)
+      if(val_cur_mse<val_mse)
 	best_ann=fann_copy(ann);
     }
     // clear heap
@@ -636,15 +634,21 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
   }
   results_score_evolution=join_vert(results_score_evolution, res_mat);
 
-  double test_score=0,test_acc=0,test_err=0;
+  /*
+
+    // is now done for every call to the error function
+
+  double test_score=0,test_acc=0,test_mse=0;
   // compute ACC and SCORE on TEST SET
   mat test_preds,test_labels;
   fann_get_preds_labels(best_ann, test_data,test_preds,test_labels);
-  mat test_conf_mat=generate_conf_mat(nb_classes,test_preds,test_labels);
-  compute_error_acc_score(test_conf_mat, test_labels, test_err, test_acc, test_score);
-  cout<<"Performances on test set: ACC="<<test_acc<<"\tSCORE="<<test_score<<"\tERR="<<test_err
+  compute_mse_acc_score(test_preds, test_labels,nb_classes, test_mse, test_acc, test_score);
+  cout<<"Performances on test set: ACC="<<test_acc<<"\tSCORE="<<test_score<<"\tERR="<<test_mse
       <<endl
       <<endl;
+
+  */
+
 
   // clean-up memory
   fann_destroy(best_ann);
@@ -684,11 +688,16 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
   cout<<"deleted"<<endl;
   */
 
+  /*
+
+    // is now done for every call to the error function
+
   // append Cross Validation error to result matrix
   mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
   mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
   results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
   results_score_evolution=join_horiz(results_score_evolution, test_score_m);
+  */
 
   // print-out best perfs
   double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
