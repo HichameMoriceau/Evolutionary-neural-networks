@@ -37,7 +37,7 @@ exp_files read_args(int argc, char** argv){
             ef.dataset_filenames.push_back(argv[i+1]);
 	ef.neuroevolution_settings=argv[nb_ds+1];
         ef.nb_reps=std::atoi(argv[nb_ds+2]);
-        ef.max_nb_err_func_calls=std::atoi(argv[nb_ds+4]);
+        ef.max_nb_err_func_calls=std::atoi(argv[nb_ds+3]);
         ef.pop_size=std::atoi(argv[nb_ds+4]);
         return ef;
     }
@@ -51,14 +51,6 @@ int main(int argc, char *argv[]) {
   // read CLI args
   exp_files ef=read_args(argc,argv);
   
-  for(unsigned int i=0;i<ef.dataset_filenames.size();i++)
-    cout<<"ds"<<i<<" : "<<ef.dataset_filenames[i]<<endl;
-
-  cout<<"neuroevolution_settings="<<ef.neuroevolution_settings<<endl;
-  cout<<"nb_reps="<<ef.nb_reps<<endl;
-  cout<<"max_nb_err_func_calls="<<ef.max_nb_err_func_calls<<endl;
-  cout<<"pop size="<<ef.pop_size<<endl;
-
   //Load in the neuro evolution params
   NEAT::load_neat_params(ef.neuroevolution_settings.c_str(),true);
 
@@ -70,12 +62,6 @@ int main(int argc, char *argv[]) {
     ef.startgene=ef.result_file+"_startgenes";
     ef.startgene=ef.startgene.substr(5, ef.startgene.size());
     ef.result_file+="_results/NEAT-results.mat";
-    
-    cout<<"startgene filename = "<<ef.startgene<<endl;
-    cout<<"current ds         = "<<ef.current_ds<<endl;
-    cout<<"result_filename    = "<<ef.result_file<<endl;
-    cout<<"nb reps            = "<<ef.nb_reps<<endl;
-    cout<<"pop size           = "<<ef.pop_size<<endl;
     // run experiment
     multiclass_test(ef);    
   }

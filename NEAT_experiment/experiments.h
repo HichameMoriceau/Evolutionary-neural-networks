@@ -47,6 +47,7 @@ void multiclass_epoch(Population *pop,int generation, Organism& best_org, mat &r
 void multiclass_evaluate(Organism* org,string dataset_filename, mat &res_mat,unsigned int& nb_calls_err_func,Population *pop, unsigned int generation, Organism& best_org);
 
 // utility routines for Classification problems (BCM, Iris etc.)
+mat generate_metric_line(Population* population,vector<double> all_fitnesses, Organism& best_org, unsigned int gen, unsigned int nb_calls_err_func);
 void evaluate_perfs(double** data, unsigned int nb_examples, unsigned int nb_attributes_pls_bias, Network* net, double& error, double& fitness, double& accuracy);
 double** load_data_array(string dataset_filename,unsigned int &height, unsigned int &width);
 unsigned int count_nb_classes(mat labels);

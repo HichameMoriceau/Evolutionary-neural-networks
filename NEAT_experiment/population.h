@@ -32,7 +32,7 @@ namespace NEAT {
   // ---------------------------------------------  
   // POPULATION CLASS:
   //   A Population is a group of Organisms   
-  //   including their species                        
+  //   including their species                 
   // ---------------------------------------------  
   class Population {
 

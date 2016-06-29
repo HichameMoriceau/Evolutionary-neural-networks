@@ -89,77 +89,49 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
   evaluate_perfs(training_data  ,training_height,  nb_attributes,net,org->training_mse, org->training_fitness,   org->training_accuracy); 
   org->fitness=org->training_fitness;
 
-  std::vector<double> all_fitnesses;
+  vector<double> all_fitnesses;
   // find fittest
   for(curorg=(pop->organisms).begin(); curorg!=(pop->organisms).end(); curorg++){
     if((*curorg)->fitness>best_org.fitness){
-      // memorize organism
-      best_org.error=(*curorg)->error;
+      // memorize organism details
       best_org.training_accuracy=(*curorg)->training_accuracy;
       best_org.training_fitness=(*curorg)->training_fitness;
+      best_org.training_mse=(*curorg)->training_mse;
+
       best_org.validation_accuracy=(*curorg)->validation_accuracy;
       best_org.validation_fitness=(*curorg)->validation_fitness;
+      best_org.validation_mse=(*curorg)->validation_mse;
+
       best_org.test_accuracy=(*curorg)->test_accuracy;
       best_org.test_fitness=(*curorg)->test_fitness;
+      best_org.test_mse=(*curorg)->test_mse;
+
+      best_org.net->numnodes=(*curorg)->net->nodecount();
+      best_org.net->numlinks=(*curorg)->net->linkcount();
+
       best_org.fitness=(*curorg)->fitness;
+      best_org.error=(*curorg)->error;
     }
     // memorize organism's fitness
     all_fitnesses.push_back((*curorg)->training_fitness);
   }
 
-  mat line;
-  double pop_score_mean=pop->mean(all_fitnesses);
-  double pop_score_variance=pop->var(all_fitnesses);
-  double pop_score_stddev=pop->stddev(all_fitnesses);
-  double training_accuracy=best_org.training_accuracy;
-  double training_score=best_org.fitness;
-  double training_mse=best_org.training_mse;
-  double validation_accuracy=best_org.validation_accuracy;
-  double validation_score=best_org.validation_fitness;
-  double test_accuracy=best_org.test_accuracy;
-  double test_score=best_org.test_fitness;
-
-  unsigned int hidden_units=((best_org.gnome)->nodes).size();
+  mat line=generate_metric_line(pop, all_fitnesses, best_org, generation, nb_calls_err_func);
 
 #ifndef NO_SCREEN_OUT
-  std::cout<<"NB.err.func.calls="<<nb_calls_err_func
-	   <<"\ttrain.score="<<training_score
-	   <<"\ttrain.acc="<<training_accuracy
-	   <<"\ttrain.err="<<training_mse
-	   <<"\tNB nodes="<<hidden_units
-	   <<"\tpop.fit.mean="<<pop_score_mean
-	   <<"\tpop.fit.var="<<pop_score_variance
-	   <<"\tpop.fit.stddev="<<pop_score_stddev<<endl;
+                cout << fixed
+                     << setprecision(2)
+                     <<"NB.err.func.calls="<<line[0]<<"\t"
+                     <<"gen="<<line[1]<<"\t"
+                     <<"train.mse="<<line[4]<<"\t"
+                     <<"val.mse="<<line[10]<<"\t"
+                     <<"test.mse="<<line[7]<<"\t"
+                     <<"pop.fit.mean="<<line[12]<<"\t"
+                     <<"NB.links="<<line[14]<<"\t"
+                     <<"NB.nodes="<<line[15]<<"\t"
+                     << endl;
 #endif
 
-  // format result line (-1 = irrelevant attributes)
-  line << nb_calls_err_func
-       << training_mse
-       << training_accuracy
-       << training_score
-       << pop_score_variance
-
-       << pop_score_stddev
-       << pop_score_mean
-       << -1//pop_score_median
-       << pop->organisms.size()
-       << best_org.net->inputs.size()
-
-       << hidden_units
-       << best_org.net->outputs.size()
-       << -1//nb_hidden_layers
-       << true
-       << 0//selected_mutation_scheme
-
-       << -1//ensemble_accuracy
-       << -1//ensemble_score
-       << validation_accuracy
-       << validation_score
-       << test_accuracy
-       << test_score
-       << generation
-
-       << endr;
   // Write results on file
   res_mat=join_vert(res_mat,line);  
   
@@ -179,6 +151,34 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
   for (unsigned int i=0; i<test_height; i++)
     delete [] test_data[i];
   delete [] test_data;
+}
+
+mat generate_metric_line(Population* population,vector<double> all_fitnesses, Organism& best_org, unsigned int gen, unsigned int nb_calls_err_func){
+    mat line;
+    line << nb_calls_err_func
+         << gen
+
+         << best_org.training_accuracy
+         << best_org.training_fitness
+         << best_org.training_mse
+
+         << best_org.test_accuracy
+         << best_org.test_fitness
+         << best_org.test_mse
+
+         << best_org.validation_accuracy
+         << best_org.validation_fitness
+         << best_org.validation_mse
+
+         << population->var(all_fitnesses)
+         << population->mean(all_fitnesses)
+         << population->organisms.size()
+
+         << best_org.net->numlinks // instead of: nb_units_per_hidden_layer
+         << best_org.net->numnodes // instead of: nb_hidden_layers
+
+         << endr;
+    return line;
 }
 
 void evaluate_perfs(double** data,
