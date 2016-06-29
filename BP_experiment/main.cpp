@@ -38,11 +38,11 @@ vector<string> split(const string& str, int delimiter(int) = ::isspace){
 
 int rand_int(int min, int max);
 void experiment(exp_files ef);
-mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_files ef);
+mat compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, exp_files ef);
 struct fann_train_data* fann_instantiate_data(unsigned int nb_examples,unsigned int nb_inputs,unsigned int nb_outputs);
 void fann_separate_data(fann_train_data data,fann_train_data* training_data,fann_train_data* validation_data, fann_train_data* test_data);
 unsigned int fann_get_nb_hidden_units(fann* best_ann, unsigned int nb_hid_layers);
-void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef);
+void multiclass_cascade_training_task(unsigned int i, exp_files ef);
 unsigned int count_nb_classes(mat labels);
 mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels);
 void compute_mse_acc_score(mat preds, mat labels,unsigned int nb_classes,double& mse,double& accuracy,double& fitness);
@@ -114,7 +114,7 @@ int rand_int(int min, int max){
 void experiment(exp_files ef){
   std::ofstream oFile(ef.result_file.c_str(),std::ios::out);
   vector<mat> res_mats_training_perfs;
-  mat avrg_mat=compute_learning_curves_perfs(ef.max_nb_err_func_calls,ef.nb_reps,res_mats_training_perfs,ef);
+  mat avrg_mat=compute_learning_curves_perfs(res_mats_training_perfs,ef);
   mat res_mat_err = compute_replicate_error(ef.nb_reps,res_mats_training_perfs);
   // save results
   avrg_mat = join_horiz(avrg_mat, ones(avrg_mat.n_rows,1) * ef.nb_reps);
@@ -123,7 +123,7 @@ void experiment(exp_files ef){
   print_results_octave_format(oFile,res_mat_err,"err_results");
 }
 
-mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector<mat> &result_matrices_training_perfs, exp_files ed){
+mat compute_learning_curves_perfs(vector<mat> &result_matrices_train_perfs, exp_files ef){
   // return variable
   mat averaged_performances;
   // for each replicate
@@ -132,14 +132,29 @@ mat compute_learning_curves_perfs(unsigned int gens, unsigned int nb_reps,vector
     // kick off a single thread
 #pragma omp single
     {
-      for(unsigned int i=0; i<nb_reps; ++i) {
+      for(unsigned int i=0; i<ef.nb_reps; ++i) {
 #pragma omp task
-	  multiclass_cascade_training_task(i, nb_reps,gens,result_matrices_training_perfs,ed);
+	{
+	  multiclass_cascade_training_task(i,ef);
+	}
       }
     }
   }
+
+  cout<<"gathering results"<<endl;
+  // aggregate replicates results
+  for(unsigned int i=0;i<ef.nb_reps;i++){
+    mat r;
+    r.load("res"+to_string(i)+".mat");
+    result_matrices_train_perfs.push_back(r);
+  }
+
+  // clean-up auto generated result files
+  for(unsigned int i=0;i<ef.nb_reps;i++)
+    std::remove(("res"+to_string(i)+".mat").c_str());
+
   // average PERFS of all replicates
-  averaged_performances = average_matrices(result_matrices_training_perfs);
+  averaged_performances = average_matrices(result_matrices_train_perfs);
   return averaged_performances;
 }
 
@@ -443,15 +458,16 @@ const string get_current_date_time(){
   return buffer;
 }
 
-void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsigned int gens,vector<mat> &res_mats_training_perfs, exp_files ef){
+void multiclass_cascade_training_task(unsigned int i, exp_files ef){
   // result matrices (to be interpreted by Octave script <Plotter.m>)
   mat results_score_evolution;
   mat res_mat;
+  unsigned int iter=ef.max_nb_err_func_calls;
   unsigned int nb_opt_algs=5;
-  
+
   cout << endl
        << "***"
-       << "\tRUNNING REPLICATE " << i+1 << "/" << nb_reps << "\t "
+       << "\tRUNNING REPLICATE " << i+1 << "/" << ef.nb_reps << "\t "
        << "DATA: " << ef.current_ds << endl;
 
   // set seed
@@ -509,7 +525,7 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
   // Layer Growth Factor (<LGF> times the number of input attributes)
   unsigned int LGF=2;
 
-  gens/=nb_opt_algs;
+  iter/=nb_opt_algs;
   // initiating training
   for(unsigned int b=0;b<nb_opt_algs;b++){
     cout<<"nb hid layers="<<nb_hid_layers<<endl;
@@ -528,8 +544,8 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
     desc_vec.push_back(nb_outputs);
     // cast to array
     unsigned int *desc_array=&desc_vec[0];
-    // instantiate model
-    ann=fann_create_standard_array(nb_hid_layers+2,desc_array); // total NB layers = nb hid layers + input & output layer
+    // instantiate model (total NB layers = nb hid layers + input & output layer)
+    ann=fann_create_standard_array(nb_hid_layers+2,desc_array);
 
     // use sigmoid activation function for all neurons
     fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
@@ -541,12 +557,11 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
 	<<"\tNb outputs           = "<<fann_get_num_output(ann)<<endl
 	<<"\tNb hid. layers       = "<<nb_hid_layers<<endl;
 
-    for(unsigned int i=0;i<gens;i++){
+    for(unsigned int i=0;i<iter;i++){
       fann_train_epoch(ann,train_data);
 
-
       mat line;
-      unsigned int epoch=i+b*gens;
+      unsigned int epoch=i+b*iter;
       double pop_score_mean=0,pop_score_var=0,pop_score_stddev=0;
       double train_acc=0,train_score=0;
       double val_acc=0,val_score=0;
@@ -575,53 +590,45 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
       fann_get_preds_labels(ann, val_data,val_cur_preds,val_cur_labels);
       compute_mse_acc_score(val_cur_preds, val_cur_labels,nb_classes,val_cur_mse, val_cur_accuracy,val_cur_score);
 
-#ifndef NO_SCREEN_OUT
-      cout<<"epoch="<<epoch<<"of"<<gens*(b+1)
-	  <<" BP"<<b
-	  <<"\ttrain.score="<<train_score
-	  <<"\ttrain.acc="<<train_acc
-	  <<"\ttrain.mse="<<train_mse
-	  <<"\tval.score="<<val_score
-	  <<" val.acc="<<val_acc
-	  <<" val.mse="<<val_mse
-	  <<"\ttest.score="<<test_score
-	  <<" test.acc="<<test_acc
-	  <<" test.mse="<<test_mse
-	  <<"\tNB.hid.units="<<nb_hid_units_best
-	  <<"\tNB.hid.layers="<<nb_hid_layers_best
-	  <<endl;
-#endif
-
       // format result line (-1 corresponds to irrelevant attributes)
-      line << epoch
+      line << epoch // = nb_err_func_calls
+	   << iter
+
 	   << train_acc
 	   << train_score
 	   << train_mse
-	   << pop_score_var
 
-	   << pop_score_stddev
-	   << pop_score_mean
-	   << -1//pop_score_median
-	   << -1//pop->organisms.size()
-	   << nb_inputs
-
-	   << nb_hid_units_best
-	   << nb_outputs
-	   << nb_hid_layers_best
-	   << true
-	   << -1//selected_mutation_scheme
-
-	   << -1//ensemble_accuracy
-	   << -1//ensemble_score
-	   << val_acc
-	   << val_score
-	   << val_mse
 	   << test_acc
 	   << test_score
 	   << test_mse
-	   << epoch
+
+	   << val_acc
+	   << val_score
+	   << val_mse
+
+	   << -1 // instead of: population fitness variance
+	   << -1 // instead of: population fitness mean
+	   << -1 // instead of: population size
+
+	   << nb_hid_units
+	   << nb_hid_layers
 
 	   << endr;
+
+#ifndef NO_SCREEN_OUT
+      cout << fixed
+	   << setprecision(2)
+	   <<"NB.err.func.calls="<<epoch<<"\t"
+	//<<"gen="<<epoch<<"\t" // (irrelevant for BP)
+	   <<"train.mse="<<train_mse<<"\t"
+	   <<"val.mse="<<val_mse<<"\t"
+	   <<"test.mse="<<test_mse<<"\t"
+	//<<"pop.fit.mean="<<-1<<"\t" // (irrelevant for BP)
+	   <<"NB.hid.units="<<nb_hid_units<<"\t"
+	   <<"NB.hid.layers="<<nb_hid_layers<<"\t"
+	   << endl;
+#endif
+
       // Write results on file
       res_mat=join_vert(res_mat,line);
 
@@ -634,21 +641,9 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
   }
   results_score_evolution=join_vert(results_score_evolution, res_mat);
 
-  /*
-
-    // is now done for every call to the error function
-
-  double test_score=0,test_acc=0,test_mse=0;
-  // compute ACC and SCORE on TEST SET
-  mat test_preds,test_labels;
-  fann_get_preds_labels(best_ann, test_data,test_preds,test_labels);
-  compute_mse_acc_score(test_preds, test_labels,nb_classes, test_mse, test_acc, test_score);
-  cout<<"Performances on test set: ACC="<<test_acc<<"\tSCORE="<<test_score<<"\tERR="<<test_mse
-      <<endl
-      <<endl;
-
-  */
-
+    // save obtained results locally (binary format)
+#pragma omp critical
+  results_score_evolution.save("res"+to_string(i)+".mat");
 
   // clean-up memory
   fann_destroy(best_ann);
@@ -688,20 +683,8 @@ void multiclass_cascade_training_task(unsigned int i, unsigned int nb_reps,unsig
   cout<<"deleted"<<endl;
   */
 
-  /*
-
-    // is now done for every call to the error function
-
-  // append Cross Validation error to result matrix
-  mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
-  mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
-  results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
-  results_score_evolution=join_horiz(results_score_evolution, test_score_m);
-  */
-
   // print-out best perfs
   double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
-  res_mats_training_perfs.push_back(results_score_evolution);
 
   ofstream experiment_file("random-seeds.txt",ios::app);
   cout           <<"THREAD"<<omp_get_thread_num()<<" replicate="<<i<<"\tseed="<<seed<<"\tbest_score="<<"\t"<<best_score<<" on "<<ef.current_ds<<endl;
