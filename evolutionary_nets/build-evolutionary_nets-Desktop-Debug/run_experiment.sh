@@ -13,8 +13,8 @@
     data/breast-cancer-recurrence-data-transformed.csv \
     data/iris-data-transformed.csv \
     data/wine-data-transformed.csv \
-    10 \
-    100 \
+    30 \
+    5000 \
     100
 
 # Please note that running each algorithm:

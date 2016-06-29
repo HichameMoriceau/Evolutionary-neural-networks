@@ -15,7 +15,7 @@ double Trainer::compute_score_variance(vector<NeuralNet> pop){
     double variance=0.0f;
     vec score_values(pop.size());
     for(unsigned int i=0; i< pop.size(); ++i) {
-        score_values(i)=pop[i].get_f1_score();
+        score_values(i)=pop[i].get_train_score();
         // round after two decimal places
         score_values(i)=(round(score_values(i)) * 100) / 100.0f;
     }
@@ -27,7 +27,7 @@ double Trainer::compute_score_stddev(vector<NeuralNet> pop){
     double std_dev=0.0f;
     vec score_values(pop.size());
     for(unsigned int i=0; i< pop.size(); ++i) {
-        score_values(i)=pop[i].get_f1_score();
+        score_values(i)=pop[i].get_train_score();
         // round after two decimal places
         score_values(i)=(round(score_values(i)) * 100) / 100.0f;
     }
@@ -39,7 +39,7 @@ double Trainer::compute_score_mean(vector<NeuralNet> pop){
     double mean_pop=0.0f;
     vec score_values(pop.size());
     for(unsigned int i=0; i< pop.size(); ++i) {
-        score_values(i)=pop[i].get_f1_score();
+        score_values(i)=pop[i].get_train_score();
         // round after two decimal places
         score_values(i)=(round(score_values(i)) * 100) / 100.0f;
     }
@@ -51,7 +51,7 @@ double Trainer::compute_score_median(vector<NeuralNet> pop){
     double median_pop=0.0f;
     vec score_values(pop.size());
     for(unsigned int i=0; i< pop.size(); ++i) {
-        score_values(i)=pop[i].get_f1_score();
+        score_values(i)=pop[i].get_train_score();
         // round after two decimal places
         score_values(i)=(round(score_values(i)) * 100) / 100.0f;
     }
@@ -59,37 +59,51 @@ double Trainer::compute_score_median(vector<NeuralNet> pop){
     return median_pop;
 }
 
+mat Trainer::generate_metric_line(vector<NeuralNet> population, unsigned int gen){
+    mat line;
+    line << nb_err_func_calls
+         << gen
+
+         << population[0].get_train_acc()
+         << population[0].get_train_score()
+         << population[0].get_train_mse()
+
+         << population[0].get_test_acc()
+         << population[0].get_test_score()
+         << population[0].get_test_mse()
+
+         << population[0].get_val_acc()
+         << population[0].get_val_score()
+         << population[0].get_val_mse()
+
+         << compute_score_variance(population)
+         << compute_score_mean(population)
+         << population.size()
+
+         << population[0].get_topology().nb_units_per_hidden_layer
+         << population[0].get_topology().nb_hidden_layers
+
+         << endr;
+
+    return line;
+}
+
 NeuralNet Trainer::train_topology_plus_weights(Data_set data_set, net_topology max_topo, mat &results_score_evolution, unsigned int selected_mutation_scheme) {
-    // return variable
-    NeuralNet cross_validated_net;
     net_topology min_topo;
     min_topo.nb_input_units=max_topo.nb_input_units;
     min_topo.nb_units_per_hidden_layer=1;
     min_topo.nb_output_units=max_topo.nb_output_units;
     min_topo.nb_hidden_layers=1;
 
-    double test_score=0;
-    double test_acc  =0;
-    //cross_validated_net=cross_validation_training(data_set, min_topo, max_topo, results_score_evolution, test_score, test_acc, selected_mutation_scheme);
+    //trained_net=cross_val_training(data_set, min_topo, max_topo, results_score_evolution, test_score, test_acc, selected_mutation_scheme);
     population=generate_random_topology_population(population.size(),min_topo, max_topo);
-    cross_validated_net=evolve_through_iterations(data_set, min_topo, max_topo, nb_epochs, results_score_evolution, 1, selected_mutation_scheme, 1);
-    // return test score&accuracy as reference
-    test_score=cross_validated_net.get_f1_score(data_set.test_set);
-    test_acc  =cross_validated_net.get_accuracy(data_set.test_set);
-    // append Cross Validation error to result matrix
-    mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
-    mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
-    results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
-    results_score_evolution=join_horiz(results_score_evolution, test_score_m);
-    cout<<"Performances on test set: F1 score="<<test_score<<", acc="<<test_acc<<endl;
-    mat mutation_scheme=ones(results_score_evolution.n_rows,1) * selected_mutation_scheme;
-    results_score_evolution=join_horiz(results_score_evolution, mutation_scheme);
-    return cross_validated_net;
+    NeuralNet trained_net=evolve_through_iterations(data_set, min_topo, max_topo, nb_epochs, results_score_evolution, 1, selected_mutation_scheme, 1);
+    return trained_net;
 }
 
-NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min_topo, net_topology max_topo, mat &results_score_evolution, double &test_score, double &test_acc, unsigned int selected_mutation_scheme){
+NeuralNet Trainer::cross_val_training(Data_set data_set, net_topology min_topo, net_topology max_topo, mat &results_score_evolution, double &test_score, double &test_acc, unsigned int selected_mutation_scheme){
     // Using 'leave-one-out cross-validation' (exhaustive cross validation: particular case of k-fold CV)
-    unsigned int nb_folds=data_set.training_set.X.n_rows;
+    unsigned int nb_folds=data_set.train_set.X.n_rows;
     NeuralNet tmp_net(max_topo), cross_validated_net(max_topo);
     tmp_net.set_topology(max_topo);
     cross_validated_net.set_topology(max_topo);
@@ -99,7 +113,7 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
     population=generate_random_topology_population(pop_size,min_topo, max_topo);
 
     unsigned int nb_cv_gens=(nb_epochs)-(nb_epochs/nb_folds);
-    double freq_change_CV_percent = 1;
+    //double freq_change_CV_percent = 1;
 
     // Register signals
     signal(SIGINT, user_interrupt_handler);
@@ -113,14 +127,14 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
         cout << "Using validation-set" << k << " of" << nb_folds-1 << endl;
         data_set.subdivide_data_cross_validation(k, nb_folds);
         // make sure topology is adequate to data-set
-        max_topo.nb_input_units=data_set.training_set.X.n_cols;
+        max_topo.nb_input_units=data_set.train_set.X.n_cols;
         max_topo.nb_output_units=data_set.find_nb_prediction_classes(data_set.data);
 
         // empty temporary result matrix
         tmp_results_perfs.reset();
         tmp_net=evolve_through_iterations(data_set, min_topo, max_topo, 1/*nb_cv_gens/freq_change_CV_percent*/, tmp_results_perfs, k, selected_mutation_scheme, i);
 
-        if(tmp_net.get_f1_score(data_set.validation_set)>=cross_validated_net.get_f1_score(data_set.validation_set)){
+        if(tmp_net.get_train_score(data_set.val_set)>=cross_validated_net.get_train_score(data_set.val_set)){
             // update best model
             cross_validated_net.set_topology(tmp_net.get_topology());
             cross_validated_net.set_params(tmp_net.get_params());
@@ -143,50 +157,47 @@ NeuralNet Trainer::cross_validation_training(Data_set data_set, net_topology min
     // force last training cycle to do all epochs
     set_epsilon(-1);
     // force last training cycle to make use of entire training set
-    data_set.training_set.X=join_vert(data_set.training_set.X,   data_set.training_set.X);
-    data_set.training_set.Y=join_vert(data_set.training_set.Y, data_set.training_set.Y);
+    data_set.train_set.X=join_vert(data_set.train_set.X,   data_set.train_set.X);
+    data_set.train_set.Y=join_vert(data_set.train_set.Y, data_set.train_set.Y);
     // train net
-    mat perfs_entire_training_set;
+    mat perfs_entire_train_set;
     for(unsigned int i=0;i<nb_epochs/nb_folds;i++){
-        tmp_net=evolve_through_iterations(data_set, min_topo, max_topo, 1, perfs_entire_training_set, nb_folds, -1, passed_gens+i);
+        tmp_net=evolve_through_iterations(data_set, min_topo, max_topo, 1, perfs_entire_train_set, nb_folds, -1, passed_gens+i);
         // if user stopped experiment
         if(usf){
             cout<<"early termination"<<endl;
             break;
         }
     }
-    if(tmp_net.get_f1_score(data_set.validation_set)>=cross_validated_net.get_f1_score(data_set.validation_set)){
+    if(tmp_net.get_train_score(data_set.val_set)>=cross_validated_net.get_train_score(data_set.val_set)){
         // update best model
         cross_validated_net.set_topology(tmp_net.get_topology());
         cross_validated_net.set_params(tmp_net.get_params());
     }
 
     // return test score as reference
-    test_score=cross_validated_net.get_f1_score(data_set.test_set);
+    test_score=cross_validated_net.get_train_score(data_set.test_set);
     // return test accuracy as reference
-    test_acc  =cross_validated_net.get_accuracy(data_set.test_set);
+    test_acc  =cross_validated_net.get_train_acc(data_set.test_set);
     // return result matrix as reference
-    results_score_evolution=join_vert(perfs_cross_validation, perfs_entire_training_set);
+    results_score_evolution=join_vert(perfs_cross_validation, perfs_entire_train_set);
     // return trained net
     return cross_validated_net;
 }
 
-void Trainer::elective_accuracy(vector<NeuralNet> pop, Data_set data_set, double &ensemble_accuracy, double &ensemble_score){
+void Trainer::elective_acc(vector<NeuralNet> pop, Data_set data_set, double &ensemble_acc, double &ensemble_score){
     // sort pop by fitness
-    //evaluate_population(pop, data_set);
-    unsigned int nb_individuals=pop.size();
+    sort(pop.begin(), pop.end());
     unsigned int nb_classes=pop[0].get_topology().nb_output_units;
-    unsigned int nb_examples=data_set.training_set.Y.n_rows;
-    mat elected_votes(data_set.training_set.X.n_rows,1);
-    mat pos_votes(data_set.training_set.X.n_rows,1);
-    mat neg_votes(data_set.training_set.X.n_rows,1);
+    unsigned int nb_examples=data_set.train_set.Y.n_rows;
+    mat elected_votes(data_set.train_set.X.n_rows,1);
     // keeps track of number of votes for each class
     vector<map<unsigned int, unsigned int> >votes(nb_examples);
 
     // for each indiv
     for(unsigned int i=0;i<pop.size(); i++){
         // perform predictions on data-set
-        mat H=pop[i].forward_propagate(data_set.training_set.X);
+        mat H=pop[i].forward_propagate(data_set.train_set.X);
         mat Predictions=to_multiclass_format(H);
         // memorize vote
         for(unsigned int p=0; p<Predictions.n_rows; p++){
@@ -207,14 +218,14 @@ void Trainer::elective_accuracy(vector<NeuralNet> pop, Data_set data_set, double
     mat confusion_matrix(nb_classes, nb_classes);
     for(unsigned int i=0; i<nb_classes; i++) {
         for(unsigned int j=0; j<nb_classes; j++){
-            confusion_matrix(i,j)=count_nb_identicals(i,j, elected_votes, data_set.training_set.Y);
+            confusion_matrix(i,j)=count_nb_identicals(i,j, elected_votes, data_set.train_set.Y);
         }
     }
 
     vec scores(nb_classes);
     // averaged f1 score based on precision and recall
     double computed_score=0;
-    double computed_accuracy=0;
+    double computed_acc=0;
     // computing f1 score for each label
     for(unsigned int i=0; i<nb_classes; i++){
         double TP=confusion_matrix(i,i);
@@ -234,10 +245,10 @@ void Trainer::elective_accuracy(vector<NeuralNet> pop, Data_set data_set, double
     double TP=0;
     for(unsigned int i=0;i<nb_classes;i++)
         TP+=confusion_matrix(i,i);
-    computed_accuracy=(TP/elected_votes.n_rows)*100;
+    computed_acc=(TP/elected_votes.n_rows)*100;
 
     // return ensemble accuracy
-    ensemble_accuracy=computed_accuracy;
+    ensemble_acc=computed_acc;
     // return ensemble score
     ensemble_score=computed_score;
 }
@@ -282,7 +293,7 @@ mat Trainer::to_multiclass_format(mat predictions){
     return formatted_predictions;
 }
 
-vector<NeuralNet> Trainer::generate_population(unsigned int pop_size, net_topology t, Data_set d) {
+vector<NeuralNet> Trainer::generate_population(unsigned int pop_size, net_topology t) {
     vector<NeuralNet> pop(pop_size);
     for(unsigned int i=0;i<pop_size;++i){
         NeuralNet tmp_net(t);
@@ -355,79 +366,16 @@ vector<NeuralNet> Trainer::generate_random_topology_population(unsigned int quan
 }
 
 void Trainer::evaluate_population(vector<NeuralNet> &pop, Data_set d, mat& results_score_evolution) {
-
-
-    // recorded metrics and printing vars
-    mat new_line;
-    double prediction_accuracy = 0;
-    double score = 0;
-    double MSE   = 0;
-    double pop_score_variance = 100;
-    double pop_score_stddev = 0;
-    double pop_score_mean = 0;
-    double pop_score_median = 0;
-    double ensemble_accuracy = 0;
-    double ensemble_score = 0;
-    double pop_score = 0;
-    double pop_accuracy=0;
-
     // update all performance metrics
-    for(unsigned int i=0 ; i < pop.size() ; ++i){
+    for(unsigned int i=0 ; i < pop.size();++i){
         pop[i].get_fitness_metrics(d);
         nb_err_func_calls++;
         // sort by fittest
         sort(pop.begin(), pop.end());
-
-        // print results
-        // record model performances on new data
-        prediction_accuracy =   population[0].get_accuracy();
-        score               =   population[0].get_f1_score();
-        MSE                 =   population[0].get_MSE();
-        double validation_accuracy=population[0].get_validation_acc();
-        double validation_score=population[0].get_validation_score();
-        double test_accuracy=population[0].get_test_acc();
-        double test_score=population[0].get_test_score();
-        // compute stats
-        pop_score_variance  =   compute_score_variance(population);
-        pop_score_stddev    =   compute_score_stddev(population);
-        pop_score_mean      =   compute_score_mean(population);
-        pop_score_median    =   compute_score_median(population);
-        // record results (performances and topology description)
-        unsigned int inputs             =   population[0].get_topology().nb_input_units;
-        unsigned int hidden_units       =   population[0].get_topology().nb_units_per_hidden_layer;
-        unsigned int outputs            =   population[0].get_topology().nb_output_units;
-        unsigned int nb_hidden_layers   =   population[0].get_topology().nb_hidden_layers;
-        // format result line
-        new_line << nb_err_func_calls // i+1
-                 << MSE
-                 << prediction_accuracy
-                 << score
-                 << pop_score_variance
-
-                 << pop_score_stddev
-                 << pop_score_mean
-                 << pop_score_median
-                 << population.size()
-                 << inputs
-
-                 << hidden_units
-                 << outputs
-                 << nb_hidden_layers
-                 << true
-                 << -1
-
-                 << ensemble_accuracy
-                 << ensemble_score
-                 << validation_accuracy
-                 << validation_score
-                 << test_accuracy
-                 << test_score
-                 << nb_err_func_calls
-
-                 << endr;
-
+        // format population performances
+        mat line=generate_metric_line(population,0);
         // append result line to result matrix
-        results_score_evolution = join_vert(results_score_evolution, new_line);
+        results_score_evolution = join_vert(results_score_evolution, line);
 
     }
     // sort pop according to score
@@ -450,7 +398,7 @@ mat Trainer::get_population_scores(data_subset d){
     mat scores;
     for(unsigned int i=0; i<population.size(); ++i) {
         mat tmp;
-        tmp={ population[i].get_f1_score(d) };
+        tmp={ population[i].get_train_score(d) };
         scores=join_horiz(scores, tmp);
     }
     return scores;

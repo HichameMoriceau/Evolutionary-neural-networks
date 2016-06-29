@@ -37,7 +37,7 @@ public:
 
     virtual void        train(Data_set data_set, NeuralNet &net) = 0;
     virtual void        train(Data_set data_set, NeuralNet &net, mat &results_cost_and_score_evolution) = 0;
-    //virtual void    single_epoch(vector<vec> &population, data_subset training_set, net_topology min_topo, net_topology max_topology, unsigned int selected_mutation_scheme) =0;
+    //virtual void    single_epoch(vector<vec> &population, data_subset train_set, net_topology min_topo, net_topology max_topology, unsigned int selected_mutation_scheme) =0;
 
     // stats routines
     double              compute_score_variance(vector<NeuralNet> population);
@@ -45,19 +45,21 @@ public:
     double              compute_score_mean    (vector<NeuralNet> population);
     double              compute_score_median  (vector<NeuralNet> population);
 
+    mat                 generate_metric_line(vector<NeuralNet> population, unsigned int gen);
+
     // cross-validation routines
     NeuralNet           train_topology_plus_weights(Data_set data_set, net_topology max_topo, mat &results_score_evolution, unsigned int selected_mutation_scheme);
-    NeuralNet           cross_validation_training(Data_set data_set, net_topology min_topo, net_topology max_topo, mat &results_score_evolution, double &test_score, double &test_acc, unsigned int selected_mutation_scheme);
-    virtual NeuralNet   evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_epochs, mat &results_cost_and_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme, unsigned int current_gen)=0;
+    NeuralNet           cross_val_training(Data_set data_set, net_topology min_topo, net_topology max_topo, mat &results_score_evolution, double &test_score, double &test_acc, unsigned int selected_mutation_scheme);
+    virtual NeuralNet   evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_epochs, mat &results_cost_and_score_evolution, unsigned int index_cross_val_section, unsigned int selected_mutation_scheme, unsigned int current_gen)=0;
 
     // neural nets ensembles interpretation routines
-    void                elective_accuracy(vector<NeuralNet> pop, Data_set data_set, double &ensemble_accuracy, double &ensemble_score);
+    void                elective_acc(vector<NeuralNet> pop, Data_set data_set, double &ensemble_acc, double &ensemble_score);
     unsigned int        return_highest(map<unsigned int, unsigned int> votes);
     unsigned int        count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
     mat                 to_multiclass_format(mat predictions);
 
     // general population-based subroutines
-    vector<NeuralNet>   generate_population(unsigned int pop_size, net_topology t, Data_set training_set);
+    vector<NeuralNet>   generate_population(unsigned int pop_size, net_topology t);
     vector<NeuralNet>   generate_random_population(unsigned int quantity, NeuralNet template_net);
     /**
      * @brief Evolutionary_trainer::generate_genome_population

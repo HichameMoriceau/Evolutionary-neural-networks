@@ -28,7 +28,7 @@ void Trainer_DE::train(Data_set data_set, NeuralNet &net, mat &results_score_evo
     net = train_topology_plus_weights(data_set, net.get_topology(), results_score_evolution, MUTATION_SCHEME_RAND);
 }
 
-NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_gens, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme, unsigned int current_gen){
+NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_gens, mat &results_score_evolution, unsigned int index_cross_val_section, unsigned int selected_mutation_scheme, unsigned int current_gen){
     // flag alerting that optimization algorithm has had ~ same results for the past 100 generations
     bool plateau = false;
     // flag alerting that the GA has converged
@@ -53,17 +53,17 @@ NeuralNet Trainer_DE::evolve_through_iterations(Data_set data_set, net_topology 
         // sort from fittest
         sort(population.begin(), population.end());
         // get best model
-        if(population[0].get_validation_score()>trained_model.get_validation_score())
+        if(population[0].get_val_score()>trained_model.get_val_score())
             trained_model = population[0];
 
         /*
         // compute accuracy
-        elective_accuracy(population, data_set, pop_accuracy, pop_score);
+        elective_acc(population, data_set, pop_acc, pop_score);
         // get best ensemble
         if(pop_score >= ensemble_score){
             ensemble = population;
             ensemble_score = pop_score;
-            ensemble_accuracy = pop_accuracy;
+            ensemble_acc = pop_acc;
         }
         */
         // optimize model params and topology using training-set
@@ -95,25 +95,8 @@ void Trainer_DE::differential_evolution_topology_evolution(Data_set data_set, ne
     double CR = 0.5;
     // differential_weight [0,2]
     double F = 1;
-
-    // recorded metrics and printing vars
-    mat new_line;
-    double prediction_accuracy = 0;
-    double score = 0;
-    double MSE   = 0;
-    double pop_score_variance = 100;
-    double pop_score_stddev = 0;
-    double pop_score_mean = 0;
-    double pop_score_median = 0;
-    double ensemble_accuracy = 0;
-    double ensemble_score = 0;
-    double pop_score = 0;
-    double pop_accuracy=0;
-
-    unsigned int problem_dimensionality=max_topo.get_genome_length();
-
-    unsigned int MUTATION_SCHEME_RAND = 0;
     unsigned int MUTATION_SCHEME_BEST = 1;
+
     for(unsigned int j=0; j<population.size(); ++j){
         // declare index variables
         unsigned int index_x = generate_random_integer_between_range(1, population.size() - 1);
@@ -145,8 +128,8 @@ void Trainer_DE::differential_evolution_topology_evolution(Data_set data_set, ne
         if(selected_mutation_scheme == MUTATION_SCHEME_BEST)
             indiv_a = population[0].get_params();
 
-        double score_best_model         = population[0].get_f1_score();
-        double score_second_best_model  = population[1].get_f1_score();
+        double score_best_model         = population[0].get_train_score();
+        double score_second_best_model  = population[1].get_train_score();
 
         // if the first and second best have identical fitness
         if((score_best_model==score_second_best_model) && score_best_model!=0){
@@ -164,84 +147,34 @@ void Trainer_DE::differential_evolution_topology_evolution(Data_set data_set, ne
         nb_err_func_calls++;
 
         // if candidate outperforms original: replace original by candidate
-        if(candidate_net.get_f1_score()>population[index_x].get_f1_score()){
+        if(candidate_net.get_train_score()>population[index_x].get_train_score())
             population[index_x] = candidate_net;
-        }
-        // print results
-        // record model performances on new data
-        prediction_accuracy =   population[0].get_accuracy();
-        score               =   population[0].get_f1_score();
-        MSE                 =   population[0].get_MSE();
-        double validation_accuracy=population[0].get_validation_acc();
-        double validation_score=population[0].get_validation_score();
-        double test_accuracy=population[0].get_test_acc();
-        double test_score=population[0].get_test_score();
-        // compute stats
-        pop_score_variance  =   compute_score_variance(population);
-        pop_score_stddev    =   compute_score_stddev(population);
-        pop_score_mean      =   compute_score_mean(population);
-        pop_score_median    =   compute_score_median(population);
-        // record results (performances and topology description)
-        unsigned int inputs             =   population[0].get_topology().nb_input_units;
-        unsigned int hidden_units       =   population[0].get_topology().nb_units_per_hidden_layer;
-        unsigned int outputs            =   population[0].get_topology().nb_output_units;
-        unsigned int nb_hidden_layers   =   population[0].get_topology().nb_hidden_layers;
+
         // format result line
-        new_line << nb_err_func_calls // i+1
-                 << MSE
-                 << prediction_accuracy
-                 << score
-                 << pop_score_variance
-
-                 << pop_score_stddev
-                 << pop_score_mean
-                 << pop_score_median
-                 << population.size()
-                 << inputs
-
-                 << hidden_units
-                 << outputs
-                 << nb_hidden_layers
-                 << true
-                 << selected_mutation_scheme
-
-                 << ensemble_accuracy
-                 << ensemble_score
-                 << validation_accuracy
-                 << validation_score
-                 << test_accuracy
-                 << test_score
-                 << nb_err_func_calls
-
-                 << endr;
-
+        mat line=generate_metric_line(population, gen);
         // append result line to result matrix
-        results_score_evolution = join_vert(results_score_evolution, new_line);
+#pragma omp critical
+        results_score_evolution = join_vert(results_score_evolution, line);
 
 #ifndef NO_SCREEN_OUT
-        cout << fixed
-             << setprecision(2)
-             << "NB.err.func.call=" << nb_err_func_calls // i+1
-             << "\ttrain.score="    << score
-             << "  train.MSE="      << MSE
-             << "  train.acc="      << prediction_accuracy
-             << "  score.mean=" << pop_score_mean
-             << "  score.var=" << pop_score_variance
-             << "\tNB.hid.lay="     << nb_hidden_layers
-             << "  NB.hid.units="   << hidden_units
-             << "\tval.score=" << validation_score
-             << " val.acc=" << validation_accuracy
-             << " gen=" << gen
-                //<< "\tens.acc=" << ensemble_accuracy
-                //<< "  ens.score=" << ensemble_score
-             << endl;
+        cout<<fixed
+            <<setprecision(2)
+            <<"NB.err.func.calls="<<line[0]<<"\t"
+            <<"gen="<<line[1]<<"\t"
+            <<"train.mse="<<line[4]<<"\t"
+            <<"val.mse="<<line[10]<<"\t"
+            <<"test.mse="<<line[7]<<"\t"
+            <<"pop.fit.mean="<<line[12]<<"\t"
+            <<"NB.hid.units="<<line[14]<<"\t"
+            <<"NB.hid.layers="<<line[15]<<"\t"
+            <<endl;
 #endif
         // if MAX nb of calls to the error function is reached: stop training
         if(nb_err_func_calls>=max_nb_err_func_calls)break;
     }
 }
 
-void Trainer_DE::differential_evolution(vector<NeuralNet> &pop, data_subset training_set){
+void Trainer_DE::differential_evolution(vector<NeuralNet> &pop, data_subset train_set){
     // total nb weights
     unsigned int nb_element_vectorized_Theta = pop[0].get_topology().get_total_nb_weights();
     unsigned int problem_dimensionality = nb_element_vectorized_Theta;
@@ -296,11 +229,10 @@ void Trainer_DE::differential_evolution(vector<NeuralNet> &pop, data_subset trai
         // compute performances
         double candidate_score = 0.0f;
         double original_score  = 0.0f;
-        candidate_score = candidate_model.get_f1_score(training_set);
-        original_score  = original_model.get_f1_score(training_set);
+        candidate_score = candidate_model.get_train_score(train_set);
+        original_score  = original_model.get_train_score(train_set);
 
         bool candidate_is_better_than_original = candidate_score > original_score;
-
         // selection
         if(candidate_is_better_than_original) {
             // replace original by candidate
@@ -311,7 +243,7 @@ void Trainer_DE::differential_evolution(vector<NeuralNet> &pop, data_subset trai
 
 void Trainer_DE::train_weights(Data_set data_set, NeuralNet &net, unsigned int nb_epochs, mat &results_score_evolution){
     double cost = 0.0f;
-    double prediction_accuracy = 0.0f;
+    double prediction_acc = 0.0f;
     double score = 0.0f;
     double MSE   = 0.0f;
     double pop_score_variance = 0.0f;
@@ -320,19 +252,19 @@ void Trainer_DE::train_weights(Data_set data_set, NeuralNet &net, unsigned int n
 
     // instantiate a random net with identical topology
     NeuralNet trained_model(net.get_topology());
-    population = generate_population(population.size(), net.get_topology(), data_set);
+    population = generate_population(population.size(), net.get_topology());
 
     for(unsigned int i=0; i<nb_epochs; ++i) {
         // optimize model params and topology using training-set
-        differential_evolution(population, data_set.training_set);
+        differential_evolution(population, data_set.train_set);
         // sort from fittest
         sort(population.begin(), population.end());
         trained_model = population[0];
 
         // record model performances on new data
-        prediction_accuracy = trained_model.get_accuracy(data_set.training_set);
-        score               = trained_model.get_f1_score(data_set.training_set);
-        MSE                 = trained_model.get_MSE(data_set.training_set);
+        prediction_acc = trained_model.get_train_acc(data_set.train_set);
+        score               = trained_model.get_train_score(data_set.train_set);
+        MSE                 = trained_model.get_mse(data_set.train_set);
         pop_score_variance  = compute_score_variance(population);
         pop_score_stddev    = compute_score_mean(population);
 
@@ -344,7 +276,7 @@ void Trainer_DE::train_weights(Data_set data_set, NeuralNet &net, unsigned int n
 
         new_line << i
                  << cost
-                 << prediction_accuracy
+                 << prediction_acc
                  << score
                  << MSE
                  << pop_score_variance
@@ -358,7 +290,7 @@ void Trainer_DE::train_weights(Data_set data_set, NeuralNet &net, unsigned int n
                  << endr;
 
         results_score_evolution = join_vert(results_score_evolution, new_line);
-        cout << "epoch=" << i << "\tscore=" << score << "\taccuracy=" << prediction_accuracy << endl;
+        cout << "epoch=" << i << "\tscore=" << score << "\taccuracy=" << prediction_acc << endl;
     }
 
     // return trained model

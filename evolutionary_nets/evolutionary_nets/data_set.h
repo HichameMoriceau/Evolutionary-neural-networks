@@ -35,9 +35,9 @@ public:
 
     mat             data;
 
-    data_subset     training_set;
+    data_subset     train_set;
 
-    data_subset     validation_set;
+    data_subset     val_set;
 
     data_subset     test_set;
 
@@ -45,9 +45,9 @@ public:
 
     string          OCTAVE_perfs_VS_nb_epochs;
 
-    string          OCTAVE_cost_training_set_size;
+    string          OCTAVE_cost_train_set_size;
 
-    string          OCTAVE_cost_validation_set_size;
+    string          OCTAVE_cost_val_set_size;
 
     string          OCTAVE_scores_pop_size;
 
@@ -73,7 +73,7 @@ public:
 
     unsigned int    find_nb_prediction_classes(mat D);
 
-    void            subdivide_data_cross_validation(unsigned int index_validation_fold, unsigned int nb_folds);
+    void            subdivide_data_cross_validation(unsigned int index_val_fold, unsigned int nb_folds);
 
 private:
 

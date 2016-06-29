@@ -73,10 +73,10 @@ void Data_set::select_data_set(unsigned int chosen_data_set_index) {
                 = "data/breast-cancer-malignantOrBenign-data-transformed.csv";
         OCTAVE_perfs_VS_nb_epochs
                 = "breastCancer_MalignantOrBenign_results";
-        OCTAVE_cost_training_set_size
-                = "MalignantOrBenign_results_increasingly_large_training_set";
-        OCTAVE_cost_validation_set_size
-                = "MalignantOrBenign_results_increasingly_large_validation_set";
+        OCTAVE_cost_train_set_size
+                = "MalignantOrBenign_results_increasingly_large_train_set";
+        OCTAVE_cost_val_set_size
+                = "MalignantOrBenign_results_increasingly_large_val_set";
         OCTAVE_scores_pop_size
                 = "MalignantOrBenign_results_increasing_pop_size";
 
@@ -88,10 +88,10 @@ void Data_set::select_data_set(unsigned int chosen_data_set_index) {
                 = "data/breast-cancer-recurrence-data-transformed.csv";
         OCTAVE_perfs_VS_nb_epochs
                 = "breastCancer_RecurrenceOrNot_results";
-        OCTAVE_cost_training_set_size
-                = "RecurrenceOrNot_results_increasingly_large_training_set";
-        OCTAVE_cost_validation_set_size
-                = "RecurrenceOrNot_results_increasingly_large_validation_set";
+        OCTAVE_cost_train_set_size
+                = "RecurrenceOrNot_results_increasingly_large_train_set";
+        OCTAVE_cost_val_set_size
+                = "RecurrenceOrNot_results_increasingly_large_val_set";
         OCTAVE_scores_pop_size
                 = "RecurrenceOrNot_results_increasing_pop_size";
 
@@ -103,10 +103,10 @@ void Data_set::select_data_set(unsigned int chosen_data_set_index) {
                 = "data/haberman-data-transformed.csv";
         OCTAVE_perfs_VS_nb_epochs
                 = "haberman_results";
-        OCTAVE_cost_training_set_size
-                = "haberman_results_increasingly_large_training_set";
-        OCTAVE_cost_validation_set_size
-                = "haberman_results_increasingly_large_validation_set";
+        OCTAVE_cost_train_set_size
+                = "haberman_results_increasingly_large_train_set";
+        OCTAVE_cost_val_set_size
+                = "haberman_results_increasingly_large_val_set";
         OCTAVE_scores_pop_size
                 = "haberman_results_increasing_pop_size";
 
@@ -136,14 +136,14 @@ void Data_set::select_data_set(string filename) {
     // set Octave variable names
     data_set_filename = filename;
     OCTAVE_perfs_VS_nb_epochs = base_name + "_results";
-    OCTAVE_cost_training_set_size = base_name + "_results_increasingly_large_training_set";
-    OCTAVE_cost_validation_set_size = base_name + "_results_increasingly_large_validation_set";
+    OCTAVE_cost_train_set_size = base_name + "_results_increasingly_large_train_set";
+    OCTAVE_cost_val_set_size = base_name + "_results_increasingly_large_val_set";
     OCTAVE_scores_pop_size = base_name + "_results_increasing_pop_size";
     result_filename = "data/" + base_name + "_results.mat";
     // replace all '-' by '_'
     std::replace(OCTAVE_perfs_VS_nb_epochs.begin(), OCTAVE_perfs_VS_nb_epochs.end(), '-','_');
-    std::replace(OCTAVE_cost_training_set_size.begin(), OCTAVE_cost_training_set_size.end(), '-','_');
-    std::replace(OCTAVE_cost_validation_set_size.begin(), OCTAVE_cost_validation_set_size.end(), '-','_');
+    std::replace(OCTAVE_cost_train_set_size.begin(), OCTAVE_cost_train_set_size.end(), '-','_');
+    std::replace(OCTAVE_cost_val_set_size.begin(), OCTAVE_cost_val_set_size.end(), '-','_');
     std::replace(OCTAVE_scores_pop_size.begin(), OCTAVE_scores_pop_size.end(), '-','_');
     std::replace(result_filename.begin(), result_filename.end(), '-','_');
     // load corresponding data set
@@ -225,20 +225,20 @@ unsigned int Data_set::count_nb_elements_equal_to(vec V, double value){
   return count;
 }
 
-void Data_set::subdivide_data_cross_validation(unsigned int index_validation_fold, unsigned int nb_folds) {
-    if(index_validation_fold >= nb_folds) throw new InnapropriateValidationFoldIndex;
+void Data_set::subdivide_data_cross_validation(unsigned int index_val_fold, unsigned int nb_folds) {
+    if(index_val_fold >= nb_folds) throw new InnapropriateValidationFoldIndex;
 
     nb_prediction_classes = find_nb_prediction_classes(data);
     unsigned int range=((data.n_rows)*80/100)/nb_folds;//= data.n_rows / nb_folds;
     // build training and validation set while preserving the imbalance ratio
-    mat training_section, validation_section, test_section;
+    mat train_section, val_section, test_section;
     for(unsigned int i=0; i<nb_folds; ++i){
-        if(i != index_validation_fold) {
+        if(i != index_val_fold) {
             //cout<<"training section indices: "<<round(i*range)<<" up to "<<(i+1)*range<<endl;
-            training_section = join_vert(training_section, data.rows(round(i*range), (i+1)*range));
+            train_section = join_vert(train_section, data.rows(round(i*range), (i+1)*range));
         }else{
             //cout<<"validation section indices: "<<round(i*range)<<" up to "<<(i+1)*range<<endl;
-            validation_section = join_vert(validation_section, data.rows(round(i*range), (i+1)*range));
+            val_section = join_vert(val_section, data.rows(round(i*range), (i+1)*range));
         }
     }
     unsigned int index_low=data.n_rows-(double(data.n_rows)*(20.0/100));
@@ -248,10 +248,10 @@ void Data_set::subdivide_data_cross_validation(unsigned int index_validation_fol
     // set training and validation folds
     unsigned int dataset_nb_features = data.n_cols-1;
     unsigned int dataset_last_column_index = data.n_cols-1;
-    training_set.X = training_section.cols(0,dataset_nb_features-1);
-    training_set.Y = training_section.col(dataset_last_column_index);
-    validation_set.X = validation_section.cols(0,dataset_nb_features-1);
-    validation_set.Y = validation_section.col(dataset_last_column_index);
+    train_set.X = train_section.cols(0,dataset_nb_features-1);
+    train_set.Y = train_section.col(dataset_last_column_index);
+    val_set.X = val_section.cols(0,dataset_nb_features-1);
+    val_set.Y = val_section.col(dataset_last_column_index);
     test_set.X=test_section.cols(0,dataset_nb_features-1);
     test_set.Y=test_section.col(dataset_last_column_index);
 }

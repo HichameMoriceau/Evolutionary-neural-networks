@@ -3,23 +3,36 @@
 NeuralNet::NeuralNet(){
     // default topology
     net_topology t;
-    t.nb_input_units   = 1;
-    t.nb_hidden_layers = 1;
-    t.nb_output_units  = 2;
-    t.nb_units_per_hidden_layer = 1;
+    t.nb_input_units=1;
+    t.nb_hidden_layers=1;
+    t.nb_output_units=2;
+    t.nb_units_per_hidden_layer=1;
 
-    accuracy     = 0.0f;
-    score        = 0.0f;
-    mse = 0.0f;
-    topology     = t;
+    train_acc=0;
+    train_score=0;
+    train_mse=0;
+    val_score=0;
+    val_acc=0;
+    val_mse=0;
+    test_score=0;
+    test_acc=0;
+    test_mse=0;
+
+    topology=t;
     randomize_weights();
 }
 
 NeuralNet::NeuralNet(net_topology t){
-    accuracy     = 0.0f;
-    score        = 0.0f;
-    mse = 0.0f;
-    topology     = t;
+    train_acc=0;
+    train_score=0;
+    train_mse=0;
+    val_score=0;
+    val_acc=0;
+    val_mse=0;
+    test_score=0;
+    test_acc=0;
+    test_mse=0;
+    topology=t;
     randomize_weights();
 }
 
@@ -214,9 +227,9 @@ double NeuralNet::compute_score(mat confusion_matrix, unsigned int nb_classes, u
     return (computed_score/nb_local_classes)*100;
 }
 
-double NeuralNet::get_accuracy(data_subset data_set) {
+double NeuralNet::get_train_acc(data_subset data_set) {
     //return variable
-    double computed_accuracy = 0;
+    double computed_acc = 0;
     // make predictions over entire data-set
     mat H = forward_propagate(data_set.X);
     unsigned int nb_classes = topology.nb_output_units;
@@ -225,14 +238,14 @@ double NeuralNet::get_accuracy(data_subset data_set) {
     for(unsigned int i=0; i<nb_classes; i++){
         TP += confusion_matrix(i,i);
     }
-    computed_accuracy = (TP/H.n_rows)*100;
+    computed_acc = (TP/H.n_rows)*100;
     // update neural network accuracy
-    accuracy = computed_accuracy;
+    train_acc = computed_acc;
     // return computed accuracy
-    return computed_accuracy;
+    return computed_acc;
 }
 
-double NeuralNet::get_f1_score(data_subset data_set) {
+double NeuralNet::get_train_score(data_subset data_set) {
     // computed score is based on precision and recall
     double computed_score = 0;
     // perform predictions on provided data-set
@@ -258,42 +271,49 @@ double NeuralNet::get_f1_score(data_subset data_set) {
     // general f1 score = average of all classes score
     computed_score = (computed_score/nb_local_classes)*100;
     // update net score
-    score = computed_score;
+    //train_score = computed_score;
     // return net score
-    return score;
+    return computed_score;
 }
 
 void NeuralNet::get_fitness_metrics(Data_set D){
     /*SCORE CALCULATION*/
     // perform predictions on provided data-set
-    mat H_train = forward_propagate(D.training_set.X);
-    mat H_val   = forward_propagate(D.validation_set.X);
+    mat H_train = forward_propagate(D.train_set.X);
+    mat H_val   = forward_propagate(D.val_set.X);
     mat H_test  = forward_propagate(D.test_set.X);
     unsigned int nb_classes = topology.nb_output_units;
     // generate confusion matrix
-    mat confusion_matrix_train=generate_conf_mat(nb_classes,H_train, D.training_set.Y);
-    mat confusion_matrix_val  =generate_conf_mat(nb_classes,H_val, D.validation_set.Y);
+    mat confusion_matrix_train=generate_conf_mat(nb_classes,H_train, D.train_set.Y);
+    mat confusion_matrix_val  =generate_conf_mat(nb_classes,H_val, D.val_set.Y);
     mat confusion_matrix_test =generate_conf_mat(nb_classes,H_test, D.test_set.Y);
-    unsigned int nb_local_classes_t=count_nb_classes(D.training_set.Y);
-    unsigned int nb_local_classes_val=count_nb_classes(D.validation_set.Y);
+    unsigned int nb_local_classes_t=count_nb_classes(D.train_set.Y);
+    unsigned int nb_local_classes_val=count_nb_classes(D.val_set.Y);
     unsigned int nb_local_classes_test=count_nb_classes(D.test_set.Y);
     // update score values
-    score=compute_score(confusion_matrix_train,nb_classes, nb_local_classes_t);
-    validation_score=compute_score(confusion_matrix_val,nb_classes, nb_local_classes_val);
+    train_score=compute_score(confusion_matrix_train,nb_classes, nb_local_classes_t);
+    val_score=compute_score(confusion_matrix_val,nb_classes, nb_local_classes_val);
     test_score=compute_score(confusion_matrix_test,nb_classes, nb_local_classes_test);
 
     /*ACC CALCULATION*/
     double TP =0;
     for(unsigned int i=0; i<nb_classes; i++)
         TP += confusion_matrix_train(i,i);
-    accuracy=(TP/H_train.n_rows)*100;
+    train_acc=(TP/H_train.n_rows)*100;
     TP=0;
     for(unsigned int i=0; i<nb_classes; i++)
         TP += confusion_matrix_val(i,i);
-    validation_acc=(TP/H_val.n_rows)*100;
+    val_acc=(TP/H_val.n_rows)*100;
+    TP=0;
+    for(unsigned int i=0; i<nb_classes; i++)
+        TP += confusion_matrix_test(i,i);
+    test_acc=(TP/H_test.n_rows)*100;
 
     /*MSE CALCULATION*/
-    mse=get_MSE(D.training_set);
+    //train_mse=get_mse(D.train_set);
+    train_mse=as_scalar(sum(square(to_multiclass_format(H_train)-D.train_set.Y)))/double(D.train_set.Y.n_elem);
+    val_mse  =as_scalar(sum(square(to_multiclass_format(H_val)-D.val_set.Y)))/double(D.val_set.Y.n_elem);
+    test_mse =as_scalar(sum(square(to_multiclass_format(H_test)-D.test_set.Y)))/double(D.test_set.Y.n_elem);
 }
 
 unsigned int NeuralNet::count_nb_classes(mat labels){
@@ -347,19 +367,17 @@ mat NeuralNet::to_multiclass_format(mat predictions){
     return formatted_predictions;
 }
 
-double NeuralNet::get_MSE(data_subset d){
+double NeuralNet::get_mse(data_subset d){
     double total_error = 0;
     unsigned int nb_classes=get_topology().nb_output_units;
     for(unsigned int i=0; i<d.X.n_rows; i++){
         mat prediction = forward_propagate(d.X.row(i));
         double max=-1;
-        unsigned int index=-1;
         // search for most activated output
         for(unsigned int j=0; j<nb_classes; j++){
             unsigned int p=prediction(j);
             if(p>max){
                 max=p;
-                index=j;
             }
         }
         total_error += pow(as_scalar(to_multiclass_format(prediction))-d.Y(i), 2);

@@ -27,7 +27,7 @@ void Trainer_AIS::train(Data_set data_set, NeuralNet &net, mat &results_score_ev
     net=train_topology_plus_weights(data_set, net.get_topology(), results_score_evolution, -1);
 }
 
-NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_gens, mat &results_score_evolution, unsigned int index_cross_validation_section, unsigned int selected_mutation_scheme, unsigned int current_gen) {
+NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology min_topo, net_topology max_topo, unsigned int nb_gens, mat &results_score_evolution, unsigned int index_cross_val_section, unsigned int selected_mutation_scheme, unsigned int current_gen) {
     // flag alerting that optimization algorithm has had ~ same results for the past 100 generations
     bool plateau=false;
     // flag alerting that the GA has converged
@@ -44,21 +44,21 @@ NeuralNet Trainer_AIS::evolve_through_iterations(Data_set data_set, net_topology
      *  TERMINATION CRITERIA:
      *      If all generations were achieved OR if the GA has already converged
     */
-    for(unsigned int i=0;(i<nb_gens)&&(!has_converged);++i) {
+    for(unsigned int i=0;(i<nb_gens)&&(!has_converged);i++) {
         // sort from fittest
         sort(population.begin(), population.end());
         // get best model
-        if(population[0].get_validation_score()>=trained_model.get_validation_score())
+        if(population[0].get_val_score()>=trained_model.get_val_score())
             trained_model=population[0];
 
         /*
         // compute accuracy
-        elective_accuracy(ensemble, data_set, pop_accuracy, pop_score);
+        elective_acc(ensemble, data_set, pop_acc, pop_score);
         // get best ensemble
         if(pop_score>=ensemble_score){
             ensemble=population;
             ensemble_score=pop_score;
-            ensemble_accuracy=pop_accuracy;
+            ensemble_acc=pop_acc;
         }
         */
 
@@ -103,20 +103,6 @@ void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_top
     double F=1;
     // -- --
 
-    // recorded characteristics
-    double prediction_accuracy=0;
-    double score=0;
-    double MSE  =0;
-    double pop_score_variance=100;
-    double pop_score_stddev=0;
-    double pop_score_mean=0;
-    double pop_score_median=0;
-    double ensemble_accuracy=0;
-    double ensemble_score=0;
-    double pop_score=0;
-    double pop_accuracy=0;
-    mat new_line;
-
     for(unsigned int g=0; g<pop_size; ++g) {
         // instantiate subpopulations
         vector<NeuralNet>selected_indivs=select(selection_size, population);
@@ -129,6 +115,7 @@ void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_top
             nb_clones_array[j]=nb_clones;
             pop_clones.push_back(generate_clones(nb_clones, selected_indivs[j]));
         }
+
         // hyper-mutate (using a DE/RAND/1 mutative-crossover operation)
         for(unsigned int i=0; i<pop_clones.size(); i++) {
             for(unsigned int j=0; j<pop_clones[i].size(); j++) {
@@ -167,77 +154,24 @@ void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_top
                 candidate_net.get_fitness_metrics(data_set);
                 nb_err_func_calls++;
                 // update clone if interesting
-                if(candidate_net.get_f1_score()>pop_clones[i][j].get_f1_score())
+                if(candidate_net.get_train_score()>pop_clones[i][j].get_train_score())
                     pop_clones[i][j]=candidate_net;
-
-                // print out learning metrics
-
-                // record model performances on new data
-                prediction_accuracy=population[0].get_accuracy();
-                score              =population[0].get_f1_score();
-                MSE                =population[0].get_MSE();
-                double validation_accuracy=population[0].get_validation_acc();
-                double validation_score=population[0].get_validation_score();
-                double test_accuracy=population[0].get_test_acc();
-                double test_score=population[0].get_test_score();
-                // compute stats
-                pop_score_variance=compute_score_variance(population);
-                pop_score_stddev  =compute_score_stddev(population);
-                pop_score_mean    =compute_score_mean(population);
-                pop_score_median  =compute_score_median(population);
-                // record results (performances and topology description)
-                unsigned int inputs            =population[0].get_topology().nb_input_units;
-                unsigned int hidden_units      =population[0].get_topology().nb_units_per_hidden_layer;
-                unsigned int outputs           =population[0].get_topology().nb_output_units;
-                unsigned int nb_hidden_layers  =population[0].get_topology().nb_hidden_layers;
                 // format result line
-                new_line << nb_err_func_calls
-                         << MSE
-                         << prediction_accuracy
-                         << score
-                         << pop_score_variance
-
-                         << pop_score_stddev
-                         << pop_score_mean
-                         << pop_score_median
-                         << population.size()
-                         << inputs
-
-                         << hidden_units
-                         << outputs
-                         << nb_hidden_layers
-                         << true
-                         << selected_mutation_scheme
-
-                         << ensemble_accuracy
-                         << ensemble_score
-                         << validation_accuracy
-                         << validation_score
-                         << test_accuracy
-                         << test_score
-                         << gen
-
-                         << endr;
-
+                mat line=generate_metric_line(population, gen);
                 // append result line to result matrix
-                results_score_evolution=join_vert(results_score_evolution, new_line);
+                results_score_evolution=join_vert(results_score_evolution, line);
 
 #ifndef NO_SCREEN_OUT
                 cout << fixed
                      << setprecision(2)
-                     << "NB.calls.err.func=" << nb_err_func_calls
-                     << "\ttrain.score="          << score
-                     << "  train.MSE="            << MSE
-                     << "  train.acc="            << prediction_accuracy
-                     << "  score.mean=" << pop_score_mean
-                     << "  score.var=" << pop_score_variance
-                     << "\tNB.hid.lay="     << nb_hidden_layers
-                     << "  NB.hid.units="   << hidden_units
-                     << "\tval.score=" << validation_score
-                     << " val.acc=" << validation_accuracy
-                     //<< "\tens.acc=" << ensemble_accuracy
-                     //<< "  ens.score=" << ensemble_score
-                     << "  gen=" << gen
+                     <<"NB.err.func.calls="<<line[0]<<"\t"
+                     <<"gen="<<line[1]<<"\t"
+                     <<"train.mse="<<line[4]<<"\t"
+                     <<"val.mse="<<line[10]<<"\t"
+                     <<"test.mse="<<line[7]<<"\t"
+                     <<"pop.fit.mean="<<line[12]<<"\t"
+                     <<"NB.hid.units="<<line[14]<<"\t"
+                     <<"NB.hid.layers="<<line[15]<<"\t"
                      << endl;
 #endif
 
@@ -248,11 +182,9 @@ void Trainer_AIS::clonal_selection_topology_evolution(Data_set data_set, net_top
             if(nb_err_func_calls>=max_nb_err_func_calls)break;
         }
 
-
         // put all solutions in same group
         vector<NeuralNet> all_clones=add_all(pop_clones, nb_clones_array);
         all_clones.insert(all_clones.end(), population.begin(), population.end());
-
         // select n best solutions
         population=select(pop_size, all_clones);
         // maintain diversity by forcing random indivs into population

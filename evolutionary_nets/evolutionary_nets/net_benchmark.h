@@ -4,15 +4,16 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstdio>
+#include <chrono>
+#include <thread>
+#include <omp.h>
 #include "data_set.h"
 #include "neuralnet.h"
 #include "trainer.h"
 #include "trainer_de.h"
 #include "trainer_pso.h"
 #include "trainer_ais.h"
-#include <thread>
-#include <chrono>
-#include <omp.h>
 
 using namespace std;
 using namespace chrono;
@@ -58,9 +59,9 @@ public:
    void         set_topology(net_topology t);
 
    void         compute_perfs_test_validation(double &model_score_training_set,
-                                              double &model_prediction_accuracy_training_set,
+                                              double &model_prediction_acc_training_set,
                                               double &model_score_validation_set,
-                                              double &model_prediction_accuracy_validation_set);
+                                              double &model_prediction_acc_validation_set);
 
    // print as matrix
    void         print_results_octave_format(ofstream &result_file, mat recorded_performances, string octave_variable_name);
@@ -87,7 +88,7 @@ private:
     */
    void         train_net_and_save_performances(unsigned int pop_size_GA, unsigned int nb_generations_GA, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme);
 
-   void         training_task(unsigned int i, unsigned int nb_replicates, string data_set_filename, vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_algorithm, double epsilon, unsigned int selected_mutation_scheme);
+   void         training_task(unsigned int i, string data_set_filename, unsigned int selected_opt_algorithm, double epsilon, unsigned int selected_mutation_scheme);
 
    mat          compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme);
 

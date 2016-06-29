@@ -4,12 +4,12 @@ Net_benchmark::Net_benchmark() {
     // set default data-set
     data_set = Data_set();
     // set default max topology
-    max_topo.nb_input_units = data_set.training_set.X.n_cols;
-    max_topo.nb_units_per_hidden_layer = data_set.training_set.X.n_cols * 4;
+    max_topo.nb_input_units = data_set.train_set.X.n_cols;
+    max_topo.nb_units_per_hidden_layer = data_set.train_set.X.n_cols * 4;
     max_topo.nb_output_units = 1;
     max_topo.nb_hidden_layers = 2;
     //  Set default net topology
-    unsigned int dataset_nb_features = data_set.training_set.X.n_cols;
+    unsigned int dataset_nb_features = data_set.train_set.X.n_cols;
     net_topology t;
     t.nb_input_units = dataset_nb_features;
     t.nb_units_per_hidden_layer = dataset_nb_features;
@@ -40,10 +40,11 @@ void Net_benchmark::run_benchmark(exp_files ef) {
         auto start_time = system_clock::now();
         // apply on each data-set
         for(unsigned int i=0; i<ef.dataset_filenames.size(); i++) {
+            cout<<"data set: "<<ef.dataset_filenames[i]<<endl;
             // use data requested by user
             data_set.select_data_set(ef.dataset_filenames[i]);
             // set largest topology
-            max_topo.nb_input_units = data_set.training_set.X.n_cols;
+            max_topo.nb_input_units = data_set.train_set.X.n_cols;
             max_topo.nb_units_per_hidden_layer = 10;
             max_topo.nb_output_units = data_set.find_nb_prediction_classes(data_set.data);
             max_topo.nb_hidden_layers = 1;
@@ -52,7 +53,9 @@ void Net_benchmark::run_benchmark(exp_files ef) {
             double epsilon = -1;//find_termination_criteria_epsilon(200);
             // save results of cross-validated training
             train_net_and_save_performances(ef.pop_size, ef.max_nb_err_func_calls, selected_opt_alg, epsilon, mutation_scheme);
+            cout<<"finished training using all replicates on "<<ef.dataset_filenames[i]<<" data"<<endl;
         }
+
         auto end_time = system_clock::now();
         string end_time_str = get_current_date_time();
         auto experiment_duration = duration_cast<std::chrono::minutes>(end_time-start_time).count();
@@ -128,7 +131,7 @@ void Net_benchmark::train_topology(NeuralNet &evolved_net){
         // optimize weights
         evo_trainer.train( data_set, current_net);
         // record quality of the model
-        current_perf = current_net.get_f1_score(data_set.validation_set);
+        current_perf = current_net.get_train_score(data_set.val_set);
         // save best network
         if(current_perf >= best_perf){
             best_net = current_net;
@@ -143,18 +146,18 @@ void Net_benchmark::set_topology(net_topology t){
     net = NeuralNet(t);
 }
 
-void Net_benchmark::compute_perfs_test_validation(double &model_score_training_set,
-                                                  double &model_prediction_accuracy_training_set,
-                                                  double &model_score_validation_set,
-                                                  double &model_prediction_accuracy_validation_set) {
+void Net_benchmark::compute_perfs_test_validation(double &model_score_train_set,
+                                                  double &model_prediction_acc_train_set,
+                                                  double &model_score_val_set,
+                                                  double &model_prediction_acc_val_set) {
     // compute training-set accuracy
-    model_prediction_accuracy_training_set   = net.get_accuracy(data_set.training_set);
+    model_prediction_acc_train_set   = net.get_train_acc(data_set.train_set);
     // compute training-set score
-    model_score_training_set                 = net.get_f1_score(data_set.training_set);
+    model_score_train_set                 = net.get_train_score(data_set.train_set);
     // compute validation-set accuracy
-    model_prediction_accuracy_validation_set = net.get_accuracy(data_set.validation_set);
+    model_prediction_acc_val_set = net.get_train_acc(data_set.val_set);
     // compute validation-set score
-    model_score_validation_set               = net.get_f1_score(data_set.validation_set);
+    model_score_val_set               = net.get_train_score(data_set.val_set);
 }
 
 // returns the number of elements of value 1 in the provided matrix
@@ -169,41 +172,41 @@ unsigned int Net_benchmark::count_nb_positive_examples(vec A){
 
 // returns a matrix of results such as :
 mat Net_benchmark::evaluate_backprop_general_performances() {
-    data_subset training_set   = data_set.training_set;
+    data_subset train_set   = data_set.train_set;
     // result matrix
-    mat results_cost_relative_to_training_set_size;
+    mat results_cost_relative_to_train_set_size;
     // declare tmp variable for used training-set segment
-    data_subset training_set_subset;
+    data_subset train_set_subset;
     // declare variable to record model's performance
-    double model_score_training_set      = 0.0f;
-    double model_accuracy_training_set   = 0.0f;
-    double model_score_validation_set    = 0.0f;
-    double model_accuracy_validation_set = 0.0f;
+    double model_score_train_set      = 0.0f;
+    double model_acc_train_set   = 0.0f;
+    double model_score_val_set    = 0.0f;
+    double model_acc_val_set = 0.0f;
     mat new_line;
 
     // aggregate score and accuracy values for increasingly large proportion of training-set
-    for(unsigned int i = 1 ; i < training_set.X.n_rows ; ++i) {
-        model_score_training_set      = 0.0f;
-        model_accuracy_training_set   = 0.0f;
-        model_score_validation_set    = 0.0f;
-        model_accuracy_validation_set = 0.0f;
+    for(unsigned int i = 1 ; i < train_set.X.n_rows ; ++i) {
+        model_score_train_set      = 0.0f;
+        model_acc_train_set   = 0.0f;
+        model_score_val_set    = 0.0f;
+        model_acc_val_set = 0.0f;
         // i designates the index limit of the training-set subset
-        training_set_subset.X = training_set.X.rows(0, i);
-        training_set_subset.Y = training_set.Y.rows(0, i);
+        train_set_subset.X = train_set.X.rows(0, i);
+        train_set_subset.Y = train_set.Y.rows(0, i);
         // perform prediction using optimized model on training-subset and record performances
-        compute_perfs_test_validation( model_score_training_set,
-                                       model_accuracy_training_set,
-                                       model_score_validation_set,
-                                       model_accuracy_validation_set);
+        compute_perfs_test_validation( model_score_train_set,
+                                       model_acc_train_set,
+                                       model_score_val_set,
+                                       model_acc_val_set);
         // create new vector with model's performances on training-set and validation-set
         new_line << i
-                 << model_accuracy_training_set   << model_score_training_set
-                 << model_accuracy_validation_set << model_score_validation_set
+                 << model_acc_train_set   << model_score_train_set
+                 << model_acc_val_set << model_score_val_set
                  << endr;
         // append results for that size to result matrix
-        results_cost_relative_to_training_set_size= join_vert(results_cost_relative_to_training_set_size,new_line);
+        results_cost_relative_to_train_set_size= join_vert(results_cost_relative_to_train_set_size,new_line);
     }
-    return results_cost_relative_to_training_set_size;
+    return results_cost_relative_to_train_set_size;
 }
 
 void Net_benchmark::print_results_octave_format(ofstream &result_file, mat recorded_performances, string octave_variable_name){
@@ -276,14 +279,12 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
                     << "------------------------------------" << endl
                     << "\n" << "\n";
 
-    //
-    // PREPARE PRINT-OUT RESULTS TO FILE
-    //
+    evo_trainer.set_population(evo_trainer.generate_population(pop_size_GA,max_topo));
 
     // declare file for writing-out results
     ofstream result_file;
     string result_filename = data_set.result_filename.substr(0,data_set.result_filename.size()-4);
-    // produce differentiable result file prefix for each algorithm
+    // produce distinct result file prefixes for each algorithm
     switch(selected_opt_alg){
     case OPTIMIZATION_ALG::DE:
         result_filename+="/DE-";
@@ -303,15 +304,14 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
         cout << "Couldn't open results file, experiment aborted. Is it located in: \"" << data_set.result_filename.c_str() << "\" ?" << endl;
         exit(0);
     }
-    //
-    // PERFORMANCES DURING TRAINING
-    //
-    vector<mat> result_matrices_training_perfs;
-    mat averaged_performances   = compute_learning_curves_perfs(result_matrices_training_perfs, selected_opt_alg, epsilon, selected_mutation_scheme);
-    mat err_perfs               = compute_replicate_error(result_matrices_training_perfs);
+
+    vector<mat> result_matrices_train_perfs;
+    // run experiment iterations
+    mat averaged_performances   = compute_learning_curves_perfs(result_matrices_train_perfs, selected_opt_alg, epsilon, selected_mutation_scheme);
+    mat err_perfs               = compute_replicate_error(result_matrices_train_perfs);
 
     // save results
-    averaged_performances = join_horiz(averaged_performances, ones(averaged_performances.n_rows,1) * nb_replicates);
+    //averaged_performances = join_horiz(averaged_performances, ones(averaged_performances.n_rows,1) * nb_replicates);
     // save error amonst replicates
     print_results_octave_format(result_file, averaged_performances, "results");
     print_results_octave_format(result_file, err_perfs, "err_results");
@@ -319,7 +319,7 @@ void Net_benchmark::train_net_and_save_performances(unsigned int pop_size_GA, un
     cout<<"results written on "<<data_set.result_filename.c_str()<<endl;
 }
 
-void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, string data_set_filename, vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_algorithm,double epsilon, unsigned int selected_mutation_scheme){
+void Net_benchmark::training_task(unsigned int i, string data_set_filename, unsigned int selected_opt_algorithm,double epsilon, unsigned int selected_mutation_scheme){
     // return variable
     NeuralNet trained_net;
     Data_set d = data_set;
@@ -381,16 +381,18 @@ void Net_benchmark::training_task(unsigned int i, unsigned int nb_replicates, st
         trained_net = trainer_de.train_topology_plus_weights(d, max_t, results_score_evolution, selected_mutation_scheme);
     }
 
+    // save obtained results locally (binary format)
+#pragma omp critical
+    results_score_evolution.save("res"+to_string(i)+".mat");
+    // memorize trained net
     net = trained_net;
     // print-out best perfs
     double best_score = results_score_evolution(results_score_evolution.n_rows-1, 3);
-    // save obtained results in memory
-    result_matrices_training_perfs.push_back(results_score_evolution);
-    cout            << "THREAD&REPLICATE" << omp_get_thread_num() << i << "\tseed=" << seed << "\ttrain.score=" << "\t" << best_score << " on " << data_set_filename << endl;
-    experiment_file << "THREAD&REPLICATE" << omp_get_thread_num() << i << "\tseed=" << seed << "\ttrain.score=" << "\t" << best_score << " on " << data_set_filename << endl;
+    cout            << "THREAD"<<omp_get_thread_num()<<" REPLICATE" << i << "\tseed=" << seed << "\ttrain.score=" << "\t" << best_score << " on " << data_set_filename << endl;
+    experiment_file << "THREAD"<<omp_get_thread_num()<<" REPLICATE" << i << "\tseed=" << seed << "\ttrain.score=" << "\t" << best_score << " on " << data_set_filename << endl;
 }
 
-mat Net_benchmark::compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme){
+mat Net_benchmark::compute_learning_curves_perfs(vector<mat> &result_matrices_train_perfs, unsigned int selected_opt_alg, double epsilon, unsigned int selected_mutation_scheme){
     // return variable
     mat averaged_performances;
     // for each replicate
@@ -401,14 +403,28 @@ mat Net_benchmark::compute_learning_curves_perfs(vector<mat> &result_matrices_tr
         {
             for(unsigned int i=0; i<nb_replicates; ++i) {
 #pragma omp task
-                training_task(i, nb_replicates, data_set.data_set_filename, result_matrices_training_perfs, selected_opt_alg, epsilon, selected_mutation_scheme);
+                {
+                training_task(i, data_set.data_set_filename, selected_opt_alg, epsilon, selected_mutation_scheme);
+                }
             }
         }
     }
+
+    // aggregate replicates results
+    for(unsigned int i=0;i<nb_replicates;i++){
+        mat r;
+        r.load("res"+to_string(i)+".mat");
+        result_matrices_train_perfs.push_back(r);
+    }
+
+    // clean-up auto generated result files
+    for(unsigned int i=0;i<nb_replicates;i++)
+        std::remove(("res"+to_string(i)+".mat").c_str());
+
     // reset net
     net = NeuralNet();
-    // average PERFS of all replicates
-    averaged_performances = average_matrices(result_matrices_training_perfs);
+    // average replicates results
+    averaged_performances = average_matrices(result_matrices_train_perfs);
     return averaged_performances;
 }
 
@@ -481,18 +497,18 @@ mat Net_benchmark::compute_learning_curves_population_size(vector<mat> &result_m
 // returns a result matrix containing learning curves
 mat Net_benchmark::compute_learning_curves_dataset_size(vector<mat> &result_matrices_perfs_data_set_sizes, unsigned int selected_mutation_scheme) {
     // result matrix
-    mat results_cost_relative_to_training_set_size;
+    mat results_cost_relative_to_train_set_size;
     Data_set entire_data_set = data_set;
 
     // declare variable to record model's performance
-    double model_score_training_set      = 0.0f;
-    double model_accuracy_training_set   = 0.0f;
-    double model_score_validation_set    = 0.0f;
-    double model_accuracy_validation_set = 0.0f;
+    double model_score_train_set      = 0.0f;
+    double model_acc_train_set   = 0.0f;
+    double model_score_val_set    = 0.0f;
+    double model_acc_val_set = 0.0f;
 
     mat new_line;
 
-    unsigned int m = entire_data_set.training_set.X.n_rows;
+    unsigned int m = entire_data_set.train_set.X.n_rows;
 
     // aggregate score and accuracy values for increasingly large proportion of training-set
     for(unsigned int i = 10 ; i < m ; i=i + (m/10)) {
@@ -500,14 +516,14 @@ mat Net_benchmark::compute_learning_curves_dataset_size(vector<mat> &result_matr
         net = NeuralNet();
 
         cout << "Learning curve: " << (i*100) / m << "% done" << endl;
-        model_score_training_set      = 0.0f;
-        model_accuracy_training_set   = 0.0f;
-        model_score_validation_set    = 0.0f;
-        model_accuracy_validation_set = 0.0f;
+        model_score_train_set      = 0.0f;
+        model_acc_train_set   = 0.0f;
+        model_score_val_set    = 0.0f;
+        model_acc_val_set = 0.0f;
 
         // where i is the index limit of the training-set subset
-        data_set.training_set.X = entire_data_set.training_set.X.rows(0, i);
-        data_set.training_set.Y = entire_data_set.training_set.Y.rows(0, i);
+        data_set.train_set.X = entire_data_set.train_set.X.rows(0, i);
+        data_set.train_set.Y = entire_data_set.train_set.Y.rows(0, i);
 
         cout << "starting training on partial data-set" << endl;
         // train using cross-validation using current percentage of the data-set
@@ -515,21 +531,21 @@ mat Net_benchmark::compute_learning_curves_dataset_size(vector<mat> &result_matr
         net = evo_trainer.train_topology_plus_weights(data_set, max_topo, dummy_result_matrix, selected_mutation_scheme);
 
         // perform prediction using optimized model on training-subset and record performances
-        compute_perfs_test_validation( model_score_training_set,
-                                       model_accuracy_training_set,
-                                       model_score_validation_set,
-                                       model_accuracy_validation_set);
+        compute_perfs_test_validation( model_score_train_set,
+                                       model_acc_train_set,
+                                       model_score_val_set,
+                                       model_acc_val_set);
 
         // create new vector with model's performances on training-set and validation-set
         new_line << i
-                 << model_accuracy_training_set
-                 << model_score_training_set
-                 << model_accuracy_validation_set
-                 << model_score_validation_set
+                 << model_acc_train_set
+                 << model_score_train_set
+                 << model_acc_val_set
+                 << model_score_val_set
                  << endr;
 
         // append results for that training-set size to result matrix
-        results_cost_relative_to_training_set_size= join_vert(results_cost_relative_to_training_set_size, new_line);
+        results_cost_relative_to_train_set_size= join_vert(results_cost_relative_to_train_set_size, new_line);
     }
 
     cout << "after func call, net looks like" << endl
@@ -539,7 +555,7 @@ mat Net_benchmark::compute_learning_curves_dataset_size(vector<mat> &result_matr
          << net.get_topology().nb_hidden_layers << endl;
 
     data_set = entire_data_set;
-    return results_cost_relative_to_training_set_size;
+    return results_cost_relative_to_train_set_size;
 }
 
 mat Net_benchmark::average_matrices(vector<mat> results){
@@ -574,25 +590,19 @@ mat Net_benchmark::to_matrix(double a){
 }
 
 mat Net_benchmark::compute_replicate_error(vector<mat> results){
-    // return variable
     mat err_vec;
-
     unsigned int smallest_nb_rows = INT_MAX;
     // find lowest and highest nb rows
-    for(unsigned int i=0; i<results.size() ;i++){
-        if(results[i].n_rows < smallest_nb_rows){
+    for(unsigned int i=0;i<results.size();i++)
+        if(results[i].n_rows<smallest_nb_rows)
             smallest_nb_rows = results[i].n_rows;
-        }
-    }
     mat best_scores;
     // for each generation
     for(unsigned int i=0; i<smallest_nb_rows; i++) {
         best_scores.reset();
-        // for each replica
-        for(unsigned int r=0; r<nb_replicates; r++) {
-            // get best score
+        // for each replica: get best score
+        for(unsigned int r=0; r<nb_replicates; r++)
             best_scores = join_vert(best_scores, to_matrix(results[r](i,3)));
-        }
         // append std dev of all best scores for current generation to error vector
         err_vec = join_vert( err_vec, to_matrix(corrected_sample_std_dev(best_scores)));
     }

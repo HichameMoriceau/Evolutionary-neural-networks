@@ -26,9 +26,8 @@ exp_files read_args(int argc, char** argv){
 }
 
 /*
-   Compile & run:
-   $ g++ main.cpp -o compiled_executable -larmadillo
-   $ ./evolutionary_nets    data/breast-cancer-malignantOrBenign-data-transformed.csv \
+   Compile: $ QT Creator build or see http://stackoverflow.com/questions/19206462/compile-a-qt-project-from-command-line for CLI
+   Run    : $ ./evolutionary_nets    data/breast-cancer-malignantOrBenign-data-transformed.csv \
                             data/breast-cancer-recurrence-data-transformed.csv \
                             data/iris-data-transformed.csv \
                             data/wine-data-transformed.csv \

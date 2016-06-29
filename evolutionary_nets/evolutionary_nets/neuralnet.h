@@ -51,13 +51,18 @@ private:
     // contains topology + weights (params is genotype)
     vec             params;
     net_topology    topology;
-    double          accuracy;
-    double          score;
-    double          validation_score;
-    double          validation_acc;
+
+    double          train_acc;
+    double          train_score;
+    double          train_mse;
+
+    double          val_score;
+    double          val_acc;
+    double          val_mse;
+
     double          test_score;
     double          test_acc;
-    double          mse;
+    double          test_mse;
 
 public:
                     // ctors
@@ -111,33 +116,38 @@ public:
     double          compute_score(mat confusion_matrix, unsigned int nb_classes, unsigned int nb_local_classes);
 
     /**
-     * \brief get_accuracy
+     * \brief get_train_acc
      * \param d data portion used for accuracy calculation
      * \return  returns percentage representing how often the model
      *          correctly predicts <Y> on the data-set <X>
      */
-    double          get_accuracy(data_subset d);
-    double          get_accuracy(){return accuracy;}
-    double          get_validation_acc(){return validation_acc;}
-    double          set_validation_acc(double v_a){ validation_acc=v_a;}
-    double          get_test_acc(){return test_acc;}
-    double          set_test_acc(double v_a){ test_acc=v_a;}
+    double          get_train_acc(data_subset d);
     /**
-     * \brief get_f1_score
+     * \brief get_train_score
      * \param d
      * \return (score function) returns an indication of the quality of the model [0, 1]
      *         The F1 Score function calculates the *precision* and *recall* of the model.
      *         This function is used as fitness function by the Differential Evolution algorithm.
      */
-    double          get_f1_score(data_subset d);
-    double          get_f1_score(){return score;}
-    double          get_validation_score(){ return validation_score; }
-    double          set_validation_score(double v_s){ validation_score=v_s;}
-    double          get_test_score(){ return test_score; }
-    double          set_test_score(double v_s){ test_score=v_s;}
+    double          get_train_score(data_subset d);
 
-    void            set_f1_score(double s){ score=s;}
-    void            set_accuracy(double a){ accuracy=a;}
+    double          get_train_acc(){return train_acc;}
+    double          get_train_score(){return train_score;}
+
+    double          get_val_acc(){return val_acc;}
+    void            set_val_acc(double v_a){ val_acc=v_a;}
+
+    double          get_test_acc(){return test_acc;}
+    void            set_test_acc(double v_a){ test_acc=v_a;}
+
+    double          get_val_score(){ return val_score; }
+    void            set_val_score(double v_s){ val_score=v_s;}
+
+    double          get_test_score(){ return test_score; }
+    void            set_test_score(double v_s){ test_score=v_s;}
+
+    void            set_train_score(double s){ train_score=s;}
+    void            set_acc(double a){ train_acc=a;}
 
     void            get_fitness_metrics(Data_set D);
 
@@ -149,17 +159,14 @@ public:
 
     void            print_topology(net_topology t);
 
-    /**
-     * \brief operator < (comparator-function for sorting by highest score)
-     * \param n
-     * \return true if the provided net is less fit than this net
-     */
-    bool            operator<(const NeuralNet &n) const {   return n.score < this->score; }
-
     // returns the Mean Squared Error of a net on <data_set>
-    double          get_MSE(data_subset d);
-    double          get_MSE(){return mse;}
-    void            set_mse(double e)     { mse=e;}
+    double          get_mse(data_subset d);
+    double          get_train_mse(){return train_mse;}
+    void            set_train_mse(double e){ train_mse=e;}
+    double          get_val_mse(){return val_mse;}
+    void            set_val_mse(double e){ val_mse=e;}
+    double          get_test_mse(){return test_mse;}
+    void            set_test_mse(double e){ test_mse=e;}
 
     // helper methods
 private:
@@ -180,6 +187,14 @@ private:
                returns 0 if the matrices aren't of same dimensions
      */
     unsigned int    get_nb_identical_elements(mat A, mat B);
+
+public:
+    /**
+     * \brief operator < (comparator-function for sorting by highest score)
+     * \param n
+     * \return true if the provided net is less fit than this net
+     */
+    bool            operator<(const NeuralNet &n) const {   return n.train_score < this->train_score; }
 
 };
 #endif // NEURALNET_H
