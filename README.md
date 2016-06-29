@@ -5,7 +5,7 @@
 In Machine Learning, Neural network have demonstrated flexibility and robustness properties. It is known that neural nets can be used for solving a wide variety of problems, provided that the topology is appropriately chosen. There are two main schools of thought when it comes to training neural networks: the use of gradient based methods with the *back propagation algorithm* and the use of *evolutionary algorithms*. This research project researches the automation of the design of the most adequate architecture and weights for solving various supervised learning problem.
 
 ## Overview
-The platform is composed of 3 benchmarks and some additional directories:
+This CLI tool is composed of 3 benchmarks and some additional directories:
  - The `BP_experiment` directory contains the BP benchmark (using the FANN library)
  - The `NEAT_experiment` directory contains the NEAT benchmark (using NEAT library)
  - The `evolutionary_nets` directory contains the evolutionary nets benchmark (PSO, DE & AIS)
@@ -90,8 +90,8 @@ In the `formatting_scripts` directory you'll find C++ scripts to help you conver
 If you wish to make changes to a benchmark or simply to manually run any C++ code here, you'll be able to find the compilation and execution commands by running the following commands. Feel free to look at the `run_experiment.sh` scripts to see how each experiment is ran.
 
 ```
-cat main.cpp | grep "g++"
-cat main.cpp | grep "./"
+cat main.cpp | grep "Compile"
+cat main.cpp | grep "Run"
 ```
 
 #### For NEAT
