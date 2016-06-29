@@ -18,7 +18,7 @@
 #include <omp.h>
 
 // comment for printing out optimization evolution on screen
-#define NO_SCREEN_OUT 
+//#define NO_SCREEN_OUT 
 
 void multiclass_test(exp_files ef){
   std::ofstream oFile(ef.result_file.c_str(),std::ios::out);
@@ -341,38 +341,55 @@ void compute_mse_acc_score(mat preds,mat labels,unsigned int nb_classes,double& 
   fitness=computed_score;
 }
 
-mat compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, exp_files ef){
-    // return variable
-    mat averaged_performances;
-
-    // for each replicate
+mat compute_learning_curves_perfs(vector<mat> &result_matrices_train_perfs, exp_files ef){
+  // return variable
+  mat averaged_performances;
+  // for each replicate
 #pragma omp parallel
-    {
-        // kick off a single thread
+  {
+    // kick off a single thread
 #pragma omp single
-        {
-            for(unsigned int i=0; i<ef.nb_reps; ++i) {
+    {
+      for(unsigned int i=0; i<ef.nb_reps; ++i) {
 #pragma omp task
-	      {
-	      multiclass_training_task(i,result_matrices_training_perfs,ef);
-	      }
-            }
-        }
+	{
+	  multiclass_training_task(i,ef);
+	}
+      }
     }
-    // average PERFS of all replicates
-    averaged_performances = average_matrices(result_matrices_training_perfs);
-    return averaged_performances;
+  }
+  // aggregate replicates results
+  for(unsigned int k=0;k<ef.nb_reps;k++){
+    mat r;
+    string s;
+    stringstream ss;
+    ss<<"res"<<k<<".mat";
+    s=ss.str();
+    r.load(s);
+    result_matrices_train_perfs.push_back(r);
+  }
+  // clean-up auto generated result files
+  for(unsigned int k=0;k<ef.nb_reps;k++){      
+    string s;
+    stringstream ss;
+    ss<<"res"<<k<<".mat";
+    s=ss.str();
+    std::remove(s.c_str());
+  }
+  // average PERFS of all replicates
+  averaged_performances = average_matrices(result_matrices_train_perfs);
+  return averaged_performances;
 }
 
 void standardize(mat &D){
-    // for each column
-    for(unsigned int i=0; i<D.n_rows; ++i){
-        // for each element in this column (do not standardize target attribute)
-        for(unsigned int j=0; j<D.n_cols-1; ++j){
-            // apply feature scaling and mean normalization
-            D(i,j) = (D(i,j) - mean(D.col(j))) / (max(D.col(j))-min(D.col(j)));
-        }
+  // for each column
+  for(unsigned int i=0; i<D.n_rows; ++i){
+    // for each element in this column (do not standardize target attribute)
+    for(unsigned int j=0; j<D.n_cols-1; ++j){
+      // apply feature scaling and mean normalization
+      D(i,j) = (D(i,j) - mean(D.col(j))) / (max(D.col(j))-min(D.col(j)));
     }
+  }
 }
 
 mat array2D_to_mat(double** data, unsigned int height,unsigned int width){
@@ -397,7 +414,7 @@ double** mat_to_array2D(mat d){
 }
 
 
-void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perfs,exp_files ef){
+void multiclass_training_task(unsigned int i,exp_files ef){
   // result matrices (to be interpreted by Octave script <Plotter.m>)
   mat results_score_evolution;
 
@@ -488,9 +505,14 @@ void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perf
     pop->epoch(gen);
     gen++;
   }
-
   results_score_evolution=join_vert(results_score_evolution, res_mat);
-  res_mats_training_perfs.push_back(results_score_evolution);
+
+  string s;
+  stringstream ss;
+  ss<<"res"<<i<<".mat";
+  s=ss.str();
+#pragma omp critical
+  results_score_evolution.save(s);
 
   // print best results
   ofstream experiment_file("random-seeds.txt",ios::app);

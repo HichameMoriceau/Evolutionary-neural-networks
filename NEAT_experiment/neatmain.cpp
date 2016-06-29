@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
     ef.startgene=ef.startgene.substr(5, ef.startgene.size());
     ef.result_file+="_results/NEAT-results.mat";
     // run experiment
-    multiclass_test(ef);    
+    multiclass_test(ef);
   }
 
   return 0;
