@@ -84,7 +84,6 @@ mat Trainer::generate_metric_line(vector<NeuralNet> population, unsigned int gen
          << population[0].get_topology().nb_hidden_layers
 
          << endr;
-
     return line;
 }
 

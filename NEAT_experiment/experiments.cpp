@@ -18,7 +18,7 @@
 #include <omp.h>
 
 // comment for printing out optimization evolution on screen
-//#define NO_SCREEN_OUT 
+#define NO_SCREEN_OUT 
 
 void multiclass_test(exp_files ef){
   std::ofstream oFile(ef.result_file.c_str(),std::ios::out);
