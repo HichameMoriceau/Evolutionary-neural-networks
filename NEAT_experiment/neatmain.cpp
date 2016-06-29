@@ -44,9 +44,8 @@ exp_files read_args(int argc, char** argv){
 }
 
 /**
- * Compile & Run with:
- * $ make # (No direct use of g++ here)
- * $ ./neat test.ne 0 4 300 # experiment 0, 4 replicates, 300 generations
+ * Compile: $ make # (No direct use of g++ here)
+ * Run    : $ ./neat data/breast-cancer-malignantOrBenign-data-transformed.csv test.ne 4 300 100 #  4 replicates, 300 generations 100 individuals
  */
 int main(int argc, char *argv[]) {
   // read CLI args

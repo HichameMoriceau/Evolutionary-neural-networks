@@ -36,10 +36,14 @@ namespace NEAT {
      // *ADDED by Hichame Moriceau*
     double training_accuracy; 
     double training_fitness;
+    double training_mse;
     double validation_accuracy;
     double validation_fitness;
+    double validation_mse;
     double test_accuracy;
     double test_fitness;
+    double test_mse;
+
     // **
 
     double fitness;  //A measure of fitness for the Organism

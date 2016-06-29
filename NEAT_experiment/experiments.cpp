@@ -84,9 +84,9 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
   }
 
   // training data is used last for org->error to take precedence over previous runs
-  evaluate_perfs(test_data      ,test_height,      nb_attributes,net,org->error, org->test_fitness,       org->test_accuracy);
-  evaluate_perfs(validation_data,validation_height,nb_attributes,net,org->error, org->validation_fitness, org->validation_accuracy);
-  evaluate_perfs(training_data  ,training_height,  nb_attributes,net,org->error, org->training_fitness,   org->training_accuracy); 
+  evaluate_perfs(test_data      ,test_height,      nb_attributes,net,org->test_mse, org->test_fitness,       org->test_accuracy);
+  evaluate_perfs(validation_data,validation_height,nb_attributes,net,org->validation_mse, org->validation_fitness, org->validation_accuracy);
+  evaluate_perfs(training_data  ,training_height,  nb_attributes,net,org->training_mse, org->training_fitness,   org->training_accuracy); 
   org->fitness=org->training_fitness;
 
   std::vector<double> all_fitnesses;
@@ -113,18 +113,19 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
   double pop_score_stddev=pop->stddev(all_fitnesses);
   double training_accuracy=best_org.training_accuracy;
   double training_score=best_org.fitness;
+  double training_mse=best_org.training_mse;
   double validation_accuracy=best_org.validation_accuracy;
   double validation_score=best_org.validation_fitness;
   double test_accuracy=best_org.test_accuracy;
   double test_score=best_org.test_fitness;
-  double MSE=best_org.error;
+
   unsigned int hidden_units=((best_org.gnome)->nodes).size();
 
 #ifndef NO_SCREEN_OUT
   std::cout<<"NB.err.func.calls="<<nb_calls_err_func
 	   <<"\ttrain.score="<<training_score
 	   <<"\ttrain.acc="<<training_accuracy
-	   <<"\ttrain.err="<<MSE
+	   <<"\ttrain.err="<<training_mse
 	   <<"\tNB nodes="<<hidden_units
 	   <<"\tpop.fit.mean="<<pop_score_mean
 	   <<"\tpop.fit.var="<<pop_score_variance
@@ -133,7 +134,7 @@ void multiclass_evaluate(Organism *org, string dataset_filename, mat &res_mat,un
 
   // format result line (-1 = irrelevant attributes)
   line << nb_calls_err_func
-       << MSE
+       << training_mse
        << training_accuracy
        << training_score
        << pop_score_variance
@@ -184,17 +185,20 @@ void evaluate_perfs(double** data,
 		    unsigned int nb_examples,
 		    unsigned int nb_attributes_pls_bias,
 		    Network* net, 
-		    double& error, 
+		    double& mse, 
 		    double& fitness, 
 		    double& accuracy){
-  bool success;  //Check for successful activation
-  //Load and activate the network on each input
-  int net_depth=net->max_depth(); //The max depth of the network to be activated
-  int relax; //Activates until relaxation
+  //Check for successful activation
+  bool success;
+  //The max depth of the network to be activated
+  int net_depth=net->max_depth(); 
+  //Activates until relaxation
+  int relax;
   unsigned int nb_classes=net->outputs.size();
   double out[nb_examples][nb_classes];
 
   for(unsigned int count=0;count<nb_examples;count++){
+    //Load and activate the network on each input
     net->load_sensors(data[count]);
     //Relax net and get output
     success=net->activate();
@@ -219,12 +223,11 @@ void evaluate_perfs(double** data,
     }
 
     // generate confusion matrix
-    mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
-    compute_error_acc_score(conf_mat, labels,error,accuracy,fitness);
+    compute_mse_acc_score(preds,labels,nb_classes,mse,accuracy,fitness);
   }
   else {
     //The network is flawed (shouldnt happen)
-    error   =999.0;
+    mse     =999.0;
     fitness =0.0000001;
     accuracy=0.0000001;
   }
@@ -295,8 +298,8 @@ mat generate_conf_mat(unsigned int nb_classes, mat preds, mat labels){
   return conf_mat;
 }
 
-void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness){
-  unsigned int nb_classes=conf_mat.n_cols;
+void compute_mse_acc_score(mat preds,mat labels,unsigned int nb_classes,double& mse,double& accuracy,double& fitness) {
+  mat conf_mat=generate_conf_mat(nb_classes,preds,labels);
   // number of class present in the current subset of the data set
   unsigned int nb_local_classes=count_nb_classes(labels);
   unsigned int nb_examples=0;
@@ -331,8 +334,9 @@ void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accu
   // prevent -nan values
   if(computed_acc!=computed_acc)
     computed_acc=0;
-  // compute error
-  error=(nb_examples-TP)/double(nb_examples);
+  // compute mse
+  //mse=(nb_examples-TP)/double(nb_examples);
+  mse=as_scalar(sum(square(to_multiclass_format(preds)-labels)))/double(nb_examples);
   accuracy=computed_acc;
   fitness=computed_score;
 }
@@ -486,18 +490,6 @@ void multiclass_training_task(unsigned int i,vector<mat>& res_mats_training_perf
   }
 
   results_score_evolution=join_vert(results_score_evolution, res_mat);
-
-  double test_score=best_org.test_fitness;
-  double test_acc=best_org.test_accuracy;
-
-  cout<<"\ttest score ="<<test_score<<endl;
-  cout<<"\ttest acc   ="<<test_acc<<endl;
-
-  // append TEST perfs to result matrix
-  mat test_score_m=ones(results_score_evolution.n_rows,1) * test_score;
-  mat test_acc_m  =ones(results_score_evolution.n_rows,1) * test_acc;
-  results_score_evolution=join_horiz(results_score_evolution, test_acc_m);
-  results_score_evolution=join_horiz(results_score_evolution, test_score_m);
   res_mats_training_perfs.push_back(results_score_evolution);
 
   // print best results

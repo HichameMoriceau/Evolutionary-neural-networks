@@ -51,7 +51,7 @@ void evaluate_perfs(double** data, unsigned int nb_examples, unsigned int nb_att
 double** load_data_array(string dataset_filename,unsigned int &height, unsigned int &width);
 unsigned int count_nb_classes(mat labels);
 mat generate_conf_mat(unsigned int nb_classes, mat preds,mat labels);
-void compute_error_acc_score(mat conf_mat, mat labels,double& error,double& accuracy,double& fitness);
+void compute_mse_acc_score(mat preds, mat labels,unsigned int nb_classes,double& mse,double& accuracy,double& fitness);
 mat compute_learning_curves_perfs(vector<mat> &result_matrices_training_perfs, exp_files ef);
 void multiclass_training_task(unsigned int i, vector<mat> &result_matrices_training_perfs, exp_files ef);
 unsigned int count_nb_identicals(unsigned int predicted_class, unsigned int expected_class, mat predictions, mat expectations);
