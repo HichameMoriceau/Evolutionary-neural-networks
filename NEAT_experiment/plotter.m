@@ -12,6 +12,25 @@ fprintf("Plotting curves using \n\t->\"%s\"\n" , filename);
 # load experimentation results
 load("-text",filename);
 
+nb_calls_to_err_func=results(:,1);
+generation=results(:,2);
+train_acc=results(:,3);
+train_score=results(:,4);
+train_mse=results(:,5);
+test_acc=results(:,6);
+test_score=results(:,7);
+test_mse=results(:,8);
+val_acc=results(:,9);
+val_score=results(:,10);
+val_mse=results(:,11);
+pop_score_var=results(:,12);
+pop_score_mean=results(:,13);
+pop_size=results(:,14);
+nb_units_per_hidden_layer=results(:,15);
+nb_hidden_layers=results(:,16);
+
+total_nb_rows=nb_calls_to_err_func(end)-nb_calls_to_err_func(1);
+
 # write out plots in image directory
 cd 'images/';
 
@@ -22,51 +41,19 @@ nb_gens         = results(end,1);
 TEST_SCORE = results(1,end-3);
 TEST_ACC = results(1,end-2);
 
-#{
-
 #
-# TRAINING PERFS
+# PERFS AGAINST NB OF CALLS TO ERROR FUNCTION
 #
-align_right = results(end,1) - (results(end,1)/3) - 26;
-errorbar(results(:,1), results(:,4), err_results);
+align_right = nb_calls_to_err_func(end) - (nb_calls_to_err_func(end)/3) - 26;
+errorbar(nb_calls_to_err_func, results(:,4), err_results);
 hold on;
 grid on;
-plot(results(:,1),results(:,4),  'r', 'LineWidth', 1);
-plot(results(:,1),results(:,3),  'k', 'LineWidth', 1);
-plot(results(:,1),results(:,18), 'm', 'LineWidth', 1);
+plot(nb_calls_to_err_func,train_score,  'k', 'LineWidth', 1);
+plot(nb_calls_to_err_func,train_acc,  'r', 'LineWidth', 1);
+plot(nb_calls_to_err_func,val_acc, 'm', 'LineWidth', 1);
 axis([0, results(end,1), 0, 100]);
 title( strcat(alg_data, " - population size : ", num2str(population_size), " - ", num2str(nb_replicates), " replicates"));
-legend('[Error amongst replicates] Corrected sample standard deviation','Best indiv accuracy on training set','Best indiv f1 score on training set', 'Best indiv accuracy on CV set', "location", "southeast");
-xlabel('Number of generations');
-ylabel('Performance of best individual while training');
-text(align_right, 50 , strcat("SCORE on unseen test data =", num2str(TEST_SCORE)));
-text(align_right, 46 , strcat("ACC on unseen test data =", num2str(TEST_ACC)));
-# add topology description
-text(align_right, 42 , "Final topology:");
-text(align_right, 38 , strcat("NB inputs            =", num2str(results(end,10))) );
-text(align_right, 34 , strcat("NB hidden units  =", num2str(results(end,11))) );
-text(align_right, 30 , strcat("NB outputs          =", num2str(results(end,12))) );
-text(align_right, 26 , strcat("NB hidden layers=", num2str(results(end,13))) );
-plot_name = strcat(alg_data, "-perfsVSepochs.png");
-print('-dpng', '-tiff', plot_name)
-hold off;
-fprintf("Saved as: \n\t->\"%s\"\n" , plot_name);
-
-#}
-
-#
-# NB OF CALLS TO ERROR FUNCTION
-#
-align_right = results(end,1) - (results(end,1)/3) - 26;
-errorbar(results(:,1), results(:,4), err_results);
-hold on;
-grid on;
-plot(results(:,1),results(:,4),  'k', 'LineWidth', 1);
-plot(results(:,1),results(:,3),  'r', 'LineWidth', 1);
-plot(results(:,1),results(:,18), 'm', 'LineWidth', 1);
-axis([0, results(end,1), 0, 100]);
-title( strcat(alg_data, " - population size : ", num2str(population_size), " - ", num2str(nb_replicates), " replicates"));
-legend('[Error amongst replicates] Corrected sample standard deviation','Best indiv accuracy on training set','Best indiv f1 score on training set', 'Best indiv accuracy on CV set', "location", "southeast");
+legend('[Error amongst replicates] Corrected sample standard deviation','Best indiv f1 score on training set','Best indiv accuracy on training set','Best indiv accuracy on CV set', "location", "southeast");
 xlabel('Number of calls to the error function');
 ylabel('Performance of best individual while training');
 text(align_right, 50 , strcat("SCORE on unseen test data =", num2str(TEST_SCORE)));
@@ -78,12 +65,12 @@ text(align_right, 34 , strcat("NB hidden units  =", num2str(results(end,11))) );
 text(align_right, 30 , strcat("NB outputs          =", num2str(results(end,12))) );
 text(align_right, 26 , strcat("NB hidden layers=", num2str(results(end,13))) );
 plot_name = strcat(alg_data, "-perfsVSnbcallstoerrorfunction.png");
-print('-dpng', '-tiff', plot_name)
+print('-deps', '-tiff', plot_name)
 hold off;
 fprintf("Saved as: \n\t->\"%s\"\n" , plot_name);
 
 
-plot(results(:,1), results(:,2), 'b', 'LineWidth', 1);
+plot(nb_calls_to_err_func, train_mse, 'b', 'LineWidth', 1);
 grid on;
 hold on;
 title(strcat(alg_data, " - MSE against nb generations"));
@@ -91,7 +78,7 @@ legend('MSE', "location", "northeast");
 xlabel('Number of generations');
 ylabel('Mean Squared Error');
 plot_name = strcat(alg_data, "-MSEVSepochs.png");
-print('-dpng', '-tiff', plot_name);
+print('-deps', '-tiff', plot_name);
 hold off;
 fprintf("Saved as: \n\t->\"%s\"\n" , plot_name);
 
@@ -99,7 +86,7 @@ fprintf("Saved as: \n\t->\"%s\"\n" , plot_name);
 # POPULATION SCORE STATS
 #
 
-plot(results(:,1), results(:,5), 'b', 'LineWidth', 1);
+plot(nb_calls_to_err_func, pop_score_var, 'b', 'LineWidth', 1);
 grid on;
 hold on;
 title(strcat(alg_data, " - Variance of individuals's scores against nb generations"));
@@ -107,25 +94,11 @@ legend('Variance', "location", "northeast");
 xlabel('Number of generations');
 ylabel('Variance on validation-set');
 plot_name = strcat(alg_data, "-varianceVSepochs.png");
-print('-dpng', '-tiff', plot_name);
+print('-deps', '-tiff', plot_name);
 hold off;
 fprintf("Saved as: \n\t->\"%s\"\n" , plot_name);
 
-#{
-plot(results(:,1), results(:,6), 'b', 'LineWidth', 1);
-hold on;
-grid on;
-title(strcat(alg_data, " - Standard deviation of individuals's scores against nb generations"));
-legend('Standard deviation', "location", "northeast");
-xlabel('Number of generations');
-ylabel('Standard deviation on validation-set');
-plot_name = strcat(alg_data, "-stddevVSepochs.png");
-print('-dpng', '-tiff', plot_name);
-hold off;
-fprintf("Saved as: \n\t->\"%s\"\n" , plot_name);
-#}
-
-plot(results(:,1), results(:,7), 'b', 'LineWidth', 1);
+plot(nb_calls_to_err_func, pop_score_mean, 'b', 'LineWidth', 1);
 hold on;
 grid on;
 title(strcat(alg_data, " - Mean of individuals's scores against nb generations"));
@@ -133,21 +106,19 @@ legend('Mean', "location", "southeast");
 xlabel('Number of generations');
 ylabel('Mean of population score on validation-set');
 plot_name = strcat(alg_data, "-meanVSepochs.png");
-print('-dpng', '-tiff', plot_name);
+print('-deps', '-tiff', plot_name);
 hold off;
 fprintf("Saved as: \n\t->\"%s\"\n" , plot_name);
 
 
 #
-# RESULT TABLE
+# RESULT SUMMARY
 #
-
-nb_err_calls=results(end,1)-results(1,1);
 
 # calculate index values of 10 evenly separated rows
 indexes=ones(10,1);
 for i = [1:10]
-    indexes(i)=nb_err_calls*(i*10/100);
+    indexes(i)=total_nb_rows*(i*10/100);
 endfor
     
 indexes=round(indexes);
