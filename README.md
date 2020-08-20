@@ -1,6 +1,6 @@
 # Automated Optimization of Neural Network Architecture Design 
-###### [Pursuing the work done for my bachelor's dissertation over the course of a research internship]
-###### *Currently under development*
+###### [Bachelor's 4th year of Computing Science Honours degree: dissertation over the course of a research internship at Edinburgh Napier University]
+###### :warning: *Project no longer supported* 
 
 In Machine Learning, Neural network have demonstrated flexibility and robustness properties. It is known that neural nets can be used for solving a wide variety of problems, provided that the topology is appropriately chosen. There are two main schools of thought when it comes to training neural networks: the use of gradient based methods with the *back propagation algorithm* and the use of *evolutionary algorithms*. This research project researches the automation of the design of the most adequate architecture and weights for solving various supervised learning problem.
 
